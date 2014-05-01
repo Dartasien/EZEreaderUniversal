@@ -1,0 +1,459 @@
+<?xml version='1.0' encoding='utf-8'?>
+<ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1" xml:lang="eng">
+  <head>
+    <meta content="d00b7fc7-95b5-4f83-b26f-5788f3c1e820" name="dtb:uid"/>
+    <meta content="2" name="dtb:depth"/>
+    <meta content="calibre (0.8.51)" name="dtb:generator"/>
+    <meta content="0" name="dtb:totalPageCount"/>
+    <meta content="0" name="dtb:maxPageNumber"/>
+  </head>
+  <docTitle>
+    <text>Pride and Prejudice</text>
+  </docTitle>
+  <navMap>
+    <navPoint class="chapter" id="4322cb51-dd0d-4b7f-9a9a-77037dd24388" playOrder="1">
+      <navLabel>
+        <text>From the Pages of Pride and Prejudice</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_002.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="001e7ea9-ee24-4332-969f-f922f9d499df" playOrder="2">
+      <navLabel>
+        <text>Title Page</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_003.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="a360383b-7c0a-42e4-aac3-c5b7a7f483f7" playOrder="3">
+      <navLabel>
+        <text>Copyright Page</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_004.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="60e3ba81-92f1-4884-a888-79271fe15790" playOrder="4">
+      <navLabel>
+        <text>Jane Austen</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_005.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="e75af9df-8b09-4010-ae25-59c9f96fa391" playOrder="5">
+      <navLabel>
+        <text>The World of Jane Austen and Pride and Prejudice</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_006.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="f8f661f8-973e-4d0e-86cd-a92e90d7499d" playOrder="6">
+      <navLabel>
+        <text>Introduction</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_007.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="cf3b5c9d-648c-4c2c-90c5-0626a8d4b4a7" playOrder="7">
+      <navLabel>
+        <text>Volume the First</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_008.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="b3a8f850-0edd-4b89-be64-d38a512a0d3a" playOrder="8">
+      <navLabel>
+        <text>Chapter 1</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_009.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="9d276101-f747-4264-b655-0327b7794376" playOrder="9">
+      <navLabel>
+        <text>Chapter 2</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_010.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="6c5f5428-925b-4225-abd1-3e4a00ba546b" playOrder="10">
+      <navLabel>
+        <text>Chapter 3</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_011.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="803c334e-5ed0-499e-ae28-eba152b9fda7" playOrder="11">
+      <navLabel>
+        <text>Chapter 4</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_012.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="b3588f24-2a52-457d-9328-60e6dffe3949" playOrder="12">
+      <navLabel>
+        <text>Chapter 5</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_013.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="5eb74858-cc5f-4526-9701-e0dd393121d8" playOrder="13">
+      <navLabel>
+        <text>Chapter 6</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_014.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="d9364a77-c8ce-44c9-9198-c5139e4bfb5b" playOrder="14">
+      <navLabel>
+        <text>Chapter 7</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_015.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="83e9c077-0854-460c-a42f-149f4a75d199" playOrder="15">
+      <navLabel>
+        <text>Chapter 8</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_016.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="f7e38853-90c2-43a6-9dbf-cbf4162ce082" playOrder="16">
+      <navLabel>
+        <text>Chapter 9</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_017.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="5e009f12-3106-4041-ab06-2ef56178c155" playOrder="17">
+      <navLabel>
+        <text>Chapter 10</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_018.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="52651ec0-988b-49a9-aebd-37da5709708e" playOrder="18">
+      <navLabel>
+        <text>Chapter 11</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_019.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="3d7e3908-09a1-4f96-8542-eab94d724da6" playOrder="19">
+      <navLabel>
+        <text>Chapter 12</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_020.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="d02c5560-b135-43b3-a71d-b4c14a10fa1f" playOrder="20">
+      <navLabel>
+        <text>Chapter 13</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_021.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="22d224b3-c8c7-403b-ae2a-54c60b3f97cf" playOrder="21">
+      <navLabel>
+        <text>Chapter 14</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_022.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="931a5155-24ad-409b-963f-919da252185d" playOrder="22">
+      <navLabel>
+        <text>Chapter 15</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_023.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="39fa81b8-9149-4417-bbbb-a0cde19b9443" playOrder="23">
+      <navLabel>
+        <text>Chapter 16</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_024.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="857a0227-6a20-4325-9181-8f7f29ffed7f" playOrder="24">
+      <navLabel>
+        <text>Chapter 17</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_025.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="f05c37dc-5e02-49a7-adb9-ebf1e110253b" playOrder="25">
+      <navLabel>
+        <text>Chapter 18</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_026.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="548733da-cd5f-44a4-bdbf-8d34e085fbd0" playOrder="26">
+      <navLabel>
+        <text>Chapter 19</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_027.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="bf885509-f4d3-4c4c-8b05-e3442ca3f149" playOrder="27">
+      <navLabel>
+        <text>Chapter 20</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_028.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="8c267e1e-8c1d-40dc-88d0-af4c7ab350e3" playOrder="28">
+      <navLabel>
+        <text>Chapter 21</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_029.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="47201ca3-71f2-43d9-9d05-43b0cbd69c04" playOrder="29">
+      <navLabel>
+        <text>Chapter 22</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_030.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="0f436f6f-5cc4-4694-abaa-8f89e0976a74" playOrder="30">
+      <navLabel>
+        <text>Chapter 23</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_031.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="90cdcdd1-9113-49bd-8ece-f5a8970aa3a2" playOrder="31">
+      <navLabel>
+        <text>Volume the Second</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_032.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="2d23ff64-395f-4131-a5f1-f8881cbd87fd" playOrder="32">
+      <navLabel>
+        <text>Chapter 1</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_033.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="2897ed94-61ac-413b-b31e-4bf4380229dd" playOrder="33">
+      <navLabel>
+        <text>Chapter 2</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_034.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="8d53c698-6a7a-4513-af84-c32e7cc08965" playOrder="34">
+      <navLabel>
+        <text>Chapter 3</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_035.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="67c6edec-d69c-45c6-9473-b2c3268d3342" playOrder="35">
+      <navLabel>
+        <text>Chapter 4</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_036.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="f7252d62-acf4-457d-8973-0b2371c99a7c" playOrder="36">
+      <navLabel>
+        <text>Chapter 5</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_037.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="cb264517-1978-422b-af9e-87169972949a" playOrder="37">
+      <navLabel>
+        <text>Chapter 6</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_038.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="aae9b583-c14e-44ea-b475-a329e4ff624c" playOrder="38">
+      <navLabel>
+        <text>Chapter 7</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_039.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="433afaa2-9f12-453b-b30d-256b36e7d5aa" playOrder="39">
+      <navLabel>
+        <text>Chapter 8</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_040.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="b48da2a1-09d6-42a2-9225-ba5c1ef7345e" playOrder="40">
+      <navLabel>
+        <text>Chapter 9</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_041.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="5d3e2c7c-813a-413e-b1f1-4f755328aee5" playOrder="41">
+      <navLabel>
+        <text>Chapter 10</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_042.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="2562ada7-e069-4ebf-8875-40be6682727c" playOrder="42">
+      <navLabel>
+        <text>Chapter 11</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_043.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="e2ae8039-7c4f-4454-9a63-0d4c126213d2" playOrder="43">
+      <navLabel>
+        <text>Chapter 12</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_044.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="cf290370-bc69-4ef5-8517-fd4c93d29f7c" playOrder="44">
+      <navLabel>
+        <text>Chapter 13</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_045.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="4aba1bc5-70eb-4c7c-93cd-07fc99d47e6b" playOrder="45">
+      <navLabel>
+        <text>Chapter 14</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_046.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="c647c9a9-adf6-481c-b303-a964bd2baf37" playOrder="46">
+      <navLabel>
+        <text>Chapter 15</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_047.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="26757af1-b7d6-4a24-b729-60b77fdcdd4f" playOrder="47">
+      <navLabel>
+        <text>Chapter 16</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_048.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="621d3222-6443-4290-aa7d-c2b2cb02be39" playOrder="48">
+      <navLabel>
+        <text>Chapter 17</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_049.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="ba577fc8-4a29-4bd6-977f-95961a3b33e2" playOrder="49">
+      <navLabel>
+        <text>Chapter 18</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_050.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="db67616a-9981-4a70-8063-ec42fc2e753c" playOrder="50">
+      <navLabel>
+        <text>Chapter 19</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_051.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="6a5be249-b8cc-4341-ba70-4a9adc9e6152" playOrder="51">
+      <navLabel>
+        <text>Volume the Third</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_052.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="003206e9-175a-4dc6-a9db-3b4ce3d23d5e" playOrder="52">
+      <navLabel>
+        <text>Chapter 1</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_053.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="df662744-26f8-4068-a56c-6c8131c5a861" playOrder="53">
+      <navLabel>
+        <text>Chapter 2</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_054.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="5a07955d-5a9f-4614-9850-258d93fce9e6" playOrder="54">
+      <navLabel>
+        <text>Chapter 3</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_055.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="ec100b46-a5e8-4cd4-a7fb-e82f5308ef70" playOrder="55">
+      <navLabel>
+        <text>Chapter 4</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_056.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="b67878a9-f99d-4fa5-9059-52f911a1c027" playOrder="56">
+      <navLabel>
+        <text>Chapter 5</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_057.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="38535c1e-3a27-470a-8ccf-d29ccebfb362" playOrder="57">
+      <navLabel>
+        <text>Chapter 6</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_058.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="74444399-326d-4042-b531-56c9fe098e02" playOrder="58">
+      <navLabel>
+        <text>Chapter 7</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_059.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="3cf29ee6-c9d3-4d1b-a7dc-26643913ffb0" playOrder="59">
+      <navLabel>
+        <text>Chapter 8</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_060.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="9151c713-452d-491d-b442-b2dba3be8df5" playOrder="60">
+      <navLabel>
+        <text>Chapter 9</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_061.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="cde5960f-e5c7-4f8f-ad8d-19f37080cf6e" playOrder="61">
+      <navLabel>
+        <text>Chapter 10</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_062.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="6348e7b8-7601-4fb5-b3a3-60e295ddea19" playOrder="62">
+      <navLabel>
+        <text>Chapter 11</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_063.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="249393e4-c891-4a2b-a620-0d52a03f8756" playOrder="63">
+      <navLabel>
+        <text>Chapter 12</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_064.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="29e9c12e-0cc6-4abb-ae71-30839d67ddb0" playOrder="64">
+      <navLabel>
+        <text>Chapter 13</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_065.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="bf1da604-511a-4d39-aa03-bed57573db8e" playOrder="65">
+      <navLabel>
+        <text>Chapter 14</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_066.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="c4f5e88e-3d61-4d67-aed0-35161ee4e78e" playOrder="66">
+      <navLabel>
+        <text>Chapter 15</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_067.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="612b4485-07f0-415a-9840-de14ce0fed19" playOrder="67">
+      <navLabel>
+        <text>Chapter 16</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_068.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="20bff88f-8b1d-4b62-83d9-203e52171d3d" playOrder="68">
+      <navLabel>
+        <text>Chapter 17</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_069.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="bda4c37c-d24f-4dc1-b3c4-3b763e2b1c60" playOrder="69">
+      <navLabel>
+        <text>Chapter 18</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_070.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="593f6b82-5e8d-4195-9c18-99d0babdb036" playOrder="70">
+      <navLabel>
+        <text>Chapter 19</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_071.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="8a40ab49-2135-47e6-b102-51e8596fa4d2" playOrder="71">
+      <navLabel>
+        <text>Endnotes</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_072.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="de261d28-995a-4f33-83e8-7890fbb0c674" playOrder="72">
+      <navLabel>
+        <text>Inspired by Pride and Prejudice</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_073.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="d750a555-bc0f-4c2d-b560-e486b432c0e4" playOrder="73">
+      <navLabel>
+        <text>Comments &amp; Questions</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_074.html"/>
+    </navPoint>
+    <navPoint class="chapter" id="0df2fbed-eefc-4294-930f-b3c0f3f8f3ac" playOrder="74">
+      <navLabel>
+        <text>For Further Reading</text>
+      </navLabel>
+      <content src="Pride_and_Prejudice_split_075.html"/>
+    </navPoint>
+  </navMap>
+</ncx>
