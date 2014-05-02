@@ -30,15 +30,7 @@ namespace EZEreaderUniversal.ViewModels
             }
         }
 
-        private ObservableCollection<BookModel> _items = new ObservableCollection<BookModel>();
-        public ObservableCollection<BookModel> Items 
-        { 
-            get
-            {
-                return this._items;
-            }
-        }
-        
+        public ObservableCollection<BookModel> Items { get; set; }
         public bool IsDataLoaded
         {
             get;
@@ -339,7 +331,7 @@ namespace EZEreaderUniversal.ViewModels
                 if (!IsDataLoaded)
                 {
                     string itemsAsXML = await IO.ReadStringFromFile(dataFile);
-                    this._items = IO.SerializeFromString<ObservableCollection<BookModel>>(itemsAsXML);
+                    this.Items = IO.SerializeFromString<ObservableCollection<BookModel>>(itemsAsXML);
                 }
                  
             }
@@ -348,14 +340,14 @@ namespace EZEreaderUniversal.ViewModels
             
                 if (!IsDataLoaded)
                 {
-                    this._items = new ObservableCollection<BookModel>();
-                    this._items.Add(new BookModel() { BookID = "Pride and Prejudice - Jane Austen_6590", 
+                    this.Items = new ObservableCollection<BookModel>();
+                    this.Items.Add(new BookModel() { BookID = "Pride and Prejudice - Jane Austen_6590", 
                         BookName = "Pride and Prejudice", AuthorID = " jane austen", 
                         AddedDate = DateTime.Now.ToString(), CoverPic = "Pride and Prejudice - Jane Austen_6590/cover.jpeg" ,
                         ContentDirectory = "Pride and Prejudice - Jane Austen_6590/",
                         Chapters = ParseBookManifest("Pride and Prejudice - Jane Austen_6590/content.opf", "Pride and Prejudice - Jane Austen_6590/"),
-                        CurrentChapter = 2,
-                        CurrentPage = 5
+                        CurrentChapter = 0,
+                        CurrentPage = 0
                     });
                      
                 }

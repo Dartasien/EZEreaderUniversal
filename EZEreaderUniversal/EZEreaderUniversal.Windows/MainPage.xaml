@@ -8,6 +8,54 @@
     mc:Ignorable="d">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="180"/>
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
 
+        <StackPanel Grid.Row="0"
+                    Orientation="Vertical"
+                    Margin="301,44,0,0">
+            <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap"
+                       Text="Library" VerticalAlignment="Top"
+                       Style="{StaticResource HeaderTextBlockStyle}"
+                       Margin="0, 0, 0, 44"/>
+        
+        </StackPanel>
+
+        <Grid Grid.Row="1" Margin="40, 0, 40, 0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition MinWidth="320" Width="160*"/>
+                <ColumnDefinition Width="483*"/>
+            </Grid.ColumnDefinitions>
+
+            <ListView 
+                x:Name="ItemListView"
+                Grid.Column="0" Margin="60, 0, 0, 0" HorizontalAlignment="Left"
+                      ItemsSource="{Binding Items}" Width="0">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal">
+                            
+                            <TextBlock Text="test" FontSize="18" Margin="5,0, 0, 0"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+
+            <StackPanel 
+                DataContext="{Binding ElementName=ItemListView, Path=SelectedItem}"
+                Grid.Column="1" Margin="25, 0, 0, 0" 
+                HorizontalAlignment="Left" Width="925">
+                
+                
+            </StackPanel>
+        </Grid>
+        <TextBlock 
+            HorizontalAlignment="Left" 
+            Margin="20,75,0,0" 
+            TextWrapping="Wrap" Text="EZEreader" 
+            VerticalAlignment="Top"
+            Style="{StaticResource HeaderTextBlockStyle}"/>
     </Grid>
 </Page>

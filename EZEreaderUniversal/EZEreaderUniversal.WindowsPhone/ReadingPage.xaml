@@ -10,14 +10,9 @@
 
     <Grid x:Name="LayoutRoot"
           Background="Transparent"
+          Margin="10, 10, 10, 10"
+          HorizontalAlignment="Stretch"
+          VerticalAlignment="Stretch"
           >
-        <!--<RichTextBlock x:Name="myRTB"
-                           Margin="10, 10, 10, 10"
-                           TextAlignment="Justify"
-                           Tapped="myRTB_Tapped"
-                           HorizontalAlignment="Left"
-                           VerticalAlignment="Top"
-                           IsTextSelectionEnabled="False" >
-        </RichTextBlock>-->
     </Grid>
 </Page>

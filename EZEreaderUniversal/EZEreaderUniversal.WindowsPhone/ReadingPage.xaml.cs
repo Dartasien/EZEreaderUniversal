@@ -31,8 +31,9 @@ namespace EZEreaderUniversal
     public sealed partial class ReadingPage : Page
     {
         BookModel thisBook;
-        List<UIElement> pages = new List<UIElement>();
         List<RichTextBlockOverflow> listRTBO = new List<RichTextBlockOverflow>();
+        List<UIElement> uiList;
+        bool pageBack = false;
         Run myRun;
         string chapterText;
         int pageNumber = 0;
@@ -81,6 +82,7 @@ namespace EZEreaderUniversal
         {   
             thisBook = ((BookModel)e.NavigationParameter);
             this.DataContext = thisBook;
+            //CreateFirstPage();
             CreateFirstPage();
         }
 
@@ -91,29 +93,92 @@ namespace EZEreaderUniversal
         /// </summary>
         private void CreateFirstPage()
         {
+            uiList = new List<UIElement>();
+            LayoutRoot.HorizontalAlignment = Windows.UI.Xaml.HorizontalAlignment.Stretch;
+            LayoutRoot.VerticalAlignment = Windows.UI.Xaml.VerticalAlignment.Stretch;
             HtmlDocument htmlDoc = new HtmlDocument();
             htmlDoc.Load(thisBook.ContentDirectory +
-            thisBook.Chapters[thisBook.CurrentChapter].ChapterString);
-            chapterText = HtmlUtilities.ConvertToText(htmlDoc.DocumentNode.InnerHtml);
+                thisBook.Chapters[thisBook.CurrentChapter].ChapterString);
+            if (thisBook.CurrentChapter == 0)
+            {
+                chapterText = thisBook.BookName + "\n" + thisBook.AuthorID;
+                myRun = new Run();
+                myRun.Text = chapterText;
+                para = new Paragraph();
+                para.Inlines.Add(myRun);
+                SetmyRTBTest();
+            }
+            else
+            {
+                chapterText = HtmlUtilities.ConvertToText(htmlDoc.DocumentNode.InnerHtml);
+                myRun = new Run();
+                if (chapterText == "")
+                {
+                    chapterText = " ";
+                }
+                myRun.Text = chapterText;
+                para = new Paragraph();
+                para.Inlines.Add(myRun);
+                SetmyRTBTest();
+            }
             myRun = new Run();
+            if (chapterText == "")
+            {
+                chapterText = " ";
+            }
             myRun.Text = chapterText;
             para = new Paragraph();
             para.Inlines.Add(myRun);
+            SetmyRTBTest();
+            myRTBTest.Blocks.Add(para);
+            this.LayoutRoot.Children.Add(myRTBTest);
+            uiList.Add(myRTBTest);
+            //Debug.WriteLine(thisBook.Chapters[thisBook.CurrentChapter].ChapterString);
+            //Debug.WriteLine(innerString);
+            //Debug.WriteLine(chapterText);
+        }
+
+
+        private void SetmyRTBTest()
+        {
             myRTBTest = new RichTextBlock();
             myRTBTest.IsTextSelectionEnabled = false;
             myRTBTest.Tapped += myRTB_Tapped;
             myRTBTest.TextAlignment = TextAlignment.Justify;
-            myRTBTest.HorizontalAlignment = Windows.UI.Xaml.HorizontalAlignment.Left;
-            myRTBTest.VerticalAlignment = Windows.UI.Xaml.VerticalAlignment.Top;
+            myRTBTest.FontSize = 20;
             Thickness margin = myRTBTest.Margin;
+            myRTBTest.Visibility = Visibility.Visible;
             margin.Left = 10;
             margin.Right = 10;
             margin.Top = 10;
             margin.Bottom = 10;
-            myRTBTest.Blocks.Add(para);
-            this.LayoutRoot.Children.Add(myRTBTest);
+
+        }
+        private void SetmyRTBTestBackwards()
+        {
+            myRTBTest = new RichTextBlock();
+            myRTBTest.IsTextSelectionEnabled = false;
+            myRTBTest.Tapped += myRTB_Tapped;
+            myRTBTest.TextAlignment = TextAlignment.Justify;
+            Thickness margin = myRTBTest.Margin;
+            myRTBTest.Visibility = Visibility.Collapsed;
+            margin.Left = 10;
+            margin.Right = 10;
+            margin.Top = 10;
+            margin.Bottom = 10;
+
         }
 
+        private void CreateAdditionalPages()
+        {
+            if (pageNumber == 0)
+            {
+                if (myRTBTest.HasOverflowContent)
+                {
+
+                }
+            }
+        }
         /// <summary>
         /// Preserves state associated with this page in case the application is suspended or the
         /// page is discarded from the navigation cache.  Values must conform to the serialization
@@ -161,60 +226,90 @@ namespace EZEreaderUniversal
         /// <param name="e"></param>
         private void myRTB_Tapped(object sender, TappedRoutedEventArgs e)
         {
+            
+            Point eTap = e.GetPosition(myRTBTest);
 
-            Debug.WriteLine(pageNumber);
-            if (pageNumber == 0)
+            if (eTap.X > LayoutRoot.ActualWidth * .6)
             {
-                if (myRTBTest.HasOverflowContent)
+                if (pageNumber == 0)
                 {
-
-                    Debug.WriteLine("found overflow");
-                    listRTBO.Add(new RichTextBlockOverflow());
-                    myRTBTest.OverflowContentTarget = listRTBO[pageNumber];
-                    listRTBO[pageNumber].Height = myRTBTest.ActualHeight;
-                    listRTBO[pageNumber].Width = myRTBTest.ActualWidth;
-                    myRTBTest.Visibility = Visibility.Collapsed;
-                    listRTBO[pageNumber].Visibility = Visibility.Visible;
-                    pageNumber++;
-                    LayoutRoot.Children.Add(listRTBO[pageNumber - 1]);
-                    listRTBO[pageNumber - 1].Tapped += myRTB_Tapped;
-
-                }
-            }
-            else
-            {
-                Debug.WriteLine("testing tap on children add");
-                if (listRTBO[pageNumber-1].HasOverflowContent)
-                {
-                    Debug.WriteLine("found overflow myRTBO");
-                    listRTBO.Add(new RichTextBlockOverflow());
-                    
-                    listRTBO[pageNumber -1].OverflowContentTarget = listRTBO[pageNumber];
-                    listRTBO[pageNumber].Height = listRTBO[pageNumber - 1].ActualHeight;
-                    listRTBO[pageNumber].Width = listRTBO[pageNumber - 1].ActualWidth;
-                    listRTBO[pageNumber - 1].Visibility = Visibility.Collapsed;
-                    listRTBO[pageNumber].Visibility = Visibility.Visible;
-                    listRTBO[pageNumber].Tapped += myRTB_Tapped;
-                    LayoutRoot.Children.Add(listRTBO[pageNumber]);
-                    pageNumber++;
-                }
-                else
-                {
-                    if (thisBook.CurrentChapter +1 >= thisBook.Chapters.Count)
+                    if (myRTBTest.HasOverflowContent)
                     {
-                        thisBook.CurrentChapter = 0;
+
+                        listRTBO.Add(new RichTextBlockOverflow());
+                        myRTBTest.OverflowContentTarget = listRTBO[pageNumber];
+                        myRTBTest.Visibility = Visibility.Collapsed;
+                        listRTBO[pageNumber].Visibility = Visibility.Visible;
+                        pageNumber++;
+                        thisBook.CurrentPage = pageNumber;
+                        LayoutRoot.Children.Add(listRTBO[pageNumber - 1]);
+                        uiList.Add(listRTBO[pageNumber - 1]);
+                        listRTBO[pageNumber - 1].Tapped += myRTB_Tapped;
+
                     }
                     else
                     {
-                        thisBook.CurrentChapter++;
+                        if (thisBook.CurrentChapter + 1 >= thisBook.Chapters.Count)
+                        {
+                            thisBook.CurrentChapter = 0;
+                        }
+                        else
+                        {
+                            thisBook.CurrentChapter++;
+                        }
+                        pageNumber = 0;
+                        thisBook.CurrentPage = pageNumber;
+                        listRTBO = new List<RichTextBlockOverflow>();
+                        this.LayoutRoot.Children.Clear();
+                        CreateFirstPage();
                     }
-                    listRTBO[pageNumber - 1].Visibility = Visibility.Collapsed;
-                    pageNumber = 0;
-                    listRTBO = new List<RichTextBlockOverflow>();
-                    this.LayoutRoot.Children.Clear();
-                    CreateFirstPage();
                 }
-            }           
-        }
+                else
+                {
+                    if (listRTBO[pageNumber - 1].HasOverflowContent)
+                    {
+                        listRTBO.Add(new RichTextBlockOverflow());
+
+                        listRTBO[pageNumber - 1].OverflowContentTarget = listRTBO[pageNumber];
+                        listRTBO[pageNumber - 1].Visibility = Visibility.Collapsed;
+                        listRTBO[pageNumber].Visibility = Visibility.Visible;
+                        listRTBO[pageNumber].Tapped += myRTB_Tapped;
+                        LayoutRoot.Children.Add(listRTBO[pageNumber]);
+                        uiList.Add(listRTBO[pageNumber]);
+                        pageNumber++;
+                        thisBook.CurrentPage = pageNumber;
+                    }
+                    else
+                    {
+                        if (thisBook.CurrentChapter + 1 >= thisBook.Chapters.Count)
+                        {
+                            thisBook.CurrentChapter = 0;
+                        }
+                        else
+                        {
+                            thisBook.CurrentChapter++;
+                        }
+                        listRTBO[pageNumber - 1].Visibility = Visibility.Collapsed;
+                        pageNumber = 0;
+                        thisBook.CurrentPage = pageNumber;
+                        listRTBO = new List<RichTextBlockOverflow>();
+                        this.LayoutRoot.Children.Clear();
+                        CreateFirstPage();
+                    }
+                }
+            }
+            else if (eTap.X < LayoutRoot.ActualWidth * .4)
+            {
+                if (pageNumber > 0)
+                {
+                    LayoutRoot.Children.RemoveAt(pageNumber);
+                    listRTBO.RemoveAt(listRTBO.Count - 1);
+                    pageNumber--;
+                    LayoutRoot.Children.ElementAt(pageNumber).Visibility = Visibility.Visible;
+                    
+                    thisBook.CurrentPage = pageNumber;
+                }
+            }
+        }   
     }
 }

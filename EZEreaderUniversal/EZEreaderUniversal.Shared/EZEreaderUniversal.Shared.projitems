@@ -26,7 +26,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Pride and Prejudice - Jane Austen_6590\mimetype">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Pride and Prejudice - Jane Austen_6590\titlepage.xhtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -292,7 +292,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Pride and Prejudice - Jane Austen_6590\Pride_and_Prejudice_split_009.html">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Pride and Prejudice - Jane Austen_6590\Pride_and_Prejudice_split_010.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
