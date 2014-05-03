@@ -5,7 +5,6 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-//using DreamTimeStudioZ.Recipes;
 using Windows.Storage;
 using System.IO;
 using System.Windows;
@@ -30,7 +29,7 @@ namespace EZEreaderUniversal.ViewModels
             }
         }
 
-        public ObservableCollection<BookModel> Items { get; set; }
+        public ObservableCollection<BookModel> Books { get; set; }
         public bool IsDataLoaded
         {
             get;
@@ -44,7 +43,7 @@ namespace EZEreaderUniversal.ViewModels
         /// <returns>BookModel class</returns>
         public BookModel GetItem(string bookID)
         {
-            BookModel result = this.Items.Where(f => f.BookID == bookID).FirstOrDefault();
+            BookModel result = this.Books.Where(f => f.BookID == bookID).FirstOrDefault();
             return result;
         }
 
@@ -63,23 +62,23 @@ namespace EZEreaderUniversal.ViewModels
                 CurrentChapter = 12,
                 CurrentPage = 0
             };
-            if (Items != null)
+            if (Books != null)
             {
                 Debug.WriteLine("test      test");
-                this.Items.Add(result);
+                this.Books.Add(result);
             }
         }
 
         public void AddItems(ObservableCollection<BookModel> newItems)
         {
-            if (Items != null)
+            if (Books != null)
             {
-                Items.Add(newItems.FirstOrDefault());
+                Books.Add(newItems.FirstOrDefault());
             }
             else
             {
                 CallLoadData();
-                Items.Add(newItems.FirstOrDefault());
+                Books.Add(newItems.FirstOrDefault());
             }
         }
 
@@ -106,9 +105,9 @@ namespace EZEreaderUniversal.ViewModels
                 CurrentChapter = 0,
                 CurrentPage = 0
             };
-            this.Items.Add(result);
+            this.Books.Add(result);
             //uncomment below line to allow for persistent data
-            //CallUpdateBooks();
+            CallUpdateBooks();
             return result;
         }
 
@@ -278,7 +277,7 @@ namespace EZEreaderUniversal.ViewModels
         /// <param name="bookToRemove"></param>
         public void RemoveBook(BookModel bookToRemove)
         {
-            this.Items.Remove(bookToRemove);
+            this.Books.Remove(bookToRemove);
             //CallUpdateBooks();
             NotifyPropertyChanged("Items");
         }
@@ -308,7 +307,7 @@ namespace EZEreaderUniversal.ViewModels
         {
             StorageFolder appStorageFolder = IO.GetAppStorageFolder();
             await IO.DeleteFileInFolder(appStorageFolder, "ebooks.xml");
-            string itemsAsXML = IO.SerializeToString(this.Items);
+            string itemsAsXML = IO.SerializeToString(this.Books);
             StorageFile dataFile = await IO.CreateFileInFolder(appStorageFolder, "ebooks.xml");
             await IO.WriteStringToFile(dataFile, itemsAsXML);
         }
@@ -331,7 +330,7 @@ namespace EZEreaderUniversal.ViewModels
                 if (!IsDataLoaded)
                 {
                     string itemsAsXML = await IO.ReadStringFromFile(dataFile);
-                    this.Items = IO.SerializeFromString<ObservableCollection<BookModel>>(itemsAsXML);
+                    this.Books = IO.SerializeFromString<ObservableCollection<BookModel>>(itemsAsXML);
                 }
                  
             }
@@ -340,16 +339,17 @@ namespace EZEreaderUniversal.ViewModels
             
                 if (!IsDataLoaded)
                 {
-                    this.Items = new ObservableCollection<BookModel>();
-                    this.Items.Add(new BookModel() { BookID = "Pride and Prejudice - Jane Austen_6590", 
+                    this.Books = new ObservableCollection<BookModel>();
+                    this.Books.Add(new BookModel() { BookID = "Pride and Prejudice - Jane Austen_6590", 
                         BookName = "Pride and Prejudice", AuthorID = " jane austen", 
                         AddedDate = DateTime.Now.ToString(), CoverPic = "Pride and Prejudice - Jane Austen_6590/cover.jpeg" ,
                         ContentDirectory = "Pride and Prejudice - Jane Austen_6590/",
-                        Chapters = ParseBookManifest("Pride and Prejudice - Jane Austen_6590/content.opf", "Pride and Prejudice - Jane Austen_6590/"),
-                        CurrentChapter = 0,
-                        CurrentPage = 0
+                        Chapters = ParseBookManifest("Pride and Prejudice - Jane Austen_6590/content.opf",
+                        "Pride and Prejudice - Jane Austen_6590/"),
+                        CurrentChapter = 12,
+                        CurrentPage = 1
                     });
-                     
+                    CallUpdateBooks(); 
                 }
             }
             NotifyPropertyChanged("Items");

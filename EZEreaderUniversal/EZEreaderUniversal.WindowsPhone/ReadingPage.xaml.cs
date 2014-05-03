@@ -32,13 +32,12 @@ namespace EZEreaderUniversal
     {
         BookModel thisBook;
         List<RichTextBlockOverflow> listRTBO = new List<RichTextBlockOverflow>();
-        List<UIElement> uiList;
-        bool pageBack = false;
         Run myRun;
         string chapterText;
-        int pageNumber = 0;
+        int pageNumber;
+        //int currentPageCount;
         Paragraph para;
-        RichTextBlock myRTBTest;
+        RichTextBlock myRTB;
         private NavigationHelper navigationHelper;
         private ObservableDictionary defaultViewModel = new ObservableDictionary();
 
@@ -82,7 +81,6 @@ namespace EZEreaderUniversal
         {   
             thisBook = ((BookModel)e.NavigationParameter);
             this.DataContext = thisBook;
-            //CreateFirstPage();
             CreateFirstPage();
         }
 
@@ -93,23 +91,22 @@ namespace EZEreaderUniversal
         /// </summary>
         private void CreateFirstPage()
         {
-            uiList = new List<UIElement>();
-            LayoutRoot.HorizontalAlignment = Windows.UI.Xaml.HorizontalAlignment.Stretch;
-            LayoutRoot.VerticalAlignment = Windows.UI.Xaml.VerticalAlignment.Stretch;
             HtmlDocument htmlDoc = new HtmlDocument();
-            htmlDoc.Load(thisBook.ContentDirectory +
-                thisBook.Chapters[thisBook.CurrentChapter].ChapterString);
+            
             if (thisBook.CurrentChapter == 0)
             {
+                //eventually adding image to this page
                 chapterText = thisBook.BookName + "\n" + thisBook.AuthorID;
                 myRun = new Run();
                 myRun.Text = chapterText;
                 para = new Paragraph();
                 para.Inlines.Add(myRun);
-                SetmyRTBTest();
+                SetmyRTB();
             }
             else
             {
+                htmlDoc.Load(thisBook.ContentDirectory +
+                thisBook.Chapters[thisBook.CurrentChapter].ChapterString);
                 chapterText = HtmlUtilities.ConvertToText(htmlDoc.DocumentNode.InnerHtml);
                 myRun = new Run();
                 if (chapterText == "")
@@ -119,49 +116,28 @@ namespace EZEreaderUniversal
                 myRun.Text = chapterText;
                 para = new Paragraph();
                 para.Inlines.Add(myRun);
-                SetmyRTBTest();
+                SetmyRTB();
             }
-            myRun = new Run();
-            if (chapterText == "")
-            {
-                chapterText = " ";
-            }
-            myRun.Text = chapterText;
-            para = new Paragraph();
-            para.Inlines.Add(myRun);
-            SetmyRTBTest();
-            myRTBTest.Blocks.Add(para);
-            this.LayoutRoot.Children.Add(myRTBTest);
-            uiList.Add(myRTBTest);
-            //Debug.WriteLine(thisBook.Chapters[thisBook.CurrentChapter].ChapterString);
-            //Debug.WriteLine(innerString);
-            //Debug.WriteLine(chapterText);
+            pageNumber = 0;
+            myRTB.Blocks.Add(para);
+            LayoutRoot.Children.Add(myRTB);
+            CreateAdditionalPages();
+            ReturnToCurrentPage();
         }
 
-
-        private void SetmyRTBTest()
+        /// <summary>
+        /// Set the first page using RichTextBlock so that we can use the overflow
+        /// for going forwards.
+        /// </summary>
+        private void SetmyRTB()
         {
-            myRTBTest = new RichTextBlock();
-            myRTBTest.IsTextSelectionEnabled = false;
-            myRTBTest.Tapped += myRTB_Tapped;
-            myRTBTest.TextAlignment = TextAlignment.Justify;
-            myRTBTest.FontSize = 20;
-            Thickness margin = myRTBTest.Margin;
-            myRTBTest.Visibility = Visibility.Visible;
-            margin.Left = 10;
-            margin.Right = 10;
-            margin.Top = 10;
-            margin.Bottom = 10;
-
-        }
-        private void SetmyRTBTestBackwards()
-        {
-            myRTBTest = new RichTextBlock();
-            myRTBTest.IsTextSelectionEnabled = false;
-            myRTBTest.Tapped += myRTB_Tapped;
-            myRTBTest.TextAlignment = TextAlignment.Justify;
-            Thickness margin = myRTBTest.Margin;
-            myRTBTest.Visibility = Visibility.Collapsed;
+            myRTB = new RichTextBlock();
+            myRTB.IsTextSelectionEnabled = false;
+            myRTB.Tapped += myRTB_Tapped;
+            myRTB.TextAlignment = TextAlignment.Justify;
+            myRTB.FontSize = 20;
+            Thickness margin = myRTB.Margin;
+            myRTB.Visibility = Visibility.Visible;
             margin.Left = 10;
             margin.Right = 10;
             margin.Top = 10;
@@ -171,14 +147,71 @@ namespace EZEreaderUniversal
 
         private void CreateAdditionalPages()
         {
-            if (pageNumber == 0)
+            listRTBO = new List<RichTextBlockOverflow>();
+            LayoutRoot.UpdateLayout();
+            if (myRTB.HasOverflowContent)
             {
-                if (myRTBTest.HasOverflowContent)
-                {
+                listRTBO.Add(new RichTextBlockOverflow());
+                myRTB.OverflowContentTarget = listRTBO[pageNumber];
+                listRTBO[pageNumber].Visibility = Visibility.Visible;
+                listRTBO[pageNumber].Tapped += myRTB_Tapped;
+                pageNumber++;
+                LayoutRoot.Children.Add(listRTBO[pageNumber - 1]);
+                myRTB.Visibility = Visibility.Collapsed;
+                LayoutRoot.UpdateLayout();
 
+                while (listRTBO[pageNumber - 1].HasOverflowContent)
+                {
+                    listRTBO.Add(new RichTextBlockOverflow());
+                    listRTBO[pageNumber - 1].OverflowContentTarget = listRTBO[pageNumber];
+                    listRTBO[pageNumber - 1].Visibility = Visibility.Collapsed;
+                    listRTBO[pageNumber].Visibility = Visibility.Visible;
+                    listRTBO[pageNumber].Tapped += myRTB_Tapped;
+                    LayoutRoot.Children.Add(listRTBO[pageNumber]);
+                    pageNumber++;
+                    LayoutRoot.UpdateLayout();
                 }
             }
+            thisBook.Chapters[thisBook.CurrentChapter].PageCount = LayoutRoot.Children.Count();
         }
+
+        /// <summary>
+        /// Sets the first page of the chapter to visible
+        /// </summary>
+        private void ReturnToFirstPage()
+        {
+            LayoutRoot.Children.Last().Visibility = Visibility.Collapsed;
+            LayoutRoot.Children.First().Visibility = Visibility.Visible;
+        }
+
+        /// <summary>
+        /// sets the page to the previously saved page if the book was opened before
+        /// </summary>
+        private void ReturnToCurrentPage()
+        {
+            if (thisBook.CurrentPage == 0)
+            {
+                ReturnToFirstPage();
+            }
+            else
+            {
+                if (thisBook.Chapters[thisBook.CurrentChapter].PageCount > 0)
+                {
+                    if (LayoutRoot.Children.Count !=
+                        thisBook.Chapters[thisBook.CurrentChapter].PageCount)
+                    {
+                        double pagePercentage = (thisBook.CurrentPage /
+                            thisBook.Chapters[thisBook.CurrentChapter].PageCount);
+                        thisBook.CurrentPage = (int)(pagePercentage *
+                            LayoutRoot.Children.Count);
+                    }
+                }
+                LayoutRoot.Children.Last().Visibility = Visibility.Collapsed;
+                LayoutRoot.Children.ElementAt(thisBook.CurrentPage).Visibility = 
+                    Visibility.Visible;
+            }
+        }
+
         /// <summary>
         /// Preserves state associated with this page in case the application is suspended or the
         /// page is discarded from the navigation cache.  Values must conform to the serialization
@@ -189,6 +222,7 @@ namespace EZEreaderUniversal
         /// serializable state.</param>
         private void NavigationHelper_SaveState(object sender, SaveStateEventArgs e)
         {
+            this.Frame.Navigate(typeof(MainPage));
         }
 
         #region NavigationHelper registration
@@ -227,89 +261,97 @@ namespace EZEreaderUniversal
         private void myRTB_Tapped(object sender, TappedRoutedEventArgs e)
         {
             
-            Point eTap = e.GetPosition(myRTBTest);
+            Point eTap = e.GetPosition(LayoutRoot.Children.ElementAt(thisBook.CurrentPage));
 
             if (eTap.X > LayoutRoot.ActualWidth * .6)
             {
-                if (pageNumber == 0)
+                LayoutRoot.Children.ElementAt(thisBook.CurrentPage).Visibility = Visibility.Collapsed;
+                if (thisBook.CurrentPage +1 >= LayoutRoot.Children.Count)
                 {
-                    if (myRTBTest.HasOverflowContent)
+                    if (thisBook.CurrentChapter + 1 >= thisBook.Chapters.Count)
                     {
-
-                        listRTBO.Add(new RichTextBlockOverflow());
-                        myRTBTest.OverflowContentTarget = listRTBO[pageNumber];
-                        myRTBTest.Visibility = Visibility.Collapsed;
-                        listRTBO[pageNumber].Visibility = Visibility.Visible;
-                        pageNumber++;
-                        thisBook.CurrentPage = pageNumber;
-                        LayoutRoot.Children.Add(listRTBO[pageNumber - 1]);
-                        uiList.Add(listRTBO[pageNumber - 1]);
-                        listRTBO[pageNumber - 1].Tapped += myRTB_Tapped;
-
+                        thisBook.CurrentChapter = 0;
                     }
                     else
                     {
-                        if (thisBook.CurrentChapter + 1 >= thisBook.Chapters.Count)
-                        {
-                            thisBook.CurrentChapter = 0;
-                        }
-                        else
-                        {
-                            thisBook.CurrentChapter++;
-                        }
-                        pageNumber = 0;
-                        thisBook.CurrentPage = pageNumber;
-                        listRTBO = new List<RichTextBlockOverflow>();
-                        this.LayoutRoot.Children.Clear();
-                        CreateFirstPage();
+                        thisBook.CurrentChapter++;
                     }
+                    thisBook.CurrentPage = 0;
+                    LayoutRoot.Children.Clear();
+                    CreateFirstPage();
                 }
                 else
                 {
-                    if (listRTBO[pageNumber - 1].HasOverflowContent)
-                    {
-                        listRTBO.Add(new RichTextBlockOverflow());
-
-                        listRTBO[pageNumber - 1].OverflowContentTarget = listRTBO[pageNumber];
-                        listRTBO[pageNumber - 1].Visibility = Visibility.Collapsed;
-                        listRTBO[pageNumber].Visibility = Visibility.Visible;
-                        listRTBO[pageNumber].Tapped += myRTB_Tapped;
-                        LayoutRoot.Children.Add(listRTBO[pageNumber]);
-                        uiList.Add(listRTBO[pageNumber]);
-                        pageNumber++;
-                        thisBook.CurrentPage = pageNumber;
-                    }
-                    else
-                    {
-                        if (thisBook.CurrentChapter + 1 >= thisBook.Chapters.Count)
-                        {
-                            thisBook.CurrentChapter = 0;
-                        }
-                        else
-                        {
-                            thisBook.CurrentChapter++;
-                        }
-                        listRTBO[pageNumber - 1].Visibility = Visibility.Collapsed;
-                        pageNumber = 0;
-                        thisBook.CurrentPage = pageNumber;
-                        listRTBO = new List<RichTextBlockOverflow>();
-                        this.LayoutRoot.Children.Clear();
-                        CreateFirstPage();
-                    }
+                    LayoutRoot.Children.ElementAt(thisBook.CurrentPage).Visibility = Visibility.Collapsed;
+                    thisBook.CurrentPage++;
+                    LayoutRoot.Children.ElementAt(thisBook.CurrentPage).Visibility = Visibility.Visible;
                 }
+                
+                
             }
             else if (eTap.X < LayoutRoot.ActualWidth * .4)
             {
-                if (pageNumber > 0)
+                if (thisBook.CurrentPage > 0)
                 {
-                    LayoutRoot.Children.RemoveAt(pageNumber);
-                    listRTBO.RemoveAt(listRTBO.Count - 1);
-                    pageNumber--;
-                    LayoutRoot.Children.ElementAt(pageNumber).Visibility = Visibility.Visible;
-                    
-                    thisBook.CurrentPage = pageNumber;
+                    LayoutRoot.Children.ElementAt(thisBook.CurrentPage).Visibility =
+                        Visibility.Collapsed;
+                    thisBook.CurrentPage--;
+                    LayoutRoot.Children.ElementAt(thisBook.CurrentPage).Visibility = 
+                        Visibility.Visible;
+                }
+                else
+                {
+                    CreateBackwardsPages();
+                    thisBook.CurrentPage = LayoutRoot.Children.Count - 1;
+                    thisBook.Chapters[thisBook.CurrentChapter].PageCount 
+                        = LayoutRoot.Children.Count;
+
                 }
             }
-        }   
+        }
+
+        /// <summary>
+        /// Creates the pages for going backwards to a previous chapter on tap
+        /// </summary>
+        private void CreateBackwardsPages()
+        {
+            if (thisBook.CurrentChapter > 0)
+            {
+                thisBook.CurrentChapter--;
+                LayoutRoot.Children.Clear();
+                HtmlDocument htmlDoc = new HtmlDocument();
+                htmlDoc.Load(thisBook.ContentDirectory +
+                    thisBook.Chapters[thisBook.CurrentChapter].ChapterString);
+                if (thisBook.CurrentChapter == 0)
+                {
+                    //eventually adding image to this page
+                    chapterText = thisBook.BookName + "\n" + thisBook.AuthorID;
+                    myRun = new Run();
+                    myRun.Text = chapterText;
+                    para = new Paragraph();
+                    para.Inlines.Add(myRun);
+                    SetmyRTB();
+                }
+                else
+                {
+                    chapterText = HtmlUtilities.ConvertToText(htmlDoc.DocumentNode.InnerHtml);
+                    myRun = new Run();
+                    if (chapterText == "")
+                    {
+                        chapterText = " ";
+                    }
+                    myRun.Text = chapterText;
+                    para = new Paragraph();
+                    para.Inlines.Add(myRun);
+                    SetmyRTB();
+                }
+                myRTB.Blocks.Clear();
+                myRTB.Blocks.Add(para);
+                LayoutRoot.Children.Add(myRTB);
+                pageNumber = 0;
+                CreateAdditionalPages();
+                thisBook.CurrentPage = pageNumber +1;
+            }
+        }
     }
 }

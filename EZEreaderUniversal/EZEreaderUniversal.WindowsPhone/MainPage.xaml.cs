@@ -13,6 +13,8 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using EZEreaderUniversal.ViewModels;
+using Windows.ApplicationModel.Activation;
+using EZEreaderUniversal.Common;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -23,6 +25,18 @@ namespace EZEreaderUniversal
     /// </summary>
     public sealed partial class MainPage : Page
     {
+
+        BooksModel LibrarySource;
+
+        protected override void OnFileActivated(FileActivatedEventArgs args)
+        {
+            CallRetrieveLibrary();
+            if (args.Files.Count() > 0)
+            {
+                this.Frame.Navigate(typeof(LoadingPage), args.Files[0]);
+            }
+        }
+
         public MainPage()
         {
             this.InitializeComponent();
@@ -30,6 +44,10 @@ namespace EZEreaderUniversal
             this.NavigationCacheMode = NavigationCacheMode.Required;
         }
 
+        public async void CallRetrieveLibrary()
+        {
+            await RetrieveLibrary();
+        }
         /// <summary>
         /// Invoked when this page is about to be displayed in a Frame.
         /// </summary>
@@ -49,16 +67,26 @@ namespace EZEreaderUniversal
 
         private async System.Threading.Tasks.Task RetrieveLibrary()
         {
-            BooksModel LibrarySource = new BooksModel();
-            await LibrarySource.LoadData();
-            this.DataContext = LibrarySource.Items;
-            LibraryListView.ItemsSource = this.DataContext;
+            if (LibrarySource == null)
+            {
+                LibrarySource = new BooksModel();
+                await LibrarySource.LoadData();
+                this.DataContext = LibrarySource.Books;
+                LibraryListView.ItemsSource = this.DataContext;
+            }
+            else
+            {
+                LibrarySource.CallUpdateBooks();
+            }
         }
 
         private void LibraryListView_Tapped(object sender, TappedRoutedEventArgs e)
         {
             BookModel ourBook = LibraryListView.SelectedItem as BookModel;
-            this.Frame.Navigate(typeof(ReadingPage), ourBook);
+            if (ourBook != null)
+            {
+                this.Frame.Navigate(typeof(ReadingPage), ourBook);
+            }
         }
     }
 }

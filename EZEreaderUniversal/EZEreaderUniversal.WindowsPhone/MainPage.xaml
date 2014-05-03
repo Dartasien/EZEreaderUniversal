@@ -24,7 +24,7 @@
             <ListView
                 x:Name="LibraryListView"
                 Margin="15, 0, 15, 0"
-                ItemsSource="{Binding Items}"
+                ItemsSource="{Binding Books}"
                 Tapped="LibraryListView_Tapped">
                 <ListView.ItemTemplate>
                     <DataTemplate>
