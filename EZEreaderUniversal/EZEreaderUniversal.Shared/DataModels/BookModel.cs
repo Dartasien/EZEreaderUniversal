@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EZEreaderUniversal.ViewModels
+namespace EZEreaderUniversal.DataModels
 {
     public class BookModel : INotifyPropertyChanged
     {
@@ -99,19 +99,19 @@ namespace EZEreaderUniversal.ViewModels
         }
 
         //Declare the directory of the folder where the content is stored
-        private string _contentdirectory;
+        private string _maindirectory;
 
-        public String ContentDirectory
+        public String MainDirectory
         {
             get
             {
-                return _contentdirectory;
+                return _maindirectory;
             }
             set
             {
-                if (value != _contentdirectory)
+                if (value != _maindirectory)
                 {
-                    _contentdirectory = value;
+                    _maindirectory = value;
                     NotifyPropertyChanged("ContentDirectory");
                 }
             }
@@ -192,6 +192,21 @@ namespace EZEreaderUniversal.ViewModels
                 }
             }
         }
+        private bool _isoStore;
+
+        //decide whether a book is in isostorage or not
+        public bool IsoStore
+        {
+            get { return _isoStore; }
+            set
+            {
+                if (value != _isoStore)
+                {
+                    _isoStore = value;
+                    NotifyPropertyChanged("IsoStore");
+                }
+            }
+        }
 
         //declare an int to keep track of the current page
         private int _currentpage;
@@ -208,6 +223,24 @@ namespace EZEreaderUniversal.ViewModels
                 {
                     _currentpage = value;
                     NotifyPropertyChanged("CurrentPage");
+                }
+            }
+        }
+
+        //location of most of the content in string format
+        private string _contentDirectory;
+        public string ContentDirectory 
+        {
+            get 
+            { 
+                return _contentDirectory;
+            }
+            set
+            {
+                if (value != _contentDirectory)
+                {
+                    _contentDirectory = value;
+                    NotifyPropertyChanged("ContentDirectory");
                 }
             }
         }

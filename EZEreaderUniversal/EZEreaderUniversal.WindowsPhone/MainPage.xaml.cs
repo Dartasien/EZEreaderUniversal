@@ -12,7 +12,7 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
-using EZEreaderUniversal.ViewModels;
+using EZEreaderUniversal.DataModels;
 using Windows.ApplicationModel.Activation;
 using EZEreaderUniversal.Common;
 
@@ -25,17 +25,16 @@ namespace EZEreaderUniversal
     /// </summary>
     public sealed partial class MainPage : Page
     {
+        public static MainPage Current;
+        public BooksModel LibrarySource;
 
-        BooksModel LibrarySource;
-
-        protected override void OnFileActivated(FileActivatedEventArgs args)
+        private FileActivatedEventArgs _fileEventArgs = null;
+        public FileActivatedEventArgs FileEvent
         {
-            CallRetrieveLibrary();
-            if (args.Files.Count() > 0)
-            {
-                this.Frame.Navigate(typeof(LoadingPage), args.Files[0]);
-            }
+            get { return _fileEventArgs; }
+            set { _fileEventArgs = value; }
         }
+
 
         public MainPage()
         {
@@ -63,6 +62,7 @@ namespace EZEreaderUniversal
             // Windows.Phone.UI.Input.HardwareButtons.BackPressed event.
             // If you are using the NavigationHelper provided by some templates,
             // this event is handled for you.
+            Current = this;
         }
 
         private async System.Threading.Tasks.Task RetrieveLibrary()
@@ -80,6 +80,20 @@ namespace EZEreaderUniversal
             }
         }
 
+        public void CallUpdateBooks()
+        {
+            LibrarySource.CallUpdateBooks();
+        }
+
+        public void AddBookToLibrary(BooksModel newBook)
+        {
+            for (int i = 0; i < newBook.Books.Count; i++)
+            {
+                CallRetrieveLibrary();
+                LibrarySource.Books.Add(newBook.Books[i]);
+            }
+        }
+
         private void LibraryListView_Tapped(object sender, TappedRoutedEventArgs e)
         {
             BookModel ourBook = LibraryListView.SelectedItem as BookModel;
@@ -87,6 +101,11 @@ namespace EZEreaderUniversal
             {
                 this.Frame.Navigate(typeof(ReadingPage), ourBook);
             }
+        }
+
+        internal void NavigateToFilePage()
+        {
+            this.Frame.Navigate(typeof(LoadingPage));
         }
     }
 }

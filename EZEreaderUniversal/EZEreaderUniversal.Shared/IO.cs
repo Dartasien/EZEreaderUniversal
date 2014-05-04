@@ -114,6 +114,41 @@ namespace EZEreaderUniversal
             return newFolder;
         }
 
+        /// <summary>
+        /// Create the specified subfolder in the app's root storage folder
+        /// </summary>
+        /// <param name="folderName">Name of folder to be created</param>
+        /// <param name="sFolder">Name of the storageFolder to search</param>
+        /// <returns></returns>
+        public static async Task<StorageFolder> CreateOrGetFolder(string folderName,
+            StorageFolder sFolder)
+        {
+            StorageFolder newFolder;
+            try
+            {
+
+                if (folderName == "\\")
+                    return sFolder;
+
+                try
+                {
+                    newFolder = await sFolder.GetFolderAsync(folderName);
+                }
+                catch (Exception)
+                {
+                    newFolder = null;
+                }
+
+                if (newFolder == null)
+                    newFolder = await sFolder.CreateFolderAsync(folderName);
+            }
+            catch (Exception)
+            {
+                newFolder = null;
+            }
+            return newFolder;
+        }
+
 
         /// <summary>
         /// Get a StorageFile object for the specified file in the specified folder
@@ -136,6 +171,77 @@ namespace EZEreaderUniversal
 
         }
 
+        /// <summary>
+        /// Get a StorageFolder whichin multiple folders using a string
+        /// </summary>
+        /// <param name="folder">Starting folder</param>
+        /// <param name="directoryName">string array of folder names</param>
+        /// <returns></returns>
+        public static async Task<StorageFolder> CreateOrGetFolders(StorageFolder folder, string[] directoryName)
+        {
+            StorageFolder folderOne = await IO.CreateOrGetFolder(directoryName[0], folder);
+            StorageFolder folderTwo;
+            StorageFolder folderThree;
+            StorageFolder folderFour;
+            StorageFolder folderFive;
+
+            if (directoryName.Length == 2)
+            {
+                return folderOne;
+            }
+            else if (directoryName.Length == 3)
+            {
+                return await IO.CreateOrGetFolder(directoryName[1], folderOne);
+            }
+            else if (directoryName.Length == 4)
+            {
+                folderTwo = await IO.CreateOrGetFolder(directoryName[1], folderOne);
+                return await IO.CreateOrGetFolder(directoryName[2], folderTwo);
+            }
+            else if (directoryName.Length == 5)
+            {
+                folderTwo = await IO.CreateOrGetFolder(directoryName[1], folderOne);
+                folderThree = await IO.CreateOrGetFolder(directoryName[2], folderTwo);
+                return await IO.CreateOrGetFolder(directoryName[3], folderThree);
+            }
+            else if (directoryName.Length == 6)
+            {
+                folderTwo = await IO.CreateOrGetFolder(directoryName[1], folderOne);
+                folderThree = await IO.CreateOrGetFolder(directoryName[2], folderTwo);
+                folderFour = await IO.CreateOrGetFolder(directoryName[3], folderThree);
+                return await IO.CreateOrGetFolder(directoryName[4], folderFour);
+            }
+            else
+            {
+                folderTwo = await IO.CreateOrGetFolder(directoryName[1], folderOne);
+                folderThree = await IO.CreateOrGetFolder(directoryName[2], folderTwo);
+                folderFour = await IO.CreateOrGetFolder(directoryName[3], folderThree);
+                folderFive = await IO.CreateOrGetFolder(directoryName[4], folderFour);
+                return await IO.CreateOrGetFolder(directoryName[4], folderFive);
+            }
+        }
+
+        /// <summary>
+        /// Method to delete all files and folders in the apps local folder
+        /// </summary>
+        /// <returns></returns>
+        public async static Task DeleteAllFilesInLocalFolder()
+        {
+            var filesInRoot = await AppBaseFolder.GetFilesAsync();
+            var foldersInRoot = await AppBaseFolder.GetFoldersAsync();
+            foreach (StorageFile file in filesInRoot)
+            {
+                //if (file.Name != "ebooks.xml")
+                //{
+                await file.DeleteAsync();
+                //}
+            }
+            foreach (StorageFolder folders in foldersInRoot)
+            {
+                await folders.DeleteAsync();
+            }
+
+        }
         /// <summary>
         /// Get the names of all the files in the default folder for this app
         /// </summary>

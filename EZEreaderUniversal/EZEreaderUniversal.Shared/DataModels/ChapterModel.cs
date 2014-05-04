@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EZEreaderUniversal.ViewModels
+namespace EZEreaderUniversal.DataModels
 {
     public class ChapterModel : INotifyPropertyChanged
     {

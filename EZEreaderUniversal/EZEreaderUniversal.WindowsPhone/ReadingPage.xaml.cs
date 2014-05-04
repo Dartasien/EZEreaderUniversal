@@ -1,5 +1,5 @@
 ﻿using EZEreaderUniversal.Common;
-using EZEreaderUniversal.ViewModels;
+using EZEreaderUniversal.DataModels;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -20,6 +20,8 @@ using Windows.Data.Html;
 using HtmlAgilityPack;
 using Windows.UI.Xaml.Documents;
 using System.Diagnostics;
+using Windows.Storage;
+using System.Threading.Tasks;
 
 // The Basic Page item template is documented at http://go.microsoft.com/fwlink/?LinkID=390556
 
@@ -30,6 +32,8 @@ namespace EZEreaderUniversal
     /// </summary>
     public sealed partial class ReadingPage : Page
     {
+        StorageFolder appFolder = ApplicationData.Current.LocalFolder;
+        MainPage rootPage = MainPage.Current;
         BookModel thisBook;
         List<RichTextBlockOverflow> listRTBO = new List<RichTextBlockOverflow>();
         Run myRun;
@@ -77,11 +81,11 @@ namespace EZEreaderUniversal
         /// <see cref="Frame.Navigate(Type, Object)"/> when this page was initially requested and
         /// a dictionary of state preserved by this page during an earlier
         /// session.  The state will be null the first time a page is visited.</param>
-        private void NavigationHelper_LoadState(object sender, LoadStateEventArgs e)
+        private async void NavigationHelper_LoadState(object sender, LoadStateEventArgs e)
         {   
             thisBook = ((BookModel)e.NavigationParameter);
             this.DataContext = thisBook;
-            CreateFirstPage();
+            await CreateFirstPage();
         }
 
 
@@ -89,7 +93,7 @@ namespace EZEreaderUniversal
         /// Takes the chapters full html file and loads it, then converts to text, and finally
         /// loads that into a RichTextBox and adds that to the grid
         /// </summary>
-        private void CreateFirstPage()
+        private async Task CreateFirstPage()
         {
             HtmlDocument htmlDoc = new HtmlDocument();
             
@@ -105,9 +109,17 @@ namespace EZEreaderUniversal
             }
             else
             {
-                htmlDoc.Load(thisBook.ContentDirectory +
-                thisBook.Chapters[thisBook.CurrentChapter].ChapterString);
-                chapterText = HtmlUtilities.ConvertToText(htmlDoc.DocumentNode.InnerHtml);
+                if (thisBook.IsoStore)
+                {
+                    await GetChapterFromStorage(htmlDoc);
+                }
+                else
+                {
+                    htmlDoc.Load(thisBook.MainDirectory +
+                        thisBook.Chapters[thisBook.CurrentChapter].ChapterString);
+                    chapterText = HtmlUtilities.ConvertToText(htmlDoc.DocumentNode.InnerHtml);
+                }
+                
                 myRun = new Run();
                 if (chapterText == "")
                 {
@@ -123,6 +135,37 @@ namespace EZEreaderUniversal
             LayoutRoot.Children.Add(myRTB);
             CreateAdditionalPages();
             ReturnToCurrentPage();
+        }
+
+        private async Task GetChapterFromStorage(HtmlDocument htmlDoc)
+        {
+            StorageFolder chapterFolder;
+            string[] st;
+            string contentLoc = thisBook.ContentDirectory;
+            if (thisBook.ContentDirectory.Contains('/'))
+            {
+                st = contentLoc.Split('/');
+                contentLoc = "";
+                for (int i = 0; i < st.Length - 1; i++)
+                {
+                    contentLoc += st[i];
+                }
+            }
+            string fullChapterString = thisBook.MainDirectory +
+            contentLoc + "/" +
+                thisBook.Chapters[thisBook.CurrentChapter].ChapterString;
+            string[] fullChapterStrings = fullChapterString.Split('/');
+            string chapterString = fullChapterStrings[fullChapterStrings.Length - 1];
+            string[] chapterStringLoc =
+                fullChapterString.Split('/');
+
+            chapterFolder =
+                await IO.CreateOrGetFolders(appFolder, chapterStringLoc);
+            using (var file = await chapterFolder.OpenStreamForReadAsync(chapterString))
+            {
+                htmlDoc.Load(file);
+                chapterText = HtmlUtilities.ConvertToText(htmlDoc.DocumentNode.InnerHtml);
+            }
         }
 
         /// <summary>
@@ -222,7 +265,7 @@ namespace EZEreaderUniversal
         /// serializable state.</param>
         private void NavigationHelper_SaveState(object sender, SaveStateEventArgs e)
         {
-            this.Frame.Navigate(typeof(MainPage));
+            //rootPage.CallUpdateBooks();
         }
 
         #region NavigationHelper registration
@@ -258,7 +301,7 @@ namespace EZEreaderUniversal
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void myRTB_Tapped(object sender, TappedRoutedEventArgs e)
+        private async void myRTB_Tapped(object sender, TappedRoutedEventArgs e)
         {
             
             Point eTap = e.GetPosition(LayoutRoot.Children.ElementAt(thisBook.CurrentPage));
@@ -278,7 +321,7 @@ namespace EZEreaderUniversal
                     }
                     thisBook.CurrentPage = 0;
                     LayoutRoot.Children.Clear();
-                    CreateFirstPage();
+                    await CreateFirstPage();
                 }
                 else
                 {
@@ -301,7 +344,7 @@ namespace EZEreaderUniversal
                 }
                 else
                 {
-                    CreateBackwardsPages();
+                    await CreateBackwardsPages();
                     thisBook.CurrentPage = LayoutRoot.Children.Count - 1;
                     thisBook.Chapters[thisBook.CurrentChapter].PageCount 
                         = LayoutRoot.Children.Count;
@@ -313,15 +356,13 @@ namespace EZEreaderUniversal
         /// <summary>
         /// Creates the pages for going backwards to a previous chapter on tap
         /// </summary>
-        private void CreateBackwardsPages()
+        private async Task CreateBackwardsPages()
         {
             if (thisBook.CurrentChapter > 0)
             {
                 thisBook.CurrentChapter--;
                 LayoutRoot.Children.Clear();
                 HtmlDocument htmlDoc = new HtmlDocument();
-                htmlDoc.Load(thisBook.ContentDirectory +
-                    thisBook.Chapters[thisBook.CurrentChapter].ChapterString);
                 if (thisBook.CurrentChapter == 0)
                 {
                     //eventually adding image to this page
@@ -334,7 +375,16 @@ namespace EZEreaderUniversal
                 }
                 else
                 {
-                    chapterText = HtmlUtilities.ConvertToText(htmlDoc.DocumentNode.InnerHtml);
+                    if (thisBook.IsoStore)
+                    {
+                        await GetChapterFromStorage(htmlDoc);
+                    }
+                    else
+                    {
+                        htmlDoc.Load(thisBook.MainDirectory +
+                            thisBook.Chapters[thisBook.CurrentChapter].ChapterString);
+                        chapterText = HtmlUtilities.ConvertToText(htmlDoc.DocumentNode.InnerHtml);
+                    }
                     myRun = new Run();
                     if (chapterText == "")
                     {
