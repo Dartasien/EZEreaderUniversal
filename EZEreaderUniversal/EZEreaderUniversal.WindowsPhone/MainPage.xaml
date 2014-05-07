@@ -28,9 +28,17 @@
                 Tapped="LibraryListView_Tapped">
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <StackPanel>
-                            <TextBlock Text="{Binding BookName}"/>
-                        </StackPanel>
+                        <Grid Height="100">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="60"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Image Source="{Binding CoverPic}" Grid.Column="0" />
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="{Binding BookName}" FontSize="24"/>
+                                <TextBlock Text="{Binding AuthorID}" FontSize="16"/>
+                            </StackPanel>
+                        </Grid>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
