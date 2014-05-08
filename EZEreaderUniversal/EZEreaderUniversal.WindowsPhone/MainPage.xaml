@@ -25,10 +25,24 @@
                 x:Name="LibraryListView"
                 Margin="15, 0, 15, 0"
                 ItemsSource="{Binding Books}"
-                Tapped="LibraryListView_Tapped">
+                Tapped="LibraryListView_Tapped"
+                RightTapped="LibraryListView_RightTapped"
+                >
+                <FlyoutBase.AttachedFlyout
+                    >
+                    <MenuFlyout Closed="Flyout_Closed"
+                                Placement="Bottom"
+                                >
+                        
+                        <MenuFlyoutItem HorizontalAlignment="Left" Text="Delete" Width="100"  Tapped="MenuFlyoutItem_Tapped"></MenuFlyoutItem>
+                        <MenuFlyoutItem Text="Edit" HorizontalAlignment="Center" Width="100" Tapped="MenuFlyoutItem_Tapped_1"></MenuFlyoutItem>
+                    </MenuFlyout>
+                </FlyoutBase.AttachedFlyout>
                 <ListView.ItemTemplate>
                     <DataTemplate>
+                        
                         <Grid Height="100">
+                            
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="60"/>
                                 <ColumnDefinition Width="*"/>

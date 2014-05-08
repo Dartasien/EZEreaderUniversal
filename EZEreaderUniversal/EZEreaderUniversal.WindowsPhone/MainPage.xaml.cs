@@ -107,5 +107,25 @@ namespace EZEreaderUniversal
         {
             this.Frame.Navigate(typeof(LoadingPage));
         }
+
+        private void LibraryListView_RightTapped(object sender, RightTappedRoutedEventArgs e)
+        {
+            FlyoutBase.ShowAttachedFlyout(sender as FrameworkElement);
+        }
+
+        private void Flyout_Closed(object sender, object e)
+        {
+
+        }
+
+        private void MenuFlyoutItem_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+
+        }
+
+        private void MenuFlyoutItem_Tapped_1(object sender, TappedRoutedEventArgs e)
+        {
+
+        }
     }
 }
