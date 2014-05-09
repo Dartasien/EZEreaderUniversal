@@ -34,8 +34,10 @@
                                 Placement="Bottom"
                                 >
                         
-                        <MenuFlyoutItem HorizontalAlignment="Left" Text="Delete" Width="100"  Tapped="MenuFlyoutItem_Tapped"></MenuFlyoutItem>
-                        <MenuFlyoutItem Text="Edit" HorizontalAlignment="Center" Width="100" Tapped="MenuFlyoutItem_Tapped_1"></MenuFlyoutItem>
+                        <MenuFlyoutItem Text="Delete"  
+                                        Tapped="MenuFlyoutItem_Tapped"></MenuFlyoutItem>
+                        <MenuFlyoutItem Text="Edit"  
+                                        Tapped="MenuFlyoutItem_Tapped_1"></MenuFlyoutItem>
                     </MenuFlyout>
                 </FlyoutBase.AttachedFlyout>
                 <ListView.ItemTemplate>
