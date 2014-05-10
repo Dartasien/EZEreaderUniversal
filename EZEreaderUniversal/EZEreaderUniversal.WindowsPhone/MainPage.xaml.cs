@@ -15,7 +15,6 @@ using Windows.UI.Xaml.Navigation;
 using EZEreaderUniversal.DataModels;
 using Windows.ApplicationModel.Activation;
 using EZEreaderUniversal.Common;
-using System.Diagnostics;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -71,10 +70,7 @@ namespace EZEreaderUniversal
             if (LibrarySource == null)
             {
                 LibrarySource = new BooksModel();
-                if (!LibrarySource.IsDataLoaded)
-                {
-                    await LibrarySource.LoadData();
-                }
+                await LibrarySource.LoadData();
                 this.DataContext = LibrarySource.Books;
                 LibraryListView.ItemsSource = this.DataContext;
             }
@@ -114,10 +110,7 @@ namespace EZEreaderUniversal
 
         private void LibraryListView_RightTapped(object sender, RightTappedRoutedEventArgs e)
         {
-            FrameworkElement senderElement = sender as FrameworkElement;
-            FlyoutBase flyoutBase = FlyoutBase.GetAttachedFlyout(senderElement);
-
-            flyoutBase.ShowAt(senderElement);
+            FlyoutBase.ShowAttachedFlyout(sender as FrameworkElement);
         }
 
         private void Flyout_Closed(object sender, object e)
@@ -127,14 +120,12 @@ namespace EZEreaderUniversal
 
         private void MenuFlyoutItem_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            BookModel bookToRemove = sender as BookModel;
-            Debug.WriteLine(bookToRemove.BookID);
-            this.LibrarySource.RemoveBook(bookToRemove);
+
         }
 
         private void MenuFlyoutItem_Tapped_1(object sender, TappedRoutedEventArgs e)
         {
-            
+
         }
     }
 }
