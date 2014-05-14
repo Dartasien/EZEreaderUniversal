@@ -184,6 +184,7 @@ namespace EZEreaderUniversal
             myRTB = new RichTextBlock();
             myRTB.IsTextSelectionEnabled = false;
             myRTB.Tapped += myRTB_Tapped;
+            
             myRTB.TextAlignment = TextAlignment.Justify;
             myRTB.FontSize = 20;
             Thickness margin = myRTB.Margin;
@@ -272,7 +273,7 @@ namespace EZEreaderUniversal
         /// serializable state.</param>
         private void NavigationHelper_SaveState(object sender, SaveStateEventArgs e)
         {
-            //rootPage.CallUpdateBooks();
+            rootPage.CallUpdateBooks();
         }
 
         #region NavigationHelper registration
@@ -313,7 +314,7 @@ namespace EZEreaderUniversal
             
             Point eTap = e.GetPosition(LayoutRoot.Children.ElementAt(thisBook.CurrentPage));
 
-            if (eTap.X > LayoutRoot.ActualWidth * .6)
+            if (eTap.X > LayoutRoot.ActualWidth * .5)
             {
                 LayoutRoot.Children.ElementAt(thisBook.CurrentPage).Visibility = Visibility.Collapsed;
                 if (thisBook.CurrentPage +1 >= LayoutRoot.Children.Count)
@@ -339,7 +340,7 @@ namespace EZEreaderUniversal
                 
                 
             }
-            else if (eTap.X < LayoutRoot.ActualWidth * .4)
+            else if (eTap.X < LayoutRoot.ActualWidth * .5)
             {
                 if (thisBook.CurrentPage > 0)
                 {

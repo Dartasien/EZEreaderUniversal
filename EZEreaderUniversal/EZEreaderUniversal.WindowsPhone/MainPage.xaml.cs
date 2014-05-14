@@ -28,6 +28,7 @@ namespace EZEreaderUniversal
     {
         public static MainPage Current;
         public BooksModel LibrarySource;
+        BookModel ourBook;
 
         private FileActivatedEventArgs _fileEventArgs = null;
         public FileActivatedEventArgs FileEvent
@@ -100,7 +101,11 @@ namespace EZEreaderUniversal
 
         private void LibraryListView_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            BookModel ourBook = LibraryListView.SelectedItem as BookModel;
+            var listViewItem = sender as ListViewItem;
+            if (listViewItem != null)
+            {
+                ourBook = listViewItem.DataContext as BookModel;
+            }
             if (ourBook != null)
             {
                 this.Frame.Navigate(typeof(ReadingPage), ourBook);
@@ -114,13 +119,31 @@ namespace EZEreaderUniversal
 
         private void LibraryListView_RightTapped(object sender, RightTappedRoutedEventArgs e)
         {
+            var listViewItem = sender as ListViewItem;
+            if (listViewItem != null)
+            {
+                ourBook = listViewItem.DataContext as BookModel;
+            }
+            if (ourBook != null)
+            {
+                Debug.WriteLine(ourBook.BookID);
+            }
             if (this.BottomBar != null)
             {
                 this.BottomBar.Visibility = Visibility.Visible;
             }
         }
 
-        private void LibraryListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private async void DeleteBarButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (ourBook != null)
+            {
+                await RetrieveLibrary();
+                await this.LibrarySource.RemoveBook(ourBook);
+            }
+        }
+
+        private void EditBarButton_Click(object sender, RoutedEventArgs e)
         {
 
         }

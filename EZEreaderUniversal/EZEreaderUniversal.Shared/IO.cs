@@ -242,6 +242,18 @@ namespace EZEreaderUniversal
             }
 
         }
+
+        /// <summary>
+        /// Deletes a folder in the local storage of the device
+        /// </summary>
+        /// <param name="folderName"></param>
+        /// <returns></returns>
+        public async static Task DeleteFolderInLocalFolder(string folderName)
+        {
+            StorageFolder folderToDelete = await AppBaseFolder.GetFolderAsync(folderName);
+            await folderToDelete.DeleteAsync();
+        }
+
         /// <summary>
         /// Get the names of all the files in the default folder for this app
         /// </summary>

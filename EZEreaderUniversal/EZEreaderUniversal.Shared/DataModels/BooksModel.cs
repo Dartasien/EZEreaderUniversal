@@ -461,10 +461,14 @@ namespace EZEreaderUniversal.DataModels
         /// Method to remove a book from the library
         /// </summary>
         /// <param name="bookToRemove"></param>
-        public void RemoveBook(BookModel bookToRemove)
+        public async Task RemoveBook(BookModel bookToRemove)
         {
+            if (bookToRemove.IsoStore == true)
+            {
+                await IO.DeleteFolderInLocalFolder(bookToRemove.BookID);
+            }
             this.Books.Remove(bookToRemove);
-            //CallUpdateBooks();
+            CallUpdateBooks();
             NotifyPropertyChanged("Items");
         }
 

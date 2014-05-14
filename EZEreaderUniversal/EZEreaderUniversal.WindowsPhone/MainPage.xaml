@@ -22,32 +22,47 @@
         </StackPanel>
         <Grid Grid.Row="1" Margin="10,84,10,10">
             <ListView
-                SelectionChanged="LibraryListView_SelectionChanged"
                 x:Name="LibraryListView"
                 Margin="15, 0, 15, 0"
-                Tapped="LibraryListView_Tapped"
-                RightTapped="LibraryListView_RightTapped">
+                
+                IsItemClickEnabled="True">
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <Grid Height="100">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="60"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Image Source="{Binding CoverPic}" Grid.Column="0" />
-                            <StackPanel Grid.Column="1">
-                                <TextBlock Text="{Binding BookName}" FontSize="24"/>
-                                <TextBlock Text="{Binding AuthorID}" FontSize="16"/>
-                            </StackPanel>
-                        </Grid>
+                        <ListViewItem
+                            Tapped="LibraryListView_Tapped"
+                            RightTapped="LibraryListView_RightTapped">
+                            <Grid Height="100">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="60"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Image Source="{Binding CoverPic}" Grid.Column="0" />
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="{Binding BookName}" FontSize="24"/>
+                                    <TextBlock Text="{Binding AuthorID}" FontSize="16"/>
+                                </StackPanel>
+                            </Grid>
+                        </ListViewItem>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
         </Grid>
     </Grid>
     <Page.BottomAppBar>
-        <CommandBar x:Name="BottomBar" Visibility="Collapsed">
-            <AppBarButton Label="Delete" Icon="Delete"></AppBarButton>
+        <CommandBar 
+            x:Name="BottomBar" 
+            Visibility="Collapsed">
+            <AppBarButton 
+                Label="Delete" 
+                Icon="Delete"
+                Click="DeleteBarButton_Click">
+            </AppBarButton>
+            <AppBarButton
+                Label="Edit"
+                Icon="Edit"
+                Click="EditBarButton_Click">
+                
+            </AppBarButton>
         </CommandBar>
     </Page.BottomAppBar>
 </Page>
