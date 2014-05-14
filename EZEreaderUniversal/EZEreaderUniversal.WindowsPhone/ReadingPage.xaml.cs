@@ -140,6 +140,7 @@ namespace EZEreaderUniversal
         private async Task GetChapterFromStorage(HtmlDocument htmlDoc)
         {
             StorageFolder chapterFolder;
+            string fullChapterString;
             string[] st;
             string contentLoc = thisBook.ContentDirectory;
             if (thisBook.ContentDirectory.Contains('/'))
@@ -150,10 +151,16 @@ namespace EZEreaderUniversal
                 {
                     contentLoc += st[i];
                 }
-            }
-            string fullChapterString = thisBook.MainDirectory +
+                fullChapterString = thisBook.MainDirectory +
             contentLoc + "/" +
                 thisBook.Chapters[thisBook.CurrentChapter].ChapterString;
+            }
+            else
+            {
+                fullChapterString = thisBook.MainDirectory +
+                thisBook.Chapters[thisBook.CurrentChapter].ChapterString;
+            }
+            
             string[] fullChapterStrings = fullChapterString.Split('/');
             string chapterString = fullChapterStrings[fullChapterStrings.Length - 1];
             string[] chapterStringLoc =

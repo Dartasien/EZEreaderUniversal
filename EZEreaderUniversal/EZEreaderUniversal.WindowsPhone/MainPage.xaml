@@ -22,29 +22,14 @@
         </StackPanel>
         <Grid Grid.Row="1" Margin="10,84,10,10">
             <ListView
+                SelectionChanged="LibraryListView_SelectionChanged"
                 x:Name="LibraryListView"
                 Margin="15, 0, 15, 0"
-                ItemsSource="{Binding Books}"
                 Tapped="LibraryListView_Tapped"
-                RightTapped="LibraryListView_RightTapped"
-                >
-                <FlyoutBase.AttachedFlyout
-                    >
-                    <MenuFlyout Closed="Flyout_Closed"
-                                Placement="Bottom"
-                                >
-                        
-                        <MenuFlyoutItem Text="Delete"  
-                                        Tapped="MenuFlyoutItem_Tapped"></MenuFlyoutItem>
-                        <MenuFlyoutItem Text="Edit"  
-                                        Tapped="MenuFlyoutItem_Tapped_1"></MenuFlyoutItem>
-                    </MenuFlyout>
-                </FlyoutBase.AttachedFlyout>
+                RightTapped="LibraryListView_RightTapped">
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        
                         <Grid Height="100">
-                            
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="60"/>
                                 <ColumnDefinition Width="*"/>
@@ -60,4 +45,9 @@
             </ListView>
         </Grid>
     </Grid>
+    <Page.BottomAppBar>
+        <CommandBar x:Name="BottomBar" Visibility="Collapsed">
+            <AppBarButton Label="Delete" Icon="Delete"></AppBarButton>
+        </CommandBar>
+    </Page.BottomAppBar>
 </Page>

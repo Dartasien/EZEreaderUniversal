@@ -114,27 +114,15 @@ namespace EZEreaderUniversal
 
         private void LibraryListView_RightTapped(object sender, RightTappedRoutedEventArgs e)
         {
-            FrameworkElement senderElement = sender as FrameworkElement;
-            FlyoutBase flyoutBase = FlyoutBase.GetAttachedFlyout(senderElement);
-
-            flyoutBase.ShowAt(senderElement);
+            if (this.BottomBar != null)
+            {
+                this.BottomBar.Visibility = Visibility.Visible;
+            }
         }
 
-        private void Flyout_Closed(object sender, object e)
+        private void LibraryListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
 
-        }
-
-        private void MenuFlyoutItem_Tapped(object sender, TappedRoutedEventArgs e)
-        {
-            BookModel bookToRemove = sender as BookModel;
-            Debug.WriteLine(bookToRemove.BookID);
-            this.LibrarySource.RemoveBook(bookToRemove);
-        }
-
-        private void MenuFlyoutItem_Tapped_1(object sender, TappedRoutedEventArgs e)
-        {
-            
         }
     }
 }
