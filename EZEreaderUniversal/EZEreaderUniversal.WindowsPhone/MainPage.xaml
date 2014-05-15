@@ -47,6 +47,32 @@
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
+            <Grid
+                x:Name="DetailsGrid"
+                Height="100"
+                Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBox x:Name="BookNameBox"
+                         Grid.Row="0"
+                         Grid.Column="0"
+                         Visibility="Collapsed"
+                         TextChanged="BookNameBox_TextChanged">
+                </TextBox>
+                <TextBox x:Name="AuthorNameBox"
+                         Grid.Row="1"
+                         Grid.Column="0"
+                         Visibility="Collapsed"
+                         TextChanged="AuthorNameBox_TextChanged"
+                         >
+                    
+                </TextBox>
+            </Grid>
         </Grid>
     </Grid>
     <Page.BottomAppBar>

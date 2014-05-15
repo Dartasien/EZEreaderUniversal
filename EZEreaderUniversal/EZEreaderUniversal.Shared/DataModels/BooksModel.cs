@@ -66,7 +66,6 @@ namespace EZEreaderUniversal.DataModels
             };
             if (Books != null)
             {
-                Debug.WriteLine("test      test");
                 this.Books.Add(result);
             }
         }
@@ -127,13 +126,12 @@ namespace EZEreaderUniversal.DataModels
             if (isInStorage)
             {
                 string newDirectory = directoryLoc.Substring(0, directoryLoc.Length - 1);
-                Debug.WriteLine("made it ths far");
                 StorageFolder folder = await appFolder.GetFolderAsync(newDirectory);
                 StorageFolder metaFolder = await folder.GetFolderAsync("META-INF");
                 StorageFile file = await metaFolder.GetFileAsync("container.xml");
+
                 using (Stream fileStream = await file.OpenStreamForReadAsync())
                 {
-                    Debug.WriteLine("made it farther");
                     xdoc = XDocument.Load(fileStream);
 
                     var contentOPFLoc = from q in xdoc.Descendants()
@@ -531,6 +529,8 @@ namespace EZEreaderUniversal.DataModels
                 if (!IsDataLoaded)
                 {
                     this.Books = new ObservableCollection<BookModel>();
+                    ImportBook("Pride and Prejudice - Jane Austen_6590", false);
+                    /*
                     this.Books.Add(new BookModel() { BookID = "Pride and Prejudice - Jane Austen_6590", 
                         BookName = "Pride and Prejudice", AuthorID = " jane austen", 
                         AddedDate = DateTime.Now.ToString(), CoverPic = "Pride and Prejudice - Jane Austen_6590/cover.jpeg" ,
@@ -540,6 +540,7 @@ namespace EZEreaderUniversal.DataModels
                         CurrentChapter = 0,
                         CurrentPage = 0
                     });
+                     */
                     CallUpdateBooks(); 
                 }
             }

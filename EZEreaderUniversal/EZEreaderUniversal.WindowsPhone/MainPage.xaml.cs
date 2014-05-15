@@ -103,11 +103,15 @@ namespace EZEreaderUniversal
         private void LibraryListView_Tapped(object sender, TappedRoutedEventArgs e)
         {
             BottomBar.Visibility = Visibility.Collapsed;
+            DetailsGrid.Visibility = Visibility.Collapsed;
+            BookNameBox.Visibility = Visibility.Collapsed;
+            AuthorNameBox.Visibility = Visibility.Collapsed;
             var listViewItem = sender as ListViewItem;
             if (listViewItem != null)
             {
                 ourBook = listViewItem.DataContext as BookModel;
             }
+            listViewItem = null;
             if (ourBook != null)
             {
                 this.Frame.Navigate(typeof(ReadingPage), ourBook);
@@ -126,10 +130,6 @@ namespace EZEreaderUniversal
             {
                 ourBook = listViewItem.DataContext as BookModel;
             }
-            if (ourBook != null)
-            {
-                Debug.WriteLine(ourBook.BookID);
-            }
             if (this.BottomBar != null)
             {
                 BottomBar.Visibility = Visibility.Visible;
@@ -147,12 +147,20 @@ namespace EZEreaderUniversal
 
         private void EditBarButton_Click(object sender, RoutedEventArgs e)
         {
-
+            BottomBar.Visibility = Visibility.Collapsed;
+            DetailsGrid.Visibility = Visibility.Visible;
+            BookNameBox.Visibility = Visibility.Visible;
+            AuthorNameBox.Visibility = Visibility.Visible;
+            BookNameBox.Text = ourBook.BookName;
+            AuthorNameBox.Text = ourBook.AuthorID;
         }
 
         private void LibraryListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             BottomBar.Visibility = Visibility.Collapsed;
+            DetailsGrid.Visibility = Visibility.Collapsed;
+            BookNameBox.Visibility = Visibility.Collapsed;
+            AuthorNameBox.Visibility = Visibility.Collapsed;
         }
 
         private void LibraryListView_Tapped_1(object sender, TappedRoutedEventArgs e)
@@ -161,7 +169,22 @@ namespace EZEreaderUniversal
             {
                 BottomBar.Visibility = Visibility.Collapsed;
             }
+            LibraryListView.SelectedItem = null;
+            DetailsGrid.Visibility = Visibility.Collapsed;
+            BookNameBox.Visibility = Visibility.Collapsed;
+            AuthorNameBox.Visibility = Visibility.Collapsed;
         }
 
+        private void BookNameBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            ourBook.BookName = BookNameBox.Text;
+            CallUpdateBooks();
+        }
+
+        private void AuthorNameBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            ourBook.AuthorID = AuthorNameBox.Text;
+            CallUpdateBooks();
+        }
     }
 }
