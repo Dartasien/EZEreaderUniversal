@@ -24,7 +24,8 @@
             <ListView
                 x:Name="LibraryListView"
                 Margin="15, 0, 15, 0"
-                
+                Tapped="LibraryListView_Tapped_1"
+                SelectionChanged="LibraryListView_SelectionChanged"
                 IsItemClickEnabled="True">
                 <ListView.ItemTemplate>
                     <DataTemplate>
@@ -50,8 +51,7 @@
     </Grid>
     <Page.BottomAppBar>
         <CommandBar 
-            x:Name="BottomBar" 
-            Visibility="Collapsed">
+            x:Name="BottomBar">
             <AppBarButton 
                 Label="Delete" 
                 Icon="Delete"

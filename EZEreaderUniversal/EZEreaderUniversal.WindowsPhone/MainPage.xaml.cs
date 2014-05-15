@@ -56,6 +56,7 @@ namespace EZEreaderUniversal
         /// This parameter is typically used to configure the page.</param>
         async protected override void OnNavigatedTo(NavigationEventArgs e)
         {
+            BottomBar.Visibility = Visibility.Collapsed;
             await RetrieveLibrary();
             // TODO: Prepare page for display here.
 
@@ -101,6 +102,7 @@ namespace EZEreaderUniversal
 
         private void LibraryListView_Tapped(object sender, TappedRoutedEventArgs e)
         {
+            BottomBar.Visibility = Visibility.Collapsed;
             var listViewItem = sender as ListViewItem;
             if (listViewItem != null)
             {
@@ -130,7 +132,7 @@ namespace EZEreaderUniversal
             }
             if (this.BottomBar != null)
             {
-                this.BottomBar.Visibility = Visibility.Visible;
+                BottomBar.Visibility = Visibility.Visible;
             }
         }
 
@@ -147,5 +149,19 @@ namespace EZEreaderUniversal
         {
 
         }
+
+        private void LibraryListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            BottomBar.Visibility = Visibility.Collapsed;
+        }
+
+        private void LibraryListView_Tapped_1(object sender, TappedRoutedEventArgs e)
+        {
+            if (BottomBar.Visibility == Visibility.Visible)
+            {
+                BottomBar.Visibility = Visibility.Collapsed;
+            }
+        }
+
     }
 }
