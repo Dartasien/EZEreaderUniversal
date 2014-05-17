@@ -22,6 +22,7 @@ using Windows.UI.Xaml.Documents;
 using System.Diagnostics;
 using Windows.Storage;
 using System.Threading.Tasks;
+using Windows.UI.Xaml.Media.Imaging;
 
 // The Basic Page item template is documented at http://go.microsoft.com/fwlink/?LinkID=390556
 
@@ -113,13 +114,29 @@ namespace EZEreaderUniversal
             {
                 //eventually adding image to this page
                 Image image = new Image();
+                InlineUIContainer containers = new InlineUIContainer();
+                if ((thisBook.CoverPic.Length > 9) && (thisBook.CoverPic.ToLower().Substring(0, 9).Equals("isostore:")))
+                {
+                    await GetPicFromStorage(image, containers);
+                }
+                else
+                {
+                    GetPicFromAssets(image, containers);
+                }
                 //
-                chapterText = thisBook.BookName + "\n" + thisBook.AuthorID;
-                myRun = new Run();
-                myRun.Text = chapterText;
+                //chapterText = thisBook.BookName + "\n" + thisBook.AuthorID;
+                //myRun = new Run();
+                //myRun.Text = chapterText;
+                
+                
                 para = new Paragraph();
-                para.Inlines.Add(myRun);
+                para.Inlines.Add(containers);
                 SetmyRTB();
+                pageNumber = 0;
+                myRTB.Blocks.Add(para);
+                LayoutRoot.Children.Add(myRTB);
+                CreateAdditionalPages();
+                ReturnToCurrentPage();
             }
             else
             {
@@ -143,12 +160,42 @@ namespace EZEreaderUniversal
                 para = new Paragraph();
                 para.Inlines.Add(myRun);
                 SetmyRTB();
+                pageNumber = 0;
+                myRTB.Blocks.Add(para);
+                LayoutRoot.Children.Add(myRTB);
+                CreateAdditionalPages();
+                ReturnToCurrentPage();
             }
-            pageNumber = 0;
-            myRTB.Blocks.Add(para);
-            LayoutRoot.Children.Add(myRTB);
-            CreateAdditionalPages();
-            ReturnToCurrentPage();
+            
+        }
+
+        private void GetPicFromAssets(Image image, InlineUIContainer containers)
+        {
+            Debug.WriteLine("/" + thisBook.CoverPic);
+            string coverPic = "ms-appx:///" + thisBook.CoverPic;
+            Debug.WriteLine(coverPic);
+            Uri testUri = new Uri(coverPic, UriKind.Absolute);
+            BitmapImage img = new BitmapImage(testUri);
+            image.Source = img;
+            containers.Child = image;
+        }
+
+        private async Task GetPicFromStorage(Image image, InlineUIContainer containers)
+        {
+            string[] folders = thisBook.CoverPic.Substring(9).Split('/');
+            StorageFolder appBaseFolder = ApplicationData.Current.LocalFolder;
+            StorageFolder imageFolder = await IO.CreateOrGetFolders(appBaseFolder, folders);
+            StorageFile imageFile = await imageFolder.GetFileAsync(folders[folders.Length - 1]);
+            using (var fileStream = await imageFile.OpenReadAsync())
+            {
+                if (fileStream.CanRead)
+                {
+                    BitmapImage img = new BitmapImage();
+                    await img.SetSourceAsync(fileStream);
+                    image.Source = img;
+                    containers.Child = image;
+                }
+            }
         }
 
         private async Task GetChapterFromStorage(HtmlDocument htmlDoc)
@@ -367,7 +414,7 @@ namespace EZEreaderUniversal
         /// </summary>
         private async Task CreateBackwardsPages()
         {
-            if (thisBook.CurrentChapter > 0)
+            if (thisBook.CurrentChapter > 1)
             {
                 thisBook.CurrentChapter--;
                 LayoutRoot.Children.Clear();
@@ -410,6 +457,12 @@ namespace EZEreaderUniversal
                 pageNumber = 0;
                 CreateAdditionalPages();
                 thisBook.CurrentPage = pageNumber +1;
+            }
+            else
+            {
+                thisBook.CurrentChapter--;
+                LayoutRoot.Children.Clear();
+                await CreateFirstPage();
             }
         }
     }

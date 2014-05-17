@@ -24,7 +24,7 @@ namespace EZEreaderUniversal
             {
                 BitmapImage bmp = new BitmapImage();
 
-                SetSource(bmp, path.Substring(9));
+                SetSourceOne(bmp, path.Substring(9));
 
                 return bmp;
             }
@@ -34,6 +34,11 @@ namespace EZEreaderUniversal
         public object ConvertBack(object value, Type targetType, object parameter, string language)
         {
             throw new NotImplementedException();
+        }
+
+        public async void SetSourceOne(BitmapImage img, string path)
+        {
+            await SetSource(img, path);
         }
 
         public async Task SetSource(BitmapImage img, string path)
