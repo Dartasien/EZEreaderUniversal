@@ -1,8 +1,10 @@
-﻿using System;
+﻿using EZEreaderUniversal.DataModels;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.ApplicationModel.Activation;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI.Xaml;
@@ -22,6 +24,7 @@ namespace EZEreaderUniversal
     /// </summary>
     public sealed partial class MainPage : Page
     {
+        public BooksModel LibrarySource;
         public MainPage()
         {
             this.InitializeComponent();
@@ -30,6 +33,15 @@ namespace EZEreaderUniversal
         private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
 
+        }
+
+        public static MainPage Current { get; set; }
+
+        private FileActivatedEventArgs _fileEventArgs = null;
+        public FileActivatedEventArgs FileEvent
+        {
+            get { return _fileEventArgs; }
+            set { _fileEventArgs = value; }
         }
     }
 }

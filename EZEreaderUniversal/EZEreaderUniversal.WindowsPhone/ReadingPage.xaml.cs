@@ -40,7 +40,6 @@ namespace EZEreaderUniversal
         Run myRun;
         string chapterText;
         int pageNumber;
-        //int currentPageCount;
         Paragraph para;
         RichTextBlock myRTB;
         private NavigationHelper navigationHelper;
@@ -112,7 +111,7 @@ namespace EZEreaderUniversal
             
             if (thisBook.CurrentChapter == 0)
             {
-                //eventually adding image to this page
+                //adds image to the first page of each book from assets or storage
                 Image image = new Image();
                 InlineUIContainer containers = new InlineUIContainer();
                 if ((thisBook.CoverPic.Length > 9) && (thisBook.CoverPic.ToLower().Substring(0, 9).Equals("isostore:")))
@@ -123,12 +122,6 @@ namespace EZEreaderUniversal
                 {
                     GetPicFromAssets(image, containers);
                 }
-                //
-                //chapterText = thisBook.BookName + "\n" + thisBook.AuthorID;
-                //myRun = new Run();
-                //myRun.Text = chapterText;
-                
-                
                 para = new Paragraph();
                 para.Inlines.Add(containers);
                 SetmyRTB();
@@ -169,17 +162,25 @@ namespace EZEreaderUniversal
             
         }
 
+        /// <summary>
+        /// getting picture from assets instead of storage and converting it into an image
+        /// </summary>
+        /// <param name="image"></param>the image to be sent to the container
+        /// <param name="containers"></param>the inlineuicontainer to be added to the paragraph
         private void GetPicFromAssets(Image image, InlineUIContainer containers)
         {
-            Debug.WriteLine("/" + thisBook.CoverPic);
-            string coverPic = "ms-appx:///" + thisBook.CoverPic;
-            Debug.WriteLine(coverPic);
-            Uri testUri = new Uri(coverPic, UriKind.Absolute);
+            Uri testUri = new Uri("ms-appx:///" + thisBook.CoverPic, UriKind.Absolute);
             BitmapImage img = new BitmapImage(testUri);
             image.Source = img;
             containers.Child = image;
         }
 
+        /// <summary>
+        /// Load the picture from storage and convert into an image to be displayed in rtb
+        /// </summary>
+        /// <param name="image"></param>the image to be sent to the container
+        /// <param name="containers"></param>the inlineuicontainer to be added to the paragraph
+        /// <returns></returns>
         private async Task GetPicFromStorage(Image image, InlineUIContainer containers)
         {
             string[] folders = thisBook.CoverPic.Substring(9).Split('/');
@@ -198,6 +199,11 @@ namespace EZEreaderUniversal
             }
         }
 
+        /// <summary>
+        /// Gets the HTML of the chapter from windows storage so it can be loaded
+        /// </summary>
+        /// <param name="htmlDoc"></param>loader
+        /// <returns></returns>
         private async Task GetChapterFromStorage(HtmlDocument htmlDoc)
         {
             StorageFolder chapterFolder;
@@ -212,9 +218,8 @@ namespace EZEreaderUniversal
                 {
                     contentLoc += st[i];
                 }
-                fullChapterString = thisBook.MainDirectory +
-            contentLoc + "/" +
-                thisBook.Chapters[thisBook.CurrentChapter].ChapterString;
+                fullChapterString = thisBook.MainDirectory + contentLoc + "/" +
+                    thisBook.Chapters[thisBook.CurrentChapter].ChapterString;
             }
             else
             {
@@ -245,7 +250,6 @@ namespace EZEreaderUniversal
             myRTB = new RichTextBlock();
             myRTB.IsTextSelectionEnabled = false;
             myRTB.Tapped += myRTB_Tapped;
-            
             myRTB.TextAlignment = TextAlignment.Justify;
             myRTB.FontSize = 20;
             Thickness margin = myRTB.Margin;
@@ -362,6 +366,7 @@ namespace EZEreaderUniversal
             
             Point eTap = e.GetPosition(LayoutRoot.Children.ElementAt(thisBook.CurrentPage));
 
+            //tap on rightside of the screen makes page turn forwards
             if (eTap.X > LayoutRoot.ActualWidth * .5)
             {
                 LayoutRoot.Children.ElementAt(thisBook.CurrentPage).Visibility = Visibility.Collapsed;
@@ -385,9 +390,8 @@ namespace EZEreaderUniversal
                     thisBook.CurrentPage++;
                     LayoutRoot.Children.ElementAt(thisBook.CurrentPage).Visibility = Visibility.Visible;
                 }
-                
-                
             }
+            //tap on left side of the screen makes the page turn backwards
             else if (eTap.X < LayoutRoot.ActualWidth * .5)
             {
                 if (thisBook.CurrentPage > 0)
@@ -419,38 +423,25 @@ namespace EZEreaderUniversal
                 thisBook.CurrentChapter--;
                 LayoutRoot.Children.Clear();
                 HtmlDocument htmlDoc = new HtmlDocument();
-                if (thisBook.CurrentChapter == 0)
+                if (thisBook.IsoStore)
                 {
-                    //eventually adding image to this page
-                    chapterText = thisBook.BookName + "\n" + thisBook.AuthorID;
-                    myRun = new Run();
-                    myRun.Text = chapterText;
-                    para = new Paragraph();
-                    para.Inlines.Add(myRun);
-                    SetmyRTB();
+                    await GetChapterFromStorage(htmlDoc);
                 }
                 else
                 {
-                    if (thisBook.IsoStore)
-                    {
-                        await GetChapterFromStorage(htmlDoc);
-                    }
-                    else
-                    {
-                        htmlDoc.Load(thisBook.MainDirectory +
-                            thisBook.Chapters[thisBook.CurrentChapter].ChapterString);
-                        chapterText = HtmlUtilities.ConvertToText(htmlDoc.DocumentNode.InnerHtml);
-                    }
-                    myRun = new Run();
-                    if (chapterText == "")
-                    {
-                        chapterText = " ";
-                    }
-                    myRun.Text = chapterText;
-                    para = new Paragraph();
-                    para.Inlines.Add(myRun);
-                    SetmyRTB();
+                    htmlDoc.Load(thisBook.MainDirectory +
+                        thisBook.Chapters[thisBook.CurrentChapter].ChapterString);
+                    chapterText = HtmlUtilities.ConvertToText(htmlDoc.DocumentNode.InnerHtml);
                 }
+                myRun = new Run();
+                if (chapterText == "")
+                {
+                    chapterText = " ";
+                }
+                myRun.Text = chapterText;
+                para = new Paragraph();
+                para.Inlines.Add(myRun);
+                SetmyRTB();
                 myRTB.Blocks.Clear();
                 myRTB.Blocks.Add(para);
                 LayoutRoot.Children.Add(myRTB);
@@ -458,7 +449,7 @@ namespace EZEreaderUniversal
                 CreateAdditionalPages();
                 thisBook.CurrentPage = pageNumber +1;
             }
-            else
+            else if (thisBook.CurrentChapter == 1)
             {
                 thisBook.CurrentChapter--;
                 LayoutRoot.Children.Clear();

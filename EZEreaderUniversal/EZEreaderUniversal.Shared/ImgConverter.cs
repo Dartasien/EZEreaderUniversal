@@ -17,7 +17,6 @@ namespace EZEreaderUniversal
         public object Convert(object value, Type targetType, object parameter, string language)
         {
             string path = value as string;
-            Debug.WriteLine(path);
             if (String.IsNullOrEmpty(path))
                 return null;
             if ((path.Length > 9) && (path.ToLower().Substring(0, 9).Equals("isostore:")))

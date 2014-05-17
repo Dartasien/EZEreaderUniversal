@@ -103,20 +103,43 @@ namespace EZEreaderUniversal
 
         private void LibraryListView_Tapped(object sender, TappedRoutedEventArgs e)
         {
+            if (BottomBar.Visibility == Visibility.Visible)
+            {
+                CloseAppBarAndDetailsIfOpen();
+            }
+            else if (DetailsGrid.Visibility == Visibility.Visible)
+            {
+                CloseAppBarAndDetailsIfOpen();
+            }
+            else if (BookNameBox.Visibility == Visibility.Visible)
+            {
+                CloseAppBarAndDetailsIfOpen();
+            }
+            else if (AuthorNameBox.Visibility == Visibility.Visible)
+            {
+                CloseAppBarAndDetailsIfOpen();
+            }
+            else
+            {
+                var listViewItem = sender as ListViewItem;
+                if (listViewItem != null)
+                {
+                    ourBook = listViewItem.DataContext as BookModel;
+                }
+                this.LibraryListView.SelectedItem = null;
+                if (ourBook != null)
+                {
+                    this.Frame.Navigate(typeof(ReadingPage), ourBook);
+                }
+            }
+        }
+
+        private void CloseAppBarAndDetailsIfOpen()
+        {
             BottomBar.Visibility = Visibility.Collapsed;
             DetailsGrid.Visibility = Visibility.Collapsed;
             BookNameBox.Visibility = Visibility.Collapsed;
             AuthorNameBox.Visibility = Visibility.Collapsed;
-            var listViewItem = sender as ListViewItem;
-            if (listViewItem != null)
-            {
-                ourBook = listViewItem.DataContext as BookModel;
-            }
-            this.LibraryListView.SelectedItem = null; 
-            if (ourBook != null)
-            {
-                this.Frame.Navigate(typeof(ReadingPage), ourBook);
-            }
         }
 
         internal void NavigateToFilePage()
@@ -158,10 +181,7 @@ namespace EZEreaderUniversal
 
         private void LibraryListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            BottomBar.Visibility = Visibility.Collapsed;
-            DetailsGrid.Visibility = Visibility.Collapsed;
-            BookNameBox.Visibility = Visibility.Collapsed;
-            AuthorNameBox.Visibility = Visibility.Collapsed;
+            CloseAppBarAndDetailsIfOpen();
         }
 
         private void LibraryListView_Tapped_1(object sender, TappedRoutedEventArgs e)

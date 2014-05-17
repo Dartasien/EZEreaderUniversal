@@ -54,7 +54,6 @@ namespace EZEreaderUniversal
                 
                 foreach (StorageFile file in rootPage.FileEvent.Files)
                 {
-                    //Debug.WriteLine(file.Name);
                     originalFile = file.Name;
                     newFile = originalFile.Substring(0, originalFile.Length - 4);
                     newFile += "zip";
@@ -110,7 +109,7 @@ namespace EZEreaderUniversal
                                 }
                                 catch (Exception)
                                 {
-                                    Debug.WriteLine("folder exists");
+                                    
                                 }
                             }
                             else
@@ -126,7 +125,7 @@ namespace EZEreaderUniversal
                                     }
                                     catch (Exception)
                                     {
-                                        Debug.WriteLine("newFile exists");
+                                        
                                     }
                                     if (newFile == null)
                                     {
@@ -151,7 +150,7 @@ namespace EZEreaderUniversal
                                 }
                                 catch (Exception)
                                 {
-                                    Debug.WriteLine("newFile exists");
+                                   
                                 }
                                 if (newFile == null)
                                 {
