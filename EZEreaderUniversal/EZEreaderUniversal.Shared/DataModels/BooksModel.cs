@@ -95,13 +95,13 @@ namespace EZEreaderUniversal.DataModels
             string directoryLoc = bookID + "/";
             string contentOPFLoc = await FindContentOPF(directoryLoc, isInStorage);
             string dateKey = DateTime.Now.Ticks.ToString();
-
+            Debug.WriteLine(GetCoverPic(directoryLoc, isInStorage));
             BookModel result = new BookModel() { 
                 BookID = bookID,
                 BookName = await FindTitle(directoryLoc + contentOPFLoc, isInStorage), 
                 AuthorID = await FindAuthor(directoryLoc + contentOPFLoc, isInStorage),
                 AddedDate = dateKey,
-                CoverPic = directoryLoc + "cover.jpeg",
+                CoverPic = GetCoverPic(directoryLoc, isInStorage),
                 MainDirectory = directoryLoc,
                 ContentDirectory = contentOPFLoc,
                 Chapters = await ParseBookManifest(directoryLoc + contentOPFLoc, directoryLoc, isInStorage),
@@ -112,6 +112,20 @@ namespace EZEreaderUniversal.DataModels
             this.Books.Add(result);
             //uncomment below line to allow for persistent data
             //CallUpdateBooks();
+        }
+ 
+        public string GetCoverPic(string directoryLoc, bool isInStorage)
+        {
+            string coverPic;
+            if (isInStorage)
+            {
+                coverPic = "isostore:" + directoryLoc + "cover.jpeg";
+            }
+            else
+            {
+               return coverPic = directoryLoc + "cover.jpeg";
+            }
+            return coverPic;
         }
 
         /// <summary>
@@ -342,9 +356,20 @@ namespace EZEreaderUniversal.DataModels
             // useful when title recorded as War of Worlds, The to make The War of Worlds
             if (bookTitle[0].Contains(","))
             {
-                string[] splitTitle = bookTitle[0].Split(',');
-                string[] splitTitleTwo = splitTitle[1].Split(' ');
-                return splitTitleTwo[1] + " " + splitTitle[0];
+                if (bookTitle[0].Contains("(") || bookTitle[0].Contains(")"))
+                {
+                    int indexOfParen = bookTitle[0].IndexOf('(');
+                    string splitBookTitle = bookTitle[0].Substring(indexOfParen);
+                    string[] splitTitle = splitBookTitle.Split(',');
+                    string[] splitTitleTwo = splitTitle[1].Split(' ');
+                    return bookTitle[0].Substring(0, indexOfParen) +  splitTitleTwo[1] + " " + splitTitle[0];
+                }
+                else
+                {
+                    string[] splitTitle = bookTitle[0].Split(',');
+                    string[] splitTitleTwo = splitTitle[1].Split(' ');
+                    return splitTitleTwo[1] + " " + splitTitle[0];
+                }
             }
             else
             {

@@ -58,6 +58,7 @@ namespace EZEreaderUniversal
         {
             BottomBar.Visibility = Visibility.Collapsed;
             await RetrieveLibrary();
+            LibraryListView.SelectedItem = null;
             // TODO: Prepare page for display here.
 
             // TODO: If your application contains multiple pages, ensure that you are
@@ -111,7 +112,7 @@ namespace EZEreaderUniversal
             {
                 ourBook = listViewItem.DataContext as BookModel;
             }
-            listViewItem = null;
+            this.LibraryListView.SelectedItem = null; 
             if (ourBook != null)
             {
                 this.Frame.Navigate(typeof(ReadingPage), ourBook);

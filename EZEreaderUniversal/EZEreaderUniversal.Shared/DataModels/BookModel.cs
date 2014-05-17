@@ -1,9 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Windows.Graphics.Imaging;
+using Windows.Storage;
+using Windows.Storage.Streams;
+using Windows.UI.Core;
+using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Media.Imaging;
 
 namespace EZEreaderUniversal.DataModels
 {
@@ -124,7 +133,16 @@ namespace EZEreaderUniversal.DataModels
         {
             get
             {
-                return _coverpic;
+                /*
+                if (IsoStore)
+                {
+                    return GetCoverImage().Result;
+                }
+                else
+                {
+                 */
+                    return _coverpic;
+                //}
             }
             set
             {
@@ -136,6 +154,92 @@ namespace EZEreaderUniversal.DataModels
             }
         }
 
+
+        private byte[] _imagebuffer;
+        public byte[] ImageBuffer
+        {
+            get { return _imagebuffer; }
+            set
+            {
+                if (value != _imagebuffer)
+                {
+                    _imagebuffer = value;
+                }
+            }
+        }
+
+        private async Task<BitmapImage> LoadImageAsync()
+        {
+            if ((CoverPic.Length > 9) && (CoverPic.ToLower().Substring(0, 9).Equals("isostore:")))
+            {
+                using (InMemoryRandomAccessStream ms = new InMemoryRandomAccessStream())
+                {
+                    using (DataWriter writer = new DataWriter(ms.GetOutputStreamAt(0)))
+                    {
+                        writer.WriteBytes(_imagebuffer);
+                        await writer.StoreAsync();
+                    }
+                    var image = new BitmapImage();
+                    await image.SetSourceAsync(ms);
+                    return image;
+                }
+            }
+            else
+            {
+                var image = new BitmapImage();
+                image.UriSource = new Uri(CoverPic);
+                return image;
+            }
+        }
+
+        public async Task<string> GetCoverImage()
+        {
+            StorageFolder appBaseFolder = ApplicationData.Current.LocalFolder;
+            StorageFolder newFolder;
+            var bytes = new Byte[0];
+            string[] picLoc2;
+            if ((CoverPic.Length > 9) && (CoverPic.ToLower().Substring(0, 9).Equals("isostore:")))
+            {
+                if (CoverPic.Contains("/"))
+                {
+                    picLoc2 = CoverPic.Substring(9).Split('/');
+                    if (picLoc2.Length == 2)
+                    {
+                        newFolder = await appBaseFolder.GetFolderAsync(picLoc2[0]);
+                    }
+                    else if (picLoc2.Length == 3)
+                    {
+                        StorageFolder folderOne = await appBaseFolder.GetFolderAsync(picLoc2[0]);
+                        newFolder = await folderOne.GetFolderAsync(picLoc2[1]);
+                    }
+                    else
+                    {
+                        StorageFolder folderOne = await appBaseFolder.GetFolderAsync(picLoc2[0]);
+                        StorageFolder folderTwo = await folderOne.GetFolderAsync(picLoc2[1]);
+                        newFolder = await folderOne.GetFolderAsync(picLoc2[2]);
+                    }
+                    StorageFile file = await newFolder.GetFileAsync(picLoc2[picLoc2.Length - 1]);
+                    using (var ras = await file.OpenReadAsync())
+                    {
+                        var reader = new DataReader(ras.GetInputStreamAt(0));
+                        bytes = new Byte[ras.Size];
+                        await reader.LoadAsync((uint)ras.Size);
+                        reader.ReadBytes(bytes);
+                    }
+                    return Convert.ToBase64String(bytes);
+
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            else
+            {
+                return null;
+            }
+        }
+        
         //Declare an array of the pages so that we know where to go when loading
         private List<ChapterModel> _chapters;
 

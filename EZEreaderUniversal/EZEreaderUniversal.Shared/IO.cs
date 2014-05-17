@@ -9,6 +9,7 @@ using System.Xml.Serialization;
 using Windows.Storage;
 using Windows.Storage.Search;
 using Windows.Storage.Streams;
+using Windows.UI.Xaml.Media.Imaging;
 
 namespace EZEreaderUniversal
 {
@@ -380,6 +381,29 @@ namespace EZEreaderUniversal
                 results = null;
             }
             return results;
+        }
+
+        public static async Task<BitmapImage> GetCoverImage(string picLoc)
+        {
+            StorageFolder newFolder;
+            BitmapImage img = new BitmapImage();
+            InMemoryRandomAccessStream ras = new InMemoryRandomAccessStream();
+            string[] picLoc2;
+            if (picLoc.Contains("/"))
+            {
+                picLoc2 = picLoc.Split('/');
+                newFolder = await IO.CreateOrGetFolders(AppBaseFolder, picLoc2);
+                using (Stream fileSource = await newFolder.OpenStreamForReadAsync(picLoc2[picLoc2.Length - 1]))
+                {
+                    await fileSource.CopyToAsync(ras.AsStreamForWrite());
+                    await img.SetSourceAsync(ras);
+                    return img;
+                }
+            }
+            else
+            {
+                return null;
+            }
         }
 
         /// <summary>

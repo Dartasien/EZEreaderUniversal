@@ -88,6 +88,18 @@ namespace EZEreaderUniversal
             await CreateFirstPage();
         }
 
+        /// <summary>
+        /// Preserves state associated with this page in case the application is suspended or the
+        /// page is discarded from the navigation cache.  Values must conform to the serialization
+        /// requirements of <see cref="SuspensionManager.SessionState"/>.
+        /// </summary>
+        /// <param name="sender">The source of the event; typically <see cref="NavigationHelper"/></param>
+        /// <param name="e">Event data that provides an empty dictionary to be populated with
+        /// serializable state.</param>
+        private void NavigationHelper_SaveState(object sender, SaveStateEventArgs e)
+        {
+            rootPage.CallUpdateBooks();
+        }
 
         /// <summary>
         /// Takes the chapters full html file and loads it, then converts to text, and finally
@@ -100,6 +112,8 @@ namespace EZEreaderUniversal
             if (thisBook.CurrentChapter == 0)
             {
                 //eventually adding image to this page
+                Image image = new Image();
+                //
                 chapterText = thisBook.BookName + "\n" + thisBook.AuthorID;
                 myRun = new Run();
                 myRun.Text = chapterText;
@@ -261,19 +275,6 @@ namespace EZEreaderUniversal
                 LayoutRoot.Children.ElementAt(thisBook.CurrentPage).Visibility = 
                     Visibility.Visible;
             }
-        }
-
-        /// <summary>
-        /// Preserves state associated with this page in case the application is suspended or the
-        /// page is discarded from the navigation cache.  Values must conform to the serialization
-        /// requirements of <see cref="SuspensionManager.SessionState"/>.
-        /// </summary>
-        /// <param name="sender">The source of the event; typically <see cref="NavigationHelper"/></param>
-        /// <param name="e">Event data that provides an empty dictionary to be populated with
-        /// serializable state.</param>
-        private void NavigationHelper_SaveState(object sender, SaveStateEventArgs e)
-        {
-            rootPage.CallUpdateBooks();
         }
 
         #region NavigationHelper registration
