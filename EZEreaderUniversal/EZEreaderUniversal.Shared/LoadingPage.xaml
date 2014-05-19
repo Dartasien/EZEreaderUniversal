@@ -8,6 +8,28 @@
     mc:Ignorable="d">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-
+        <StackPanel x:Name="LoadingStack" 
+                    Margin="15, 15, 15, 15"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+            <TextBlock x:Name="AddingTB" 
+                       Text="Adding Book to Library"
+                       FontSize="26"
+                       VerticalAlignment="Center"
+                       HorizontalAlignment="Center">
+                
+            </TextBlock>
+            <ProgressBar x:Name="LoadingProgressBar"
+                         IsIndeterminate="False"
+                         VerticalAlignment="Center"
+                         HorizontalAlignment="Center"
+                         Width="200"
+                         Height="10"
+                         Margin="5, 5, 5, 5"
+                         >
+                
+            </ProgressBar>
+            
+        </StackPanel>
     </Grid>
 </Page>

@@ -49,6 +49,7 @@ namespace EZEreaderUniversal
         {
             string originalFile = " ";
             string newFile = "";
+            LoadingProgressBar.Value = 0;
             if (rootPage.FileEvent != null)
             {    
                 
@@ -69,10 +70,13 @@ namespace EZEreaderUniversal
                     ///TODO add file operations
                 }
             }
+            LoadingProgressBar.Value = 25;
             string folderName = newFile.Substring(0, newFile.Length - 4);
             await IO.CreateOrGetFolder(folderName);
             await UnZipTheFile(newFile, folderName);
+            LoadingProgressBar.Value = 75;
             await IO.DeleteFileInFolder(sFolder, newFile);
+            LoadingProgressBar.Value = 100;
             addBookToLibrary(folderName);
             this.Frame.Navigate(typeof(MainPage));
         }
