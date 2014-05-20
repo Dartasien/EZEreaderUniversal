@@ -19,8 +19,10 @@
     <Compile Include="$(MSBuildThisFileDirectory)DataModels\BooksModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DataModels\ChapterModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DataModels\PageModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ICollectionViewEx.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ImgConverter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ListCollectionView.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)LoadingPage.xaml.cs">
       <DependentUpon>LoadingPage.xaml</DependentUpon>
     </Compile>

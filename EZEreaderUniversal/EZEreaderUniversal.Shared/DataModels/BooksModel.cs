@@ -14,6 +14,7 @@ using System.Diagnostics;
 using Windows.Storage.Streams;
 using System.Xml.Serialization;
 using Windows.Data.Xml.Dom;
+using CollectionView;
 
 
 namespace EZEreaderUniversal.DataModels
@@ -31,12 +32,45 @@ namespace EZEreaderUniversal.DataModels
                 handler(this, new PropertyChangedEventArgs(p));
             }
         }
+        private ListCollectionView _sortedBooks;
+    
+        public ListCollectionView SortedBooks
+        { 
+            get
+            {
+                return _sortedBooks;
+            }
+            set
+            {
+                _sortedBooks = value;
+                NotifyPropertyChanged("SortedBooks");
+            }
+        }
 
-        public ObservableCollection<BookModel> Books { get; set; }
+        private ObservableCollection<BookModel> _books;
+
+        public ObservableCollection<BookModel> Books
+        {
+            get 
+            { 
+                return _books;
+            }
+            set 
+            { 
+                _books = value;
+                NotifyPropertyChanged("Books");
+            }
+        }
+
         public bool IsDataLoaded
         {
             get;
             private set;
+        }
+
+        public void SortByBookNameAscending()
+        {          
+            SortedBooks.SortDescriptions.Add(new SortDescription("BookName", ListSortDirection.Ascending));
         }
 
         /// <summary>
@@ -74,6 +108,7 @@ namespace EZEreaderUniversal.DataModels
                 IsoStore = isInStorage
             };
             this.Books.Add(result);
+            SortByBookNameAscending();
             //uncomment below line to allow for persistent data
             //CallUpdateBooks();
         }
@@ -564,7 +599,9 @@ namespace EZEreaderUniversal.DataModels
             
                 if (!IsDataLoaded)
                 {
+                    
                     this.Books = new ObservableCollection<BookModel>();
+                    this.SortedBooks = new ListCollectionView(this.Books);
                     ImportBook("Pride and Prejudice - Jane Austen_6590", false);
                     CallUpdateBooks(); 
                 }

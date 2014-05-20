@@ -16,6 +16,7 @@ using EZEreaderUniversal.DataModels;
 using Windows.ApplicationModel.Activation;
 using EZEreaderUniversal.Common;
 using System.Diagnostics;
+using CollectionView;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -28,6 +29,7 @@ namespace EZEreaderUniversal
     {
         public static MainPage Current;
         public BooksModel LibrarySource;
+        public CollectionViewSource LibraryViewSource;
         BookModel ourBook;
 
         private FileActivatedEventArgs _fileEventArgs = null;
@@ -56,11 +58,10 @@ namespace EZEreaderUniversal
         /// This parameter is typically used to configure the page.</param>
         async protected override void OnNavigatedTo(NavigationEventArgs e)
         {
+            // TODO: Prepare page for display here.
             BottomBar.Visibility = Visibility.Collapsed;
             await RetrieveLibrary();
             LibraryListView.SelectedItem = null;
-            // TODO: Prepare page for display here.
-
             // TODO: If your application contains multiple pages, ensure that you are
             // handling the hardware Back button by registering for the
             // Windows.Phone.UI.Input.HardwareButtons.BackPressed event.
@@ -78,7 +79,7 @@ namespace EZEreaderUniversal
                 {
                     await LibrarySource.LoadData();
                 }
-                this.DataContext = LibrarySource.Books;
+                this.DataContext = LibrarySource.SortedBooks;
                 LibraryListView.ItemsSource = this.DataContext;
             }
             else
@@ -206,6 +207,42 @@ namespace EZEreaderUniversal
         {
             ourBook.AuthorID = AuthorNameBox.Text;
             CallUpdateBooks();
+        }
+
+        private void SortByAuthor_Click(object sender, RoutedEventArgs e)
+        {
+            if (LibrarySource.SortedBooks.SortDescriptions[0].PropertyName != "AuthorID")
+            {
+                LibrarySource.SortedBooks.SortDescriptions[0].PropertyName = "AuthorID";
+                LibrarySource.SortedBooks.SortDescriptions[0].Direction = ListSortDirection.Ascending;
+            }
+            else if (LibrarySource.SortedBooks.SortDescriptions[0].Direction != ListSortDirection.Ascending)
+            {
+                LibrarySource.SortedBooks.SortDescriptions[0].Direction = ListSortDirection.Ascending;
+            }
+            else
+            {
+                LibrarySource.SortedBooks.SortDescriptions[0].Direction = ListSortDirection.Descending;
+            }
+            LibrarySource.SortedBooks.Refresh();
+        }
+
+        private void SortByTitle_Click(object sender, RoutedEventArgs e)
+        {
+            if (LibrarySource.SortedBooks.SortDescriptions[0].PropertyName != "BookName")
+            {
+                LibrarySource.SortedBooks.SortDescriptions[0].PropertyName = "BookName";
+                LibrarySource.SortedBooks.SortDescriptions[0].Direction = ListSortDirection.Ascending;
+            }
+            else if (LibrarySource.SortedBooks.SortDescriptions[0].Direction != ListSortDirection.Ascending)
+            {
+                LibrarySource.SortedBooks.SortDescriptions[0].Direction = ListSortDirection.Ascending;
+            }
+            else
+            {
+                LibrarySource.SortedBooks.SortDescriptions[0].Direction = ListSortDirection.Descending;
+            }
+            LibrarySource.SortedBooks.Refresh();
         }
     }
 }
