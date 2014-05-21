@@ -98,6 +98,12 @@ namespace EZEreaderUniversal
         /// serializable state.</param>
         private void NavigationHelper_SaveState(object sender, SaveStateEventArgs e)
         {
+            if (thisBook.IsCompleted == true)
+            {
+                thisBook.CurrentChapter = 0;
+                thisBook.CurrentPage = 0;
+                rootPage.LibrarySource.RecentReads.Remove(thisBook);
+            }
             rootPage.CallUpdateBooks();
         }
 
@@ -261,6 +267,9 @@ namespace EZEreaderUniversal
 
         }
 
+        /// <summary>
+        /// Adds any additional pages that are overflowing to the layout grid
+        /// </summary>
         private void CreateAdditionalPages()
         {
             listRTBO = new List<RichTextBlockOverflow>();
@@ -374,15 +383,17 @@ namespace EZEreaderUniversal
                 {
                     if (thisBook.CurrentChapter + 1 >= thisBook.Chapters.Count)
                     {
-                        thisBook.CurrentChapter = 0;
+                        thisBook.IsCompleted = true;
+                        thisBook.IsStarted = false;
                     }
                     else
                     {
                         thisBook.CurrentChapter++;
+                        thisBook.CurrentPage = 0;
+                        LayoutRoot.Children.Clear();
+                        await CreateFirstPage();
                     }
-                    thisBook.CurrentPage = 0;
-                    LayoutRoot.Children.Clear();
-                    await CreateFirstPage();
+                    
                 }
                 else
                 {

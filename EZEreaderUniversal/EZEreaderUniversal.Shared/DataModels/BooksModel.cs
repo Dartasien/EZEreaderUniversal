@@ -47,18 +47,31 @@ namespace EZEreaderUniversal.DataModels
             }
         }
 
-        private ObservableCollection<BookModel> _books;
+        private ObservableCollection<BookModel> _recentreads;
+        public ObservableCollection<BookModel> RecentReads
+        {
+            get
+            {
+                return _recentreads;
+            }
+            set
+            {
+                _recentreads = value;
+                NotifyPropertyChanged("RecentReads");
+            }
+        }
 
-        public ObservableCollection<BookModel> Books
+        private ObservableCollection<BookModel> _library;
+        public ObservableCollection<BookModel> Library
         {
             get 
             { 
-                return _books;
+                return _library;
             }
             set 
             { 
-                _books = value;
-                NotifyPropertyChanged("Books");
+                _library = value;
+                NotifyPropertyChanged("Library");
             }
         }
 
@@ -80,7 +93,7 @@ namespace EZEreaderUniversal.DataModels
         /// <returns>BookModel class</returns>
         public BookModel GetItem(string bookID)
         {
-            BookModel result = this.Books.Where(f => f.BookID == bookID).FirstOrDefault();
+            BookModel result = this.Library.Where(f => f.BookID == bookID).FirstOrDefault();
             return result;
         }
 
@@ -105,9 +118,11 @@ namespace EZEreaderUniversal.DataModels
                 Chapters = await ParseBookManifest(directoryLoc + contentOPFLoc, directoryLoc, isInStorage),
                 CurrentChapter = 0,
                 CurrentPage = 0,
-                IsoStore = isInStorage
+                IsoStore = isInStorage,
+                IsStarted = false,
+                IsCompleted = false
             };
-            this.Books.Add(result);
+            this.Library.Add(result);
             SortByBookNameAscending();
             //uncomment below line to allow for persistent data
             //CallUpdateBooks();
@@ -347,6 +362,7 @@ namespace EZEreaderUniversal.DataModels
                 return await IO.CreateOrGetFolder(newContent[4], folderThree);
             }
         }
+
         /// <summary>
         /// Find the book's title from the content.opf xml by parsing
         /// </summary>
@@ -408,10 +424,13 @@ namespace EZEreaderUniversal.DataModels
                 if (bookTitle[0].Contains("(") || bookTitle[0].Contains(")"))
                 {
                     int indexOfParen = bookTitle[0].IndexOf('(');
-                    string splitBookTitle = bookTitle[0].Substring(indexOfParen);
+                    int indexOfClosingParen = bookTitle[0].IndexOf(')');                    
+                    string splitBookTitle = bookTitle[0].Substring(indexOfParen +1);
                     string[] splitTitle = splitBookTitle.Split(',');
                     string[] splitTitleTwo = splitTitle[1].Split(' ');
-                    return bookTitle[0].Substring(0, indexOfParen) +  splitTitleTwo[1] + " " + splitTitle[0];
+                    return bookTitle[0].Substring(0, indexOfParen +1) + 
+                        splitTitleTwo[1].Substring(0, splitTitleTwo[1].Length -1) + " " + 
+                        splitTitle[0] + bookTitle[0].Substring(indexOfClosingParen);
                 }
                 else
                 {
@@ -537,7 +556,7 @@ namespace EZEreaderUniversal.DataModels
             {
                 await IO.DeleteFolderInLocalFolder(bookToRemove.BookID);
             }
-            this.Books.Remove(bookToRemove);
+            this.Library.Remove(bookToRemove);
             CallUpdateBooks();
             NotifyPropertyChanged("Items");
         }
@@ -566,10 +585,14 @@ namespace EZEreaderUniversal.DataModels
         public async Task UpdateBooks()
         {
             StorageFolder appStorageFolder = IO.GetAppStorageFolder();
-            await IO.DeleteFileInFolder(appStorageFolder, "ebooks.xml");
-            string itemsAsXML = IO.SerializeToString(this.Books);
-            StorageFile dataFile = await IO.CreateFileInFolder(appStorageFolder, "ebooks.xml");
-            await IO.WriteStringToFile(dataFile, itemsAsXML);
+            await IO.DeleteFileInFolder(appStorageFolder, "librarybooks.xml");
+            await IO.DeleteFileInFolder(appStorageFolder, "recentreads.xml");
+            string libraryBooksAsXML = IO.SerializeToString(this.Library);
+            string recentReadsAsXML = IO.SerializeToString(this.RecentReads);
+            StorageFile dataFile = await IO.CreateFileInFolder(appStorageFolder, "librarybooks.xml");
+            StorageFile recentReadsFile = await IO.CreateFileInFolder(appStorageFolder, "recentreads.xml");
+            await IO.WriteStringToFile(dataFile, libraryBooksAsXML);
+            await IO.WriteStringToFile(recentReadsFile, recentReadsAsXML);
         }
 
         /// <summary>
@@ -582,7 +605,8 @@ namespace EZEreaderUniversal.DataModels
             //uncomment below to clear the library
             await IO.DeleteAllFilesInLocalFolder();
             StorageFolder appStorageFolder = ApplicationData.Current.LocalFolder;
-            StorageFile dataFile = await IO.GetFileInFolder(appStorageFolder, "ebooks.xml");
+            StorageFile dataFile = await IO.GetFileInFolder(appStorageFolder, "librarybooks.xml");
+            StorageFile recentReadsFile = await IO.GetFileInFolder(appStorageFolder, "recentreads.xml");
             
             if (dataFile != null)
             {
@@ -590,7 +614,8 @@ namespace EZEreaderUniversal.DataModels
                 if (!IsDataLoaded)
                 {
                     string itemsAsXML = await IO.ReadStringFromFile(dataFile);
-                    this.Books = IO.SerializeFromString<ObservableCollection<BookModel>>(itemsAsXML);
+                    this.Library = IO.SerializeFromString<ObservableCollection<BookModel>>(itemsAsXML);
+                    this.SortedBooks = new ListCollectionView(this.Library);
                 }
                  
             }
@@ -600,12 +625,33 @@ namespace EZEreaderUniversal.DataModels
                 if (!IsDataLoaded)
                 {
                     
-                    this.Books = new ObservableCollection<BookModel>();
-                    this.SortedBooks = new ListCollectionView(this.Books);
+                    this.Library = new ObservableCollection<BookModel>();
+                    this.SortedBooks = new ListCollectionView(this.Library);
                     ImportBook("Pride and Prejudice - Jane Austen_6590", false);
-                    CallUpdateBooks(); 
+                    
                 }
             }
+
+            if (recentReadsFile != null)
+            {
+
+                if (!IsDataLoaded)
+                {
+                    string recentReadsAsXML = await IO.ReadStringFromFile(dataFile);
+                    this.RecentReads = IO.SerializeFromString<ObservableCollection<BookModel>>(recentReadsAsXML);
+                }
+            }
+            else
+            {
+
+                if (!IsDataLoaded)
+                {
+
+                    this.RecentReads = new ObservableCollection<BookModel>();
+                    
+                }
+            }
+            CallUpdateBooks();
             NotifyPropertyChanged("Items");
             this.IsDataLoaded = true;
         }

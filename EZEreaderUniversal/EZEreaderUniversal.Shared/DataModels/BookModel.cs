@@ -201,9 +201,10 @@ namespace EZEreaderUniversal.DataModels
                 }
             }
         }
-        private bool _isoStore;
 
         //decide whether a book is in isostorage or not
+        private bool _isoStore;
+
         public bool IsoStore
         {
             get { return _isoStore; }
@@ -250,6 +251,44 @@ namespace EZEreaderUniversal.DataModels
                 {
                     _contentDirectory = value;
                     NotifyPropertyChanged("ContentDirectory");
+                }
+            }
+        }
+
+        //shows if the book has been opened
+        private bool _isStarted;
+
+        public bool IsStarted
+        {
+            get
+            {
+                return _isStarted;
+            }
+            set
+            {
+                if (value != _isStarted)
+                {
+                    _isStarted = value;
+                    NotifyPropertyChanged("IsStarted");
+                }
+            }
+        }
+
+        //shows if a book has been completely read
+        private bool _isCompleted;
+
+        public bool IsCompleted
+        {
+            get
+            {
+                return _isCompleted;
+            }
+            set
+            {
+                if (value != _isCompleted)
+                {
+                    _isCompleted = value;
+                    NotifyPropertyChanged("IsCompleted");
                 }
             }
         }

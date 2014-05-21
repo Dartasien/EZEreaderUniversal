@@ -14,6 +14,15 @@ namespace EZEreaderUniversal
 {
     class ImgConverter : IValueConverter
     {
+
+        /// <summary>
+        /// Overriden Convert method for IValueConverter
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="targetType"></param>
+        /// <param name="parameter"></param>
+        /// <param name="language"></param>
+        /// <returns></returns>
         public object Convert(object value, Type targetType, object parameter, string language)
         {
             string path = value as string;
@@ -35,14 +44,24 @@ namespace EZEreaderUniversal
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Method to call the SetSource method and allow async to work
+        /// </summary>
+        /// <param name="img"></param>
+        /// <param name="path"></param>
         public async void SetSourceOne(BitmapImage img, string path)
         {
             await SetSource(img, path);
         }
 
+        /// <summary>
+        /// Method to set the source of the pic from windows storage
+        /// </summary>
+        /// <param name="img">bitmapimage to set a source for</param>
+        /// <param name="path">string location of the image in storage</param>
+        /// <returns>sets the img.source to a new filestream</returns>
         public async Task SetSource(BitmapImage img, string path)
         {
-            Debug.WriteLine(path);
             string[] folders = path.Split('/');
             StorageFolder appBaseFolder = ApplicationData.Current.LocalFolder;
             StorageFolder imageFolder = await IO.CreateOrGetFolders(appBaseFolder, folders);
