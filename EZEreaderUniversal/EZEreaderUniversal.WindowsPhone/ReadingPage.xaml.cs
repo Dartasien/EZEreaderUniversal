@@ -23,6 +23,7 @@ using System.Diagnostics;
 using Windows.Storage;
 using System.Threading.Tasks;
 using Windows.UI.Xaml.Media.Imaging;
+using Windows.UI.Popups;
 
 // The Basic Page item template is documented at http://go.microsoft.com/fwlink/?LinkID=390556
 
@@ -86,12 +87,30 @@ namespace EZEreaderUniversal
         /// session.  The state will be null the first time a page is visited.</param>
         private async void NavigationHelper_LoadState(object sender, LoadStateEventArgs e)
         {   
+            string errorMessage = "";
             thisBook = ((BookModel)e.NavigationParameter);
             ReadingBottomBar.Visibility = Visibility.Collapsed;
             //FontListBox.Visibility = Visibility.Collapsed;
             this.DataContext = thisBook;
             GetSystemFonts();
-            await CreateFirstPage();
+            try
+            {
+                await CreateFirstPage();
+            }
+            catch (Exception)
+            {
+                errorMessage = "Error opening book, possible incorrect format.";
+            }
+
+            if (errorMessage != "")
+            {
+                var messageDialog = new MessageDialog(errorMessage);
+                messageDialog.Commands.Add(new UICommand("Okay"));
+                messageDialog.DefaultCommandIndex = 0;
+                messageDialog.CancelCommandIndex = 0;
+                await messageDialog.ShowAsync();
+                this.Frame.Navigate(typeof(MainPage));
+            }
         }
 
         /// <summary>

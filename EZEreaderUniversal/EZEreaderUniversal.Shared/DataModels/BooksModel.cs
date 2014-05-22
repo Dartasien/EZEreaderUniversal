@@ -131,11 +131,17 @@ namespace EZEreaderUniversal.DataModels
             }
         }
 
+        /// <summary>
+        /// Sets the ListCollection to be sorted by book name.
+        /// </summary>
         public void SortByBookNameAscending()
         {          
             SortedBooks.SortDescriptions.Add(new SortDescription("BookName", ListSortDirection.Ascending));
         }
 
+        /// <summary>
+        /// Sets the ListCollection to be sorted by most recently accessed book
+        /// </summary>
         public void SortBooksByAccessDate()
         {
             RecentBooks.SortDescriptions.Add(new SortDescription("OpenedRecentlyTime", ListSortDirection.Descending));

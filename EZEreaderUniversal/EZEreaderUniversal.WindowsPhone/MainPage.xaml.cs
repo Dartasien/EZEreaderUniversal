@@ -17,6 +17,7 @@ using Windows.ApplicationModel.Activation;
 using EZEreaderUniversal.Common;
 using System.Diagnostics;
 using CollectionView;
+using Windows.UI.Popups;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -195,16 +196,36 @@ namespace EZEreaderUniversal
 
         /// <summary>
         /// deletes the currently selected book
-        /// TODO: add confirmation box.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private async void DeleteBarButton_Click(object sender, RoutedEventArgs e)
         {
-            if (ourBook != null)
+            var messageDialog = new MessageDialog("Are you sure you want to delete " + ourBook.BookName + " ?");
+            messageDialog.Commands.Add(new UICommand("Yes", new UICommandInvokedHandler(this.CommandInvokedHandler)));
+            messageDialog.Commands.Add(new UICommand("Cancel", new UICommandInvokedHandler(this.CommandInvokedHandler)));
+            messageDialog.DefaultCommandIndex = 1;
+            messageDialog.CancelCommandIndex = 1;
+            await messageDialog.ShowAsync();
+        }
+
+        /// <summary>
+        /// Deletes a book if the user confirms the choice
+        /// </summary>
+        /// <param name="command"></param>
+        private async void CommandInvokedHandler(IUICommand command)
+        {
+            if (command.Label == "Yes")
             {
-                await RetrieveLibrary();
-                await this.LibrarySource.RemoveBook(ourBook);
+                if (ourBook != null)
+                {
+                    await RetrieveLibrary();
+                    if (ourBook.IsStarted == true)
+                    {
+                        this.LibrarySource.RecentReads.Remove(ourBook);
+                    }
+                    await this.LibrarySource.RemoveBook(ourBook);
+                }
             }
         }
 
@@ -335,6 +356,7 @@ namespace EZEreaderUniversal
 
             if (RecentReadsListView.Visibility != Visibility.Visible)
             {
+                
                 LibraryListView.Visibility = Visibility.Collapsed;
                 RecentReadsListView.Visibility = Visibility.Visible;
             }
