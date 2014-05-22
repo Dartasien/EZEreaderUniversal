@@ -59,6 +59,25 @@ namespace EZEreaderUniversal.DataModels
                 }
             }
         }
+
+        private string _chaptername;
+
+        public string ChapterName
+        {
+            get
+            {
+                return _chaptername;
+            }
+            set
+            {
+                if (value != _chaptername)
+                {
+                    _chaptername = value;
+                    NotifyPropertyChanged("ChapterName");
+                }
+            }
+        }
+
         //declare an int to hold the total pages in the chapter
         private int _pageCount;
 

@@ -163,6 +163,25 @@ namespace EZEreaderUniversal.DataModels
             }
         }
 
+        //Declare a string to hold the location of the table of contents
+        private string _tableofcontents;
+
+        public string TableOfContents
+        {
+            get
+            {
+                return _tableofcontents;
+            }
+            set
+            {
+                if (value != _tableofcontents)
+                {
+                    _tableofcontents = value;
+                    NotifyPropertyChanged("TableOfContents");
+                }
+            }
+        }
+
         //Declare an array of the pages so that we know where to go when loading
         private List<ChapterModel> _chapters;
 

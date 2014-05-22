@@ -168,15 +168,18 @@ namespace EZEreaderUniversal.DataModels
             string directoryLoc = bookID + "/";
             string contentOPFLoc = await FindContentOPF(directoryLoc, isInStorage);
             string dateKey = DateTime.Now.Ticks.ToString();
+            string tableOfContents = await GetTableOfContents(directoryLoc + contentOPFLoc, isInStorage);
             BookModel result = new BookModel() { 
                 BookID = bookID,
                 BookName = await FindTitle(directoryLoc + contentOPFLoc, isInStorage), 
                 AuthorID = await FindAuthor(directoryLoc + contentOPFLoc, isInStorage),
+                TableOfContents = tableOfContents,
                 AddedDate = dateKey,
                 CoverPic = await GetCoverPic(directoryLoc, isInStorage, contentOPFLoc),
                 MainDirectory = directoryLoc,
                 ContentDirectory = contentOPFLoc,
-                Chapters = await ParseBookManifest(directoryLoc + contentOPFLoc, directoryLoc, isInStorage),
+                Chapters = await ParseBookManifest(directoryLoc + contentOPFLoc, directoryLoc,
+                tableOfContents, isInStorage),
                 CurrentChapter = 0,
                 CurrentPage = 0,
                 IsoStore = isInStorage,
@@ -208,6 +211,161 @@ namespace EZEreaderUniversal.DataModels
                return coverPic = directoryLoc + "cover.jpeg";
             }
             return coverPic;
+        }
+
+        /// <summary>
+        /// Method to find the location of the Table of Contents of the book
+        /// </summary>
+        /// <param name="contentOPF">string location of the content.opf file</param>
+        /// <param name="isInStorage">bool that tells if location is assets or storage</param>
+        /// <returns></returns>
+        public async Task<string> GetTableOfContents(string contentOPF, bool isInStorage)
+        {
+            XDocument xdoc;
+            string tableOfContents = "test";
+            StorageFolder newFolder;
+            string newContentOPF = contentOPF;
+            if (isInStorage)
+            {
+                if (contentOPF.Contains('/'))
+                {
+                    string[] newContent = contentOPF.Split('/');
+                    newFolder = await FindContentOPFFolder(contentOPF, newContent);
+                    newContentOPF = newContent[newContent.Length - 1];
+                }
+                else
+                {
+                    newFolder = appFolder;
+                }
+                using (var file = await 
+                    newFolder.OpenStreamForReadAsync(newContentOPF))
+                {
+                    xdoc = XDocument.Load(file);
+                    XNamespace ns = "http://www.idpf.org/2007/opf";
+                    var tocLoc = from x in xdoc.Descendants()
+                                       where (string)x.Attribute("type") == "toc"
+                                       select (string)x.Attribute("href");
+
+                    foreach (string s in tocLoc)
+                    {
+                        if (s != null)
+                        {
+                            tableOfContents = s;
+                        }
+                    }
+                }
+            
+            }
+            else
+            {
+                xdoc = XDocument.Load(contentOPF);
+                XNamespace ns = "http://www.idpf.org/2007/opf";
+                var tocLoc = from q in xdoc.Descendants()
+                             where (string)q.Attribute("type") == "toc"
+                             select (string)q.Attribute("href");
+                foreach (string s in tocLoc)
+                {
+                    if (s != null)
+                    {
+                        tableOfContents = s;
+                        
+                    }
+                }
+            }
+            if (tableOfContents.Contains("#"))
+            {
+                int index = tableOfContents.IndexOf('#');
+                tableOfContents = tableOfContents.Substring(0, index);
+            }
+            //Debug.WriteLine(tableOfContents);
+            return tableOfContents;
+        }
+
+        private async Task<List<string[]>> GetChapterNamesFromTOC(string tocLoc, bool isInStrage)
+        {
+            XDocument xdoc;
+            List<string[]> chapters = new List<string[]>();
+            string[] arrayOfChapter;
+            StorageFolder storageFolder;
+            string newTocLoc = tocLoc;
+            if (isInStrage)
+            {
+                if (newTocLoc.Contains('/'))
+                {
+                    string[] splitTocLoc = newTocLoc.Split('/');
+                    storageFolder = await FindContentOPFFolder(tocLoc, splitTocLoc);
+                    newTocLoc = splitTocLoc[splitTocLoc.Length - 1];
+                }
+                else
+                {
+                    storageFolder = appFolder;
+                }
+                using (var file = await storageFolder.OpenStreamForReadAsync(newTocLoc))
+                {
+                    xdoc = XDocument.Load(file);
+                    XNamespace ns = "http://www.w3.org/1999/xhtml";
+
+                    var chapterNames = from x in xdoc.Root.Element(ns + "body").Descendants()
+                                       select new ChapterToC
+                                       (
+                                           x.Value,
+                                           (string)x.Attribute("href")
+                                       );
+
+                    foreach (var test in chapterNames)
+                    {
+                        if (test.ChapterName != null && test.ChapterString != null)
+                        {
+                            arrayOfChapter = new string[2];
+                            //Debug.WriteLine(test.ChapterString);
+                            if (test.ChapterString.Contains('#'))
+                            {
+                                arrayOfChapter[0] = test.ChapterString.Substring(0, test.ChapterString.IndexOf('#'));
+                            }
+                            else
+                            {
+                                arrayOfChapter[0] = test.ChapterString;
+                            }
+                            arrayOfChapter[1] = test.ChapterName;
+                            chapters.Add(arrayOfChapter);
+                            //Debug.WriteLine(test.ChapterName);
+                        }
+                    }
+                   
+                }
+            }
+            else
+            {
+                xdoc = XDocument.Load(tocLoc);
+                XNamespace ns = "http://www.w3.org/1999/xhtml";
+
+                var chapterNames = from x in xdoc.Root.Element(ns + "body").Descendants()
+                                       select new ChapterToC
+                                       (
+                                           x.Value,
+                                           (string)x.Attribute("href")
+                                       );
+
+                foreach (var test in chapterNames)
+                {
+                    if (test.ChapterName != null && test.ChapterString != null)
+                    {
+                        arrayOfChapter = new string[2];
+                        if (test.ChapterString.Contains('#'))
+                        {
+                            arrayOfChapter[0] = test.ChapterString.Substring(0, test.ChapterString.IndexOf('#'));
+                        }
+                        else
+                        {
+                            arrayOfChapter[0] = test.ChapterString;
+                        }
+                        arrayOfChapter[1] = test.ChapterName;
+                        chapters.Add(arrayOfChapter);
+                    }
+                }
+                
+            }
+            return chapters;
         }
 
         /// <summary>
@@ -511,7 +669,8 @@ namespace EZEreaderUniversal.DataModels
         /// </summary>
         /// <param name="contentOPF">string of content.opf directory</param>
         /// <returns>List</string></returns>
-        private async Task<List<ChapterModel>> ParseBookManifest(string contentOPF, string directoryLoc, bool isInStorage)
+        private async Task<List<ChapterModel>> ParseBookManifest(string contentOPF, string directoryLoc,
+            string tocLoc, bool isInStorage)
         {
             List<string> manifestHrefs = new List<string>();
             List<string> manifestIDs = new List<string>();
@@ -584,21 +743,52 @@ namespace EZEreaderUniversal.DataModels
                 }
             }
 
+            var chapterNames = await GetChapterNamesFromTOC(directoryLoc + tocLoc, isInStorage);
             // Will check id of chapters in the manifest against the ids in the spine
             // to find the correct order of the chapters and then adds them to chaptermodel
             int chapterID = 0;
             foreach (string s in idrefs)
             {
-
                 for (int i = 0; i < manifestIDs.Count(); i++ )
                 {
                     if (s == manifestIDs[i])
                     {
+                        string chapterName = "";
+                        string checkChapterName = manifestHrefs[i -1];
+
+                        if (manifestHrefs[i-1] == "titlepage.xhtml")
+                        {
+                            chapterName = "Cover Page";
+                        }
+                        else if (tocLoc == manifestHrefs[i - 1])
+                        {
+                            chapterName = "Table of Contents";
+                        }
+                        else
+                        {
+                            if (checkChapterName.Contains('/'))
+                            {
+
+                                string[] manifestBreak = checkChapterName.Split('/');
+                                checkChapterName = manifestBreak[manifestBreak.Length - 1];
+                            }
+
+                            foreach (string[] t in chapterNames)
+                            {
+                                if (checkChapterName == t[0])
+                                {
+                                    chapterName = t[1];
+                                }
+                            }
+                        }
                         chapterCollection.Add(new ChapterModel()
                         {
+                            ChapterName = chapterName,
                             ChapterID = chapterID,
                             ChapterString = manifestHrefs[i - 1]
                         });
+                        Debug.WriteLine(manifestHrefs[i - 1]);
+                        Debug.WriteLine(chapterName);
                     }
                     chapterID++;
                 }
