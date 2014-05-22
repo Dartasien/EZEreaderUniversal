@@ -153,30 +153,6 @@ namespace EZEreaderUniversal
             }
         }
 
-        private void RecentReadsListView_Tapped(object sender, TappedRoutedEventArgs e)
-        {
-            if (BottomBar.Visibility == Visibility.Visible ||
-                DetailsGrid.Visibility == Visibility.Visible ||
-                BookNameBox.Visibility == Visibility.Visible ||
-                AuthorNameBox.Visibility == Visibility.Visible)
-            {
-                CloseAppBarAndDetailsIfOpen();
-            }
-            else
-            {
-                var listViewItem = sender as ListViewItem;
-                if (listViewItem != null)
-                {
-                    ourBook = listViewItem.DataContext as BookModel;
-                }
-                this.LibraryListView.SelectedItem = null;
-                if (ourBook != null)
-                {
-                    this.Frame.Navigate(typeof(ReadingPage), ourBook);
-                }
-            }
-        }
-
         /// <summary>
         /// Closes the appbar and the details grid if called
         /// </summary>

@@ -81,6 +81,40 @@ namespace EZEreaderUniversal.DataModels
             private set;
         }
 
+        private int _readingfontsize;
+        public int ReadingFontSize
+        {
+            get
+            {
+                return _readingfontsize;
+            }
+            set
+            {
+                if (value != _readingfontsize)
+                {
+                    _readingfontsize = value;
+                    NotifyPropertyChanged("ReadingFontSize");
+                }
+            }
+        }
+
+        private string _readingfontfamily;
+        public string ReadingFontFamily
+        {
+            get
+            {
+                return _readingfontfamily;
+            }
+            set
+            {
+                if (value != _readingfontfamily)
+                {
+                    _readingfontfamily = value;
+                    NotifyPropertyChanged("ReadingFontFamily");
+                }
+            }
+        }
+
         public void SortByBookNameAscending()
         {          
             SortedBooks.SortDescriptions.Add(new SortDescription("BookName", ListSortDirection.Ascending));
@@ -627,6 +661,8 @@ namespace EZEreaderUniversal.DataModels
                     
                     this.Library = new ObservableCollection<BookModel>();
                     this.SortedBooks = new ListCollectionView(this.Library);
+                    this.ReadingFontSize = 20;
+                    this.ReadingFontFamily = "Segoe UI";
                     ImportBook("Pride and Prejudice - Jane Austen_6590", false);
                     
                 }

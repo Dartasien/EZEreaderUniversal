@@ -14,5 +14,111 @@
           HorizontalAlignment="Stretch"
           VerticalAlignment="Stretch"
           >
+        
     </Grid>
+    <Page.BottomAppBar>
+        <CommandBar x:Name="ReadingBottomBar">
+            <AppBarButton Label="Chapters"
+                          Icon="Bookmarks"
+                          Click="ChaptersBarButton_Click"/>
+            <AppBarButton Label="Fonts"
+                          Icon="Font">
+                <AppBarButton.Flyout>
+                    <PickerFlyout x:Name="FontFlyout"
+                                  ScrollViewer.VerticalScrollMode="Disabled">
+                        <Grid Margin="10, 10, 10, 10"
+                              ScrollViewer.VerticalScrollMode="Disabled">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="50"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="50"/>
+                                <RowDefinition Height="400"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Text="Font Choices"
+                                       Grid.Row="0"
+                                       Style="{ThemeResource SubheaderTextBlockStyle}"
+                                       FontSize="32"
+                                       HorizontalAlignment="Center"/>
+                            <StackPanel Background="{StaticResource ApplicationPageBackgroundThemeBrush}"
+                                        Grid.Row="1"
+                                        Height="200"
+                                        Orientation="Horizontal">
+                                <ListBox x:Name="FontSizeListBox"
+                                     Width="50"
+                                     FontSize="20"
+                                     Margin="10, 10, 50, 10"
+                                     HorizontalAlignment="Left"
+                                     SelectionChanged="FontSizeListBox_SelectionChanged"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                                    <x:String>12</x:String>
+                                    <x:String>14</x:String>
+                                    <x:String>16</x:String>
+                                    <x:String>18</x:String>
+                                    <x:String>20</x:String>
+                                    <x:String>22</x:String>
+                                    <x:String>24</x:String>
+                                    <x:String>26</x:String>
+                                    <x:String>28</x:String>
+                                    <x:String>30</x:String>
+                                    <x:String>32</x:String>
+                                    <x:String>34</x:String>
+                                    <x:String>36</x:String>
+                                </ListBox>
+                                <ListBox x:Name="FontFamilyListBox"
+                                         Margin="10, 10, 10, 10"
+                                         FontSize="20"
+                                         SelectionChanged="FontFamilyListBox_SelectionChanged">
+                                    
+                                </ListBox>
+                                <ListBox x:Name="FontFamilyNamesBox"
+                                         FontSize="20"
+                                         >
+                                    
+                                </ListBox>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal"
+                                        Grid.Row="2"
+                                        HorizontalAlignment="Center">
+                                <Button x:Name="AcceptButton" 
+                                        Content="Accept"
+                                        Margin="0, 0, 50, 0"
+                                        Click="AcceptButton_Click">
+                                    
+                                </Button>
+                                <Button x:Name="CancelButton"
+                                        Content="Cancel"
+                                        Click="CancelButton_Click">
+                                    
+                                </Button>
+                            </StackPanel>
+                            <TextBlock x:Name="FontCheckerBlock" 
+                                       Grid.Row="3"
+                                       Text="The quick brown fox jumps over the lazy dog 
+                                       The quick brown fox jumps over the lazy dog.
+                                       The quick brown fox jumps over the lazy dog.
+                                       The quick brown fox jumps over the lazy dog.
+                                       The quick brown fox jumps over the lazy dog.
+                                       The quick brown fox jumps over the lazy dog.
+                                       The quick brown fox jumps over the lazy dog.
+                                       The quick brown fox jumps over the lazy dog.
+                                       The quick brown fox jumps over the lazy dog.
+                                       The quick brown fox jumps over the lazy dog.
+                                       The quick brown fox jumps over the lazy dog.
+                                       The quick brown fox jumps over the lazy dog.
+                                       The quick brown fox jumps over the lazy dog.
+                                       The quick brown fox jumps over the lazy dog.
+                                       The quick brown fox jumps over the lazy dog.
+                                       The quick brown fox jumps over the lazy dog.
+                                       The quick brown fox jumps over the lazy dog.
+                                       The quick brown fox jumps over the lazy dog.
+                                       "
+                                       TextWrapping="Wrap">
+                                
+                            </TextBlock>
+                        </Grid>
+                    </PickerFlyout>
+                </AppBarButton.Flyout>
+            </AppBarButton>
+        </CommandBar>
+    </Page.BottomAppBar>
 </Page>

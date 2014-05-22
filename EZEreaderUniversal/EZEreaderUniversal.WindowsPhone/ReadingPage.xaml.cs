@@ -42,6 +42,7 @@ namespace EZEreaderUniversal
         int pageNumber;
         Paragraph para;
         RichTextBlock myRTB;
+        List<TextBlock> fontBlocks;
         private NavigationHelper navigationHelper;
         private ObservableDictionary defaultViewModel = new ObservableDictionary();
 
@@ -52,6 +53,8 @@ namespace EZEreaderUniversal
             this.navigationHelper.LoadState += this.NavigationHelper_LoadState;
             this.navigationHelper.SaveState += this.NavigationHelper_SaveState;
         }
+
+        
 
         /// <summary>
         /// Gets the <see cref="NavigationHelper"/> associated with this <see cref="Page"/>.
@@ -84,7 +87,10 @@ namespace EZEreaderUniversal
         private async void NavigationHelper_LoadState(object sender, LoadStateEventArgs e)
         {   
             thisBook = ((BookModel)e.NavigationParameter);
+            ReadingBottomBar.Visibility = Visibility.Collapsed;
+            //FontListBox.Visibility = Visibility.Collapsed;
             this.DataContext = thisBook;
+            GetSystemFonts();
             await CreateFirstPage();
         }
 
@@ -106,6 +112,24 @@ namespace EZEreaderUniversal
             }
             rootPage.CallUpdateBooks();
         }
+
+        private void GetSystemFonts()
+        {
+            fontBlocks = new List<TextBlock>();
+            string[] fonts = {"Arial", "Arial Black", "Arial Unicode MS", "Calibri", "Cambria",
+                                 "Cambria Math", "Comic Sans MS", "Candara", "Consolas", "Constantia",
+                                 "Corbel", "Courier New", "George", "Lucida Sans Unicode", "Segoe UI",
+                                 "Symbol", "Tahoma", "Times New Roman", "Trebuchet MS", "Verdana"};
+
+            for (int i = 0; i < fonts.Length; i++)
+            {
+                fontBlocks.Add(new TextBlock());
+                fontBlocks[i].Text = fonts[i];
+                fontBlocks[i].FontFamily = new FontFamily(fonts[i]);
+                FontFamilyListBox.Items.Add(fontBlocks[i]);
+            }
+        }
+
 
         /// <summary>
         /// Takes the chapters full html file and loads it, then converts to text, and finally
@@ -257,7 +281,8 @@ namespace EZEreaderUniversal
             myRTB.IsTextSelectionEnabled = false;
             myRTB.Tapped += myRTB_Tapped;
             myRTB.TextAlignment = TextAlignment.Justify;
-            myRTB.FontSize = 20;
+            myRTB.FontSize = rootPage.LibrarySource.ReadingFontSize;
+            myRTB.FontFamily = new FontFamily(rootPage.LibrarySource.ReadingFontFamily);
             Thickness margin = myRTB.Margin;
             myRTB.Visibility = Visibility.Visible;
             margin.Left = 10;
@@ -375,52 +400,80 @@ namespace EZEreaderUniversal
             
             Point eTap = e.GetPosition(LayoutRoot.Children.ElementAt(thisBook.CurrentPage));
 
-            //tap on rightside of the screen makes page turn forwards
-            if (eTap.X > LayoutRoot.ActualWidth * .5)
+            if (this.ReadingBottomBar.Visibility == Visibility.Collapsed)
             {
-                LayoutRoot.Children.ElementAt(thisBook.CurrentPage).Visibility = Visibility.Collapsed;
-                if (thisBook.CurrentPage +1 >= LayoutRoot.Children.Count)
+                //tap on rightside of the screen makes page turn forwards
+                if (eTap.X > LayoutRoot.ActualWidth * .6)
                 {
-                    if (thisBook.CurrentChapter + 1 >= thisBook.Chapters.Count)
-                    {
-                        thisBook.IsCompleted = true;
-                        thisBook.IsStarted = false;
-                    }
-                    else
-                    {
-                        thisBook.CurrentChapter++;
-                        thisBook.CurrentPage = 0;
-                        LayoutRoot.Children.Clear();
-                        await CreateFirstPage();
-                    }
-                    
+                    await PageTurnForwards();
+                }
+                //tap on left side of the screen makes the page turn backwards
+                else if (eTap.X < LayoutRoot.ActualWidth * .4)
+                {
+                    await PageTurnBack();
                 }
                 else
                 {
-                    LayoutRoot.Children.ElementAt(thisBook.CurrentPage).Visibility = Visibility.Collapsed;
-                    thisBook.CurrentPage++;
-                    LayoutRoot.Children.ElementAt(thisBook.CurrentPage).Visibility = Visibility.Visible;
+                    this.ReadingBottomBar.Visibility = Visibility.Visible;
                 }
             }
-            //tap on left side of the screen makes the page turn backwards
-            else if (eTap.X < LayoutRoot.ActualWidth * .5)
+            else
             {
-                if (thisBook.CurrentPage > 0)
+                this.ReadingBottomBar.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        /// <summary>
+        /// Will turn the page forward if called, if needed
+        /// </summary>
+        /// <returns></returns>
+        private async Task PageTurnForwards()
+        {
+            LayoutRoot.Children.ElementAt(thisBook.CurrentPage).Visibility = Visibility.Collapsed;
+            if (thisBook.CurrentPage + 1 >= LayoutRoot.Children.Count)
+            {
+                if (thisBook.CurrentChapter + 1 >= thisBook.Chapters.Count)
                 {
-                    LayoutRoot.Children.ElementAt(thisBook.CurrentPage).Visibility =
-                        Visibility.Collapsed;
-                    thisBook.CurrentPage--;
-                    LayoutRoot.Children.ElementAt(thisBook.CurrentPage).Visibility = 
-                        Visibility.Visible;
+                    thisBook.IsCompleted = true;
+                    thisBook.IsStarted = false;
                 }
                 else
                 {
-                    await CreateBackwardsPages();
-                    thisBook.CurrentPage = LayoutRoot.Children.Count - 1;
-                    thisBook.Chapters[thisBook.CurrentChapter].PageCount 
-                        = LayoutRoot.Children.Count;
-
+                    thisBook.CurrentChapter++;
+                    thisBook.CurrentPage = 0;
+                    LayoutRoot.Children.Clear();
+                    await CreateFirstPage();
                 }
+
+            }
+            else
+            {
+                LayoutRoot.Children.ElementAt(thisBook.CurrentPage).Visibility = Visibility.Collapsed;
+                thisBook.CurrentPage++;
+                LayoutRoot.Children.ElementAt(thisBook.CurrentPage).Visibility = Visibility.Visible;
+            }
+        }
+
+        /// <summary>
+        /// Will turn the page forwards if called, if needed
+        /// </summary>
+        /// <returns></returns>
+        private async Task PageTurnBack()
+        {
+            if (thisBook.CurrentPage > 0)
+            {
+                LayoutRoot.Children.ElementAt(thisBook.CurrentPage).Visibility =
+                    Visibility.Collapsed;
+                thisBook.CurrentPage--;
+                LayoutRoot.Children.ElementAt(thisBook.CurrentPage).Visibility =
+                    Visibility.Visible;
+            }
+            else
+            {
+                await CreateBackwardsPages();
+                thisBook.CurrentPage = LayoutRoot.Children.Count - 1;
+                thisBook.Chapters[thisBook.CurrentChapter].PageCount
+                    = LayoutRoot.Children.Count;
             }
         }
 
@@ -466,6 +519,55 @@ namespace EZEreaderUniversal
                 LayoutRoot.Children.Clear();
                 await CreateFirstPage();
             }
+        }
+
+        private void ChaptersBarButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        /// <summary>
+        /// Shows the different font sizes in the textblock below the list
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void FontSizeListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            string newFont = (string)((sender as ListBox).SelectedItem);
+            FontCheckerBlock.FontSize = Convert.ToInt32(newFont);
+        }
+
+        /// <summary>
+        /// Shows the different font families in the textblock below the list
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void FontFamilyListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            TextBlock newFontFamily = (TextBlock)((sender as ListBox).SelectedItem);
+            FontCheckerBlock.FontFamily = new FontFamily(newFontFamily.Text);
+        }
+
+        /// <summary>
+        /// Takes the selected font size and font families and applies them to the reading page
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private async void AcceptButton_Click(object sender, RoutedEventArgs e)
+        {
+            string newFont = (string)FontSizeListBox.SelectedItem as string;
+            rootPage.LibrarySource.ReadingFontSize = Convert.ToInt32(newFont);
+            TextBlock newFontFamily = (TextBlock)FontFamilyListBox.SelectedItem as TextBlock;
+            rootPage.LibrarySource.ReadingFontFamily = newFontFamily.Text;
+            FontFlyout.Hide();
+            BottomAppBar.Visibility = Visibility.Collapsed;
+            LayoutRoot.Children.Clear();
+            await CreateFirstPage();
+        }
+
+        private void CancelButton_Click(object sender, RoutedEventArgs e)
+        {
+            FontFlyout.Hide();
         }
     }
 }

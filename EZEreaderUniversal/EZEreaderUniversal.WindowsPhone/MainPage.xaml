@@ -10,8 +10,11 @@
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
     <Page.Resources>
         <local:ImgConverter x:Key="ImageConverter">
-            
         </local:ImgConverter>
+        <MenuFlyoutPresenter x:Key="FlyoutPresenter"
+                             Background="{StaticResource ApplicationPageBackgroundThemeBrush}"
+                             Foreground="{StaticResource ApplicationForegroundThemeBrush}">
+        </MenuFlyoutPresenter>
     </Page.Resources>
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid.RowDefinitions>
@@ -89,7 +92,7 @@
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <ListViewItem x:Name="RecentReadsListViewItems"
-                                      Tapped="RecentReadsListView_Tapped"
+                                      Tapped="LibraryListView_Tapped"
                                       RightTapped="LibraryListView_RightTapped">
                             <Grid Height="100">
                                 <Grid.ColumnDefinitions>
@@ -98,7 +101,8 @@
                                 </Grid.ColumnDefinitions>
                                 <Image Source="{Binding CoverPic, Converter={StaticResource ImageConverter}}" 
                                        Grid.Column="0" />
-                                <StackPanel Grid.Column="1">
+                                <StackPanel Grid.Column="1"
+                                            Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
                                     <TextBlock Text="{Binding BookName}" 
                                                FontSize="24"/>
                                     <TextBlock Text="{Binding AuthorID}" 
@@ -144,11 +148,21 @@
                           Icon="Sort">
                 <AppBarButton.Flyout>
                     <MenuFlyout>
+                        <MenuFlyout.MenuFlyoutPresenterStyle>
+                            <Style TargetType="MenuFlyoutPresenter">
+                                <Setter Property="Background" Value="{StaticResource ApplicationPageBackgroundThemeBrush}"/>
+                                <Setter Property="Foreground" Value="{StaticResource ApplicationForegroundThemeBrush}"/>
+                                <Setter Property="Width" Value="110"/>
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                            </Style>
+                        </MenuFlyout.MenuFlyoutPresenterStyle>
                         <MenuFlyoutItem Text="By Author"
-                                        Click="SortByAuthor_Click"/>
+                                        Click="SortByAuthor_Click"
+                                        Width="110"/>
                         <MenuFlyoutItem Text="By Title"
                                         Click="SortByTitle_Click"
-                                        Margin="0,0,0,50"/>
+                                        Margin="0,0,0,50"
+                                        Width="110"/>
                     </MenuFlyout>
                 </AppBarButton.Flyout>
             </AppBarButton>
