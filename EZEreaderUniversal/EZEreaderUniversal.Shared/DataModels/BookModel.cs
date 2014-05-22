@@ -107,6 +107,24 @@ namespace EZEreaderUniversal.DataModels
             }
         }
 
+        //a time for when the book was last accessed
+        public long _openedrecentlytime;
+
+        public long OpenedRecentlyTime
+        {
+            get
+            {
+                return _openedrecentlytime;
+            }
+            set
+            {
+                if (value != _openedrecentlytime)
+                {
+                    _openedrecentlytime = value;
+                    NotifyPropertyChanged("OpenedRecentlyTime");
+                }
+            }
+        }
         //Declare the directory of the folder where the content is stored
         private string _maindirectory;
 

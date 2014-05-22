@@ -92,7 +92,7 @@ namespace EZEreaderUniversal
                 }
                 this.DataContext = LibrarySource;
                 LibraryListView.ItemsSource = LibrarySource.SortedBooks;
-                RecentReadsListView.ItemsSource = LibrarySource.RecentReads;
+                RecentReadsListView.ItemsSource = LibrarySource.RecentBooks;
             }
             else
             {
@@ -148,6 +148,8 @@ namespace EZEreaderUniversal
                         ourBook.IsStarted = true;
                         this.LibrarySource.RecentReads.Add(ourBook);
                     }
+                    ourBook.OpenedRecentlyTime = DateTime.Now.Ticks;
+                    LibrarySource.SortBooksByAccessDate();
                     this.Frame.Navigate(typeof(ReadingPage), ourBook);
                 }
             }

@@ -47,20 +47,6 @@ namespace EZEreaderUniversal.DataModels
             }
         }
 
-        private ObservableCollection<BookModel> _recentreads;
-        public ObservableCollection<BookModel> RecentReads
-        {
-            get
-            {
-                return _recentreads;
-            }
-            set
-            {
-                _recentreads = value;
-                NotifyPropertyChanged("RecentReads");
-            }
-        }
-
         private ObservableCollection<BookModel> _library;
         public ObservableCollection<BookModel> Library
         {
@@ -72,6 +58,36 @@ namespace EZEreaderUniversal.DataModels
             { 
                 _library = value;
                 NotifyPropertyChanged("Library");
+            }
+        }
+
+
+        private ListCollectionView _recentbooks;
+
+        public ListCollectionView RecentBooks
+        {
+            get
+            {
+                return _recentbooks;
+            }
+            set
+            {
+                _recentbooks = value;
+                NotifyPropertyChanged("RecentBooks");
+            }
+        }
+
+        private ObservableCollection<BookModel> _recentreads;
+        public ObservableCollection<BookModel> RecentReads
+        {
+            get
+            {
+                return _recentreads;
+            }
+            set
+            {
+                _recentreads = value;
+                NotifyPropertyChanged("RecentReads");
             }
         }
 
@@ -118,6 +134,11 @@ namespace EZEreaderUniversal.DataModels
         public void SortByBookNameAscending()
         {          
             SortedBooks.SortDescriptions.Add(new SortDescription("BookName", ListSortDirection.Ascending));
+        }
+
+        public void SortBooksByAccessDate()
+        {
+            RecentBooks.SortDescriptions.Add(new SortDescription("OpenedRecentlyTime", ListSortDirection.Descending));
         }
 
         /// <summary>
@@ -675,6 +696,7 @@ namespace EZEreaderUniversal.DataModels
                 {
                     string recentReadsAsXML = await IO.ReadStringFromFile(dataFile);
                     this.RecentReads = IO.SerializeFromString<ObservableCollection<BookModel>>(recentReadsAsXML);
+                    this.RecentBooks = new ListCollectionView(this.RecentReads);
                 }
             }
             else
@@ -684,6 +706,7 @@ namespace EZEreaderUniversal.DataModels
                 {
 
                     this.RecentReads = new ObservableCollection<BookModel>();
+                    this.RecentBooks = new ListCollectionView(this.RecentReads);
                     
                 }
             }
