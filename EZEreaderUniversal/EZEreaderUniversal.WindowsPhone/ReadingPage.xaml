@@ -25,21 +25,21 @@
                           Icon="Bookmarks"
                           Click="ChaptersButton_Click">
                 <AppBarButton.Flyout>
-                    <Flyout x:Name="ChaptersFlyout">
+                    <PickerFlyout x:Name="ChaptersFlyout">
                         <ListBox x:Name="ChaptersListBox"
-                                 SelectionChanged="ChaptersListBox_SelectionChanged"
                                  FontSize="20"
                                  Background="{StaticResource ApplicationPageBackgroundThemeBrush}"
                                  Foreground="{StaticResource ApplicationForegroundThemeBrush}">
                         </ListBox>
-                    </Flyout>
+                    </PickerFlyout>
                 </AppBarButton.Flyout>
             </AppBarButton>
             <AppBarButton Label="Fonts"
                           Icon="Font">
                 <AppBarButton.Flyout>
                     <PickerFlyout x:Name="FontFlyout"
-                                  ScrollViewer.VerticalScrollMode="Disabled">
+                                  ScrollViewer.VerticalScrollMode="Disabled"
+                                  >
                         <Grid Margin="10, 10, 10, 10"
                               ScrollViewer.VerticalScrollMode="Disabled">
                             <Grid.RowDefinitions>

@@ -39,8 +39,9 @@ namespace EZEreaderUniversal
         BookModel thisBook;
         List<RichTextBlockOverflow> listRTBO = new List<RichTextBlockOverflow>();
         private Point InitialPoint;
-        string ListBoxSender;
         Run myRun;
+        List<string> chaptersNames;
+        int ChaptersListBoxSelectedIndex;
         string chapterText;
         int pageNumber;
         Paragraph para;
@@ -121,18 +122,39 @@ namespace EZEreaderUniversal
         /// </summary>
         private void PlaceChaptersInFlyout()
         {
-            List<string> chapterNames = new List<string>();
+            chaptersNames = new List<string>();
             foreach (var chapter in thisBook.Chapters)
             {
                 if (chapter.ChapterName != "")
                 {
-                    chapterNames.Add(chapter.ChapterName);
+                    chaptersNames.Add(chapter.ChapterName);
                 }
             }
-            ChaptersListBox.ItemsSource = chapterNames;
-            
+            ChaptersListBox.ItemsSource = chaptersNames;
+            ChaptersListBox.Loaded += ChaptersListBox_Loaded;
+            ChaptersListBox.SelectionChanged += ChaptersListBox_SelectionChanged;
         }
 
+        
+        private void ChaptersListBox_Loaded(object sender, RoutedEventArgs e)
+        {
+            
+            if (thisBook.Chapters[thisBook.CurrentChapter].ChapterName != (sender as ListBox).SelectedItem as string)
+            {
+                for (int i = 0; i < ChaptersListBox.Items.Count;i++)
+                {
+                    if ((string)ChaptersListBox.Items[i] == thisBook.Chapters[thisBook.CurrentChapter].ChapterName &&
+                        i + 2 > thisBook.CurrentChapter && i - 2 < thisBook.CurrentChapter)
+                    {
+                        ChaptersListBox.SelectionChanged -= ChaptersListBox_SelectionChanged;
+                        (sender as ListBox).SelectedIndex = i;
+                        ChaptersListBoxSelectedIndex = i;
+                        ChaptersListBox.SelectionChanged += ChaptersListBox_SelectionChanged;
+                    }
+                }
+            }
+        }
+        
         /// <summary>
         /// Preserves state associated with this page in case the application is suspended or the
         /// page is discarded from the navigation cache.  Values must conform to the serialization
@@ -627,21 +649,18 @@ namespace EZEreaderUniversal
         {
             bool chapterChanged = false;
             string newChapter = (string)(sender as ListBox).SelectedItem as string;
-            int selectedIndex = (int)(sender as ListBox).SelectedIndex;
-            Debug.WriteLine(newChapter);
+            ChaptersListBoxSelectedIndex = (int)(sender as ListBox).SelectedIndex;
             for (int i = 0; i < thisBook.Chapters.Count; i++ )
             {
                 if (newChapter == thisBook.Chapters[i].ChapterName)
                 {
-                    if (selectedIndex < i + 2 && selectedIndex > i - 2)
+                    if (ChaptersListBoxSelectedIndex < i + 2 && ChaptersListBoxSelectedIndex > i - 2)
                     {
                         thisBook.CurrentChapter = i;
                         chapterChanged = true;
-                        ListBoxSender = (string)(sender as ListBox).SelectedItem;
                     }
                 }
             }
-            ChaptersListBox.UpdateLayout();
             ChaptersFlyout.Hide();
             if (chapterChanged == true)
             {
@@ -653,9 +672,10 @@ namespace EZEreaderUniversal
 
         private void ChaptersButton_Click(object sender, RoutedEventArgs e)
         {
-            ChaptersListBox.UpdateLayout();
-            ChaptersListBox.ScrollIntoView(ListBoxSender);
-            ChaptersListBox.UpdateLayout();
+            if (ChaptersListBox.Visibility == Visibility.Visible)
+            {
+                ChaptersFlyout.Hide();
+            }
         }
 
         /// <summary>
