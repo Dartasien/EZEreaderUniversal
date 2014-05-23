@@ -13,14 +13,28 @@
           Margin="10, 10, 10, 10"
           HorizontalAlignment="Stretch"
           VerticalAlignment="Stretch"
+          ManipulationStarted="LayoutRoot_ManipulationStarted"
+          ManipulationDelta="LayoutRoot_ManipulationDelta"
+          ManipulationMode="All"
           >
-        
+
     </Grid>
     <Page.BottomAppBar>
         <CommandBar x:Name="ReadingBottomBar">
             <AppBarButton Label="Chapters"
                           Icon="Bookmarks"
-                          Click="ChaptersBarButton_Click"/>
+                          Click="ChaptersButton_Click">
+                <AppBarButton.Flyout>
+                    <Flyout x:Name="ChaptersFlyout">
+                        <ListBox x:Name="ChaptersListBox"
+                                 SelectionChanged="ChaptersListBox_SelectionChanged"
+                                 FontSize="20"
+                                 Background="{StaticResource ApplicationPageBackgroundThemeBrush}"
+                                 Foreground="{StaticResource ApplicationForegroundThemeBrush}">
+                        </ListBox>
+                    </Flyout>
+                </AppBarButton.Flyout>
+            </AppBarButton>
             <AppBarButton Label="Fonts"
                           Icon="Font">
                 <AppBarButton.Flyout>

@@ -38,6 +38,8 @@ namespace EZEreaderUniversal
         MainPage rootPage = MainPage.Current;
         BookModel thisBook;
         List<RichTextBlockOverflow> listRTBO = new List<RichTextBlockOverflow>();
+        private Point InitialPoint;
+        string ListBoxSender;
         Run myRun;
         string chapterText;
         int pageNumber;
@@ -89,6 +91,7 @@ namespace EZEreaderUniversal
         {   
             string errorMessage = "";
             thisBook = ((BookModel)e.NavigationParameter);
+            PlaceChaptersInFlyout();
             ReadingBottomBar.Visibility = Visibility.Collapsed;
             //FontListBox.Visibility = Visibility.Collapsed;
             this.DataContext = thisBook;
@@ -111,6 +114,23 @@ namespace EZEreaderUniversal
                 await messageDialog.ShowAsync();
                 this.Frame.Navigate(typeof(MainPage));
             }
+        }
+
+        /// <summary>
+        /// puts the chapters into a flyout for chapter selection by the user
+        /// </summary>
+        private void PlaceChaptersInFlyout()
+        {
+            List<string> chapterNames = new List<string>();
+            foreach (var chapter in thisBook.Chapters)
+            {
+                if (chapter.ChapterName != "")
+                {
+                    chapterNames.Add(chapter.ChapterName);
+                }
+            }
+            ChaptersListBox.ItemsSource = chapterNames;
+            
         }
 
         /// <summary>
@@ -302,6 +322,9 @@ namespace EZEreaderUniversal
             myRTB.TextAlignment = TextAlignment.Justify;
             myRTB.FontSize = rootPage.LibrarySource.ReadingFontSize;
             myRTB.FontFamily = new FontFamily(rootPage.LibrarySource.ReadingFontFamily);
+            myRTB.ManipulationStarted += LayoutRoot_ManipulationStarted;
+            myRTB.ManipulationDelta += LayoutRoot_ManipulationDelta;
+            myRTB.ManipulationMode = ManipulationModes.All;
             Thickness margin = myRTB.Margin;
             myRTB.Visibility = Visibility.Visible;
             margin.Left = 10;
@@ -324,6 +347,9 @@ namespace EZEreaderUniversal
                 myRTB.OverflowContentTarget = listRTBO[pageNumber];
                 listRTBO[pageNumber].Visibility = Visibility.Visible;
                 listRTBO[pageNumber].Tapped += myRTB_Tapped;
+                listRTBO[pageNumber].ManipulationStarted += LayoutRoot_ManipulationStarted;
+                listRTBO[pageNumber].ManipulationDelta += LayoutRoot_ManipulationDelta;
+                listRTBO[pageNumber].ManipulationMode = ManipulationModes.All;
                 pageNumber++;
                 LayoutRoot.Children.Add(listRTBO[pageNumber - 1]);
                 myRTB.Visibility = Visibility.Collapsed;
@@ -336,6 +362,9 @@ namespace EZEreaderUniversal
                     listRTBO[pageNumber - 1].Visibility = Visibility.Collapsed;
                     listRTBO[pageNumber].Visibility = Visibility.Visible;
                     listRTBO[pageNumber].Tapped += myRTB_Tapped;
+                    listRTBO[pageNumber].ManipulationStarted += LayoutRoot_ManipulationStarted;
+                    listRTBO[pageNumber].ManipulationDelta += LayoutRoot_ManipulationDelta;
+                    listRTBO[pageNumber].ManipulationMode = ManipulationModes.All;
                     LayoutRoot.Children.Add(listRTBO[pageNumber]);
                     pageNumber++;
                     LayoutRoot.UpdateLayout();
@@ -540,11 +569,6 @@ namespace EZEreaderUniversal
             }
         }
 
-        private void ChaptersBarButton_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
-
         /// <summary>
         /// Shows the different font sizes in the textblock below the list
         /// </summary>
@@ -584,9 +608,87 @@ namespace EZEreaderUniversal
             await CreateFirstPage();
         }
 
+        /// <summary>
+        /// closes font flyout when clicked
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
             FontFlyout.Hide();
+        }
+
+        /// <summary>
+        /// changes chapters when selected
+        /// </summary>
+        /// <param name="sender">ListBox</param>
+        /// <param name="e"></param>
+        private async void ChaptersListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            bool chapterChanged = false;
+            string newChapter = (string)(sender as ListBox).SelectedItem as string;
+            int selectedIndex = (int)(sender as ListBox).SelectedIndex;
+            Debug.WriteLine(newChapter);
+            for (int i = 0; i < thisBook.Chapters.Count; i++ )
+            {
+                if (newChapter == thisBook.Chapters[i].ChapterName)
+                {
+                    if (selectedIndex < i + 2 && selectedIndex > i - 2)
+                    {
+                        thisBook.CurrentChapter = i;
+                        chapterChanged = true;
+                        ListBoxSender = (string)(sender as ListBox).SelectedItem;
+                    }
+                }
+            }
+            ChaptersListBox.UpdateLayout();
+            ChaptersFlyout.Hide();
+            if (chapterChanged == true)
+            {
+                thisBook.CurrentPage = 0;
+                LayoutRoot.Children.Clear();
+                await CreateFirstPage();
+            }
+        }
+
+        private void ChaptersButton_Click(object sender, RoutedEventArgs e)
+        {
+            ChaptersListBox.UpdateLayout();
+            ChaptersListBox.ScrollIntoView(ListBoxSender);
+            ChaptersListBox.UpdateLayout();
+        }
+
+        /// <summary>
+        /// sets the initial point for swipe detection
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void LayoutRoot_ManipulationStarted(object sender, ManipulationStartedRoutedEventArgs e)
+        {
+            InitialPoint = e.Position;
+        }
+
+        /// <summary>
+        /// handler to page turn depending upon the direction of swipes on the screen
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private async void LayoutRoot_ManipulationDelta(object sender, ManipulationDeltaRoutedEventArgs e)
+        {
+            if (e.IsInertial)
+            {
+                Point currentpoint = e.Position;
+                if (currentpoint.X - InitialPoint.X >= 100)
+                {
+                    await PageTurnBack();
+                    e.Complete();
+                }
+                else if (InitialPoint.X - currentpoint.X >= 100)
+                {
+                    await PageTurnForwards();
+                    e.Complete();
+                }
+            }
         }
     }
 }
