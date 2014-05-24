@@ -24,6 +24,8 @@ using Windows.Storage;
 using System.Threading.Tasks;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Popups;
+using System.Reflection;
+using Windows.UI;
 
 // The Basic Page item template is documented at http://go.microsoft.com/fwlink/?LinkID=390556
 
@@ -47,6 +49,8 @@ namespace EZEreaderUniversal
         Paragraph para;
         RichTextBlock myRTB;
         List<TextBlock> fontBlocks;
+        List<string> fontSizes;
+        Dictionary<String, SolidColorBrush> AllColorBrushes;
         private NavigationHelper navigationHelper;
         private ObservableDictionary defaultViewModel = new ObservableDictionary();
 
@@ -92,11 +96,14 @@ namespace EZEreaderUniversal
         {   
             string errorMessage = "";
             thisBook = ((BookModel)e.NavigationParameter);
+            SetTestTextBlocksText();
             PlaceChaptersInFlyout();
-            ReadingBottomBar.Visibility = Visibility.Collapsed;
-            //FontListBox.Visibility = Visibility.Collapsed;
-            this.DataContext = thisBook;
+            SetFontSizes();
+            FontSizeListBox.Loaded += FontSizeListBox_Loaded;
             GetSystemFonts();
+            SetColorsFlyout();
+            ReadingBottomBar.Visibility = Visibility.Collapsed;
+            this.DataContext = thisBook;
             try
             {
                 await CreateFirstPage();
@@ -118,41 +125,16 @@ namespace EZEreaderUniversal
         }
 
         /// <summary>
-        /// puts the chapters into a flyout for chapter selection by the user
+        /// Sets the FontSizeListBox itemssource to a list of font sizes as strings
         /// </summary>
-        private void PlaceChaptersInFlyout()
+        private void SetFontSizes()
         {
-            chaptersNames = new List<string>();
-            foreach (var chapter in thisBook.Chapters)
+            fontSizes = new List<string>();
+            for (int i = 12; i < 37; i+=2)
             {
-                if (chapter.ChapterName != "")
-                {
-                    chaptersNames.Add(chapter.ChapterName);
-                }
+                fontSizes.Add(i.ToString());
             }
-            ChaptersListBox.ItemsSource = chaptersNames;
-            ChaptersListBox.Loaded += ChaptersListBox_Loaded;
-            ChaptersListBox.SelectionChanged += ChaptersListBox_SelectionChanged;
-        }
-
-        
-        private void ChaptersListBox_Loaded(object sender, RoutedEventArgs e)
-        {
-            
-            if (thisBook.Chapters[thisBook.CurrentChapter].ChapterName != (sender as ListBox).SelectedItem as string)
-            {
-                for (int i = 0; i < ChaptersListBox.Items.Count;i++)
-                {
-                    if ((string)ChaptersListBox.Items[i] == thisBook.Chapters[thisBook.CurrentChapter].ChapterName &&
-                        i + 2 > thisBook.CurrentChapter && i - 2 < thisBook.CurrentChapter)
-                    {
-                        ChaptersListBox.SelectionChanged -= ChaptersListBox_SelectionChanged;
-                        (sender as ListBox).SelectedIndex = i;
-                        ChaptersListBoxSelectedIndex = i;
-                        ChaptersListBox.SelectionChanged += ChaptersListBox_SelectionChanged;
-                    }
-                }
-            }
+            FontSizeListBox.ItemsSource = fontSizes;
         }
         
         /// <summary>
@@ -174,23 +156,70 @@ namespace EZEreaderUniversal
             rootPage.CallUpdateBooks();
         }
 
-        private void GetSystemFonts()
+        /// <summary>
+        /// Sets up the ColorsFlyout with the list of SolidColorBrushes available on WP 8.1
+        /// so that the user can make his own choice of text color and backgrounds.
+        /// </summary>
+        private void SetColorsFlyout()
         {
-            fontBlocks = new List<TextBlock>();
-            string[] fonts = {"Arial", "Arial Black", "Arial Unicode MS", "Calibri", "Cambria",
-                                 "Cambria Math", "Comic Sans MS", "Candara", "Consolas", "Constantia",
-                                 "Corbel", "Courier New", "George", "Lucida Sans Unicode", "Segoe UI",
-                                 "Symbol", "Tahoma", "Times New Roman", "Trebuchet MS", "Verdana"};
-
-            for (int i = 0; i < fonts.Length; i++)
+            SolidColorBrush brush = new SolidColorBrush(Colors.White);
+            var colors = typeof(Colors).GetRuntimeProperties().ToList();
+            AllColorBrushes = new Dictionary<string, SolidColorBrush>();
+            foreach (PropertyInfo color in colors)
             {
-                fontBlocks.Add(new TextBlock());
-                fontBlocks[i].Text = fonts[i];
-                fontBlocks[i].FontFamily = new FontFamily(fonts[i]);
-                FontFamilyListBox.Items.Add(fontBlocks[i]);
+                Color testColor = (Color)color.GetValue(null, null);
+                string colorName = color.Name;
+                brush = new SolidColorBrush(testColor);
+                AllColorBrushes.Add(colorName, brush);
             }
+            List<string> allColorNames = new List<string>();
+            foreach (string key in AllColorBrushes.Keys)
+            {
+                allColorNames.Add(key);
+            }
+            BackgroundColorListBox.ItemsSource = allColorNames;
+            FontColorListBox.ItemsSource = allColorNames;
+
         }
 
+        /// <summary>
+        /// Sets the text of the chapterflyout and colorflyout to the same easily seen
+        /// text for easy sampling on the user's choices of fonts/colors.
+        /// </summary>
+        private void SetTestTextBlocksText()
+        {
+            string testText = "The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog." +
+                                       "The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog." +
+                                       "The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog." +
+                                       "The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog." +
+                                       "The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog." +
+                                       "The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog." +
+                                       "The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog." +
+                                       "The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog." +
+                                       "The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog.";
+            ColorTextBlock.Text = testText;
+            FontCheckerBlock.Text = testText;
+            ColorTextBlock.Foreground = rootPage.LibrarySource.ReadingFontColor;
+            ColorTextBlockGrid.Background = rootPage.LibrarySource.BackgroundReadingColor;
+        }
+
+        /// <summary>
+        /// puts the chapters into a flyout for chapter selection by the user
+        /// </summary>
+        private void PlaceChaptersInFlyout()
+        {
+            chaptersNames = new List<string>();
+            foreach (var chapter in thisBook.Chapters)
+            {
+                if (chapter.ChapterName != "")
+                {
+                    chaptersNames.Add(chapter.ChapterName);
+                }
+            }
+            ChaptersListBox.ItemsSource = chaptersNames;
+            ChaptersListBox.Loaded += ChaptersListBox_Loaded;
+            ChaptersListBox.SelectionChanged += ChaptersListBox_SelectionChanged;
+        }
 
         /// <summary>
         /// Takes the chapters full html file and loads it, then converts to text, and finally
@@ -344,6 +373,8 @@ namespace EZEreaderUniversal
             myRTB.TextAlignment = TextAlignment.Justify;
             myRTB.FontSize = rootPage.LibrarySource.ReadingFontSize;
             myRTB.FontFamily = new FontFamily(rootPage.LibrarySource.ReadingFontFamily);
+            myRTB.Foreground = rootPage.LibrarySource.ReadingFontColor;
+            LayoutRoot.Background = rootPage.LibrarySource.BackgroundReadingColor;
             myRTB.ManipulationStarted += LayoutRoot_ManipulationStarted;
             myRTB.ManipulationDelta += LayoutRoot_ManipulationDelta;
             myRTB.ManipulationMode = ManipulationModes.All;
@@ -377,6 +408,7 @@ namespace EZEreaderUniversal
                 myRTB.Visibility = Visibility.Collapsed;
                 LayoutRoot.UpdateLayout();
 
+                //if theres any overflow, add it to a list of overflows
                 while (listRTBO[pageNumber - 1].HasOverflowContent)
                 {
                     listRTBO.Add(new RichTextBlockOverflow());
@@ -603,6 +635,51 @@ namespace EZEreaderUniversal
         }
 
         /// <summary>
+        /// Adds the list of fontfamily names to the listblock for font selection
+        /// </summary>
+        private void GetSystemFonts()
+        {
+            fontBlocks = new List<TextBlock>();
+            string[] fonts = {"Arial", "Arial Black", "Arial Unicode MS", "Calibri", "Cambria",
+                                 "Cambria Math", "Comic Sans MS", "Candara", "Consolas", "Constantia",
+                                 "Corbel", "Courier New", "George", "Lucida Sans Unicode", "Segoe UI",
+                                 "Symbol", "Tahoma", "Times New Roman", "Trebuchet MS", "Verdana"};
+
+            for (int i = 0; i < fonts.Length; i++)
+            {
+                fontBlocks.Add(new TextBlock());
+                fontBlocks[i].Text = fonts[i];
+                fontBlocks[i].FontFamily = new FontFamily(fonts[i]);
+            }
+            FontFamilyListBox.ItemsSource = fontBlocks;
+            FontFamilyListBox.Loaded += FontFamilyListBox_Loaded;
+        }
+
+        /// <summary>
+        /// Sets the currently selected fontfamily as the selected item in FontFamilyListBox
+        /// so that the user knows which is current.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        void FontFamilyListBox_Loaded(object sender, RoutedEventArgs e)
+        {
+            TextBlock fontTextBlock = new TextBlock();
+            fontTextBlock.Text = rootPage.LibrarySource.ReadingFontFamily;
+            fontTextBlock.FontFamily = new FontFamily(rootPage.LibrarySource.ReadingFontFamily);
+
+            foreach (TextBlock item in FontFamilyListBox.Items)
+            {
+                if (item.Text == rootPage.LibrarySource.ReadingFontFamily)
+                {
+                    FontFamilyListBox.SelectionChanged -= FontFamilyListBox_SelectionChanged;
+                    (sender as ListBox).SelectedItem = item;
+                    FontFamilyListBox.SelectionChanged += FontFamilyListBox_SelectionChanged;
+                    FontFamilyListBox.ScrollIntoView(item);
+                }
+            }
+        }
+
+        /// <summary>
         /// Shows the different font families in the textblock below the list
         /// </summary>
         /// <param name="sender"></param>
@@ -641,6 +718,31 @@ namespace EZEreaderUniversal
         }
 
         /// <summary>
+        /// Updates the chapterslistbox of chapternames to the currently opened chapter
+        /// whenever the chapterslistbox is opened.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ChaptersListBox_Loaded(object sender, RoutedEventArgs e)
+        {
+
+            if (thisBook.Chapters[thisBook.CurrentChapter].ChapterName != (sender as ListBox).SelectedItem as string)
+            {
+                for (int i = 0; i < ChaptersListBox.Items.Count; i++)
+                {
+                    if ((string)ChaptersListBox.Items[i] == thisBook.Chapters[thisBook.CurrentChapter].ChapterName &&
+                        i + 2 > thisBook.CurrentChapter && i - 2 < thisBook.CurrentChapter)
+                    {
+                        ChaptersListBox.SelectionChanged -= ChaptersListBox_SelectionChanged;
+                        (sender as ListBox).SelectedIndex = i;
+                        ChaptersListBoxSelectedIndex = i;
+                        ChaptersListBox.SelectionChanged += ChaptersListBox_SelectionChanged;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// changes chapters when selected
         /// </summary>
         /// <param name="sender">ListBox</param>
@@ -670,6 +772,11 @@ namespace EZEreaderUniversal
             }
         }
 
+        /// <summary>
+        /// Hides the ChapterFlyout without accepting any changes.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ChaptersButton_Click(object sender, RoutedEventArgs e)
         {
             if (ChaptersListBox.Visibility == Visibility.Visible)
@@ -708,6 +815,109 @@ namespace EZEreaderUniversal
                     await PageTurnForwards();
                     e.Complete();
                 }
+            }
+        }
+
+        /// <summary>
+        /// Hides the ChaptersFlyout without accepting any changes.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            ChaptersFlyout.Hide();
+        }
+
+        /// <summary>
+        /// Changes the ColorTextBlock text colors to give a demonstration to the user what their
+        /// color choice will look like.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void FontColorListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if ((sender as ListBox).SelectedItem != null)
+            {
+                string newForegroundColor = (sender as ListBox).SelectedItem as string;
+                if (AllColorBrushes.ContainsKey(newForegroundColor))
+                {
+                    //rootPage.LibrarySource.BackgroundReadingColor = AllColorBrushes[newBackgroundColor];
+                    ColorTextBlock.Foreground = AllColorBrushes[newForegroundColor];
+                    ColorTextBlockGrid.UpdateLayout();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Changes the ColorTextBlock background to give a demonstration to the user what their
+        /// color choice will look like.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void BackgroundColorListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if ((sender as ListBox).SelectedItem != null)
+            {
+                string newBackgroundColor = (sender as ListBox).SelectedItem as string;
+                if (AllColorBrushes.ContainsKey(newBackgroundColor))
+                {
+                    //rootPage.LibrarySource.BackgroundReadingColor = AllColorBrushes[newBackgroundColor];
+                    ColorTextBlockGrid.Background = AllColorBrushes[newBackgroundColor];
+                    ColorTextBlockGrid.UpdateLayout();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Hides the ColorFlyout without accepting any changes
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CancelColorButton_Click(object sender, RoutedEventArgs e)
+        {
+            ColorsFlyout.Hide();
+        }
+
+        /// <summary>
+        /// Hides the ColorFlyout and accepts the changes, updating the layoutroot and its objects
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private async void AcceptColorButton_Click(object sender, RoutedEventArgs e)
+        {
+            rootPage.LibrarySource.ReadingFontColor = AllColorBrushes[(string)FontColorListBox.SelectedItem];
+            rootPage.LibrarySource.BackgroundReadingColor = AllColorBrushes[(string)BackgroundColorListBox.SelectedItem];
+            LayoutRoot.Children.Clear();
+            await CreateFirstPage();
+            ColorsFlyout.Hide();
+        }
+
+        /// <summary>
+        /// Hides the ColorsFlyout if the appbarbutton is clicked while it's already opened
+        /// and accepts no changes
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ColorsButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (ColorTextBlockGrid.Visibility == Visibility.Visible)
+            {
+                ColorsFlyout.Hide();
+            }
+        }
+
+        /// <summary>
+        /// Sets the FontSizeListBox to the already chosen font when opened
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void FontSizeListBox_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (fontSizes.Contains(rootPage.LibrarySource.ReadingFontSize.ToString()))
+            {
+                FontSizeListBox.SelectionChanged -= FontSizeListBox_SelectionChanged;
+                FontSizeListBox.SelectedItem = rootPage.LibrarySource.ReadingFontSize.ToString();
+                FontSizeListBox.SelectionChanged += FontSizeListBox_SelectionChanged;
             }
         }
     }

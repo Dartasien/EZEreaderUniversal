@@ -26,11 +26,16 @@
                           Click="ChaptersButton_Click">
                 <AppBarButton.Flyout>
                     <PickerFlyout x:Name="ChaptersFlyout">
-                        <ListBox x:Name="ChaptersListBox"
+                        <StackPanel>
+                            <Button Content="Cancel"
+                                    Click="Button_Click"
+                                    HorizontalAlignment="Center"/>
+                            <ListBox x:Name="ChaptersListBox"
                                  FontSize="20"
                                  Background="{StaticResource ApplicationPageBackgroundThemeBrush}"
                                  Foreground="{StaticResource ApplicationForegroundThemeBrush}">
-                        </ListBox>
+                            </ListBox>
+                        </StackPanel>
                     </PickerFlyout>
                 </AppBarButton.Flyout>
             </AppBarButton>
@@ -64,30 +69,12 @@
                                      HorizontalAlignment="Left"
                                      SelectionChanged="FontSizeListBox_SelectionChanged"
                                      ScrollViewer.HorizontalScrollBarVisibility="Auto">
-                                    <x:String>12</x:String>
-                                    <x:String>14</x:String>
-                                    <x:String>16</x:String>
-                                    <x:String>18</x:String>
-                                    <x:String>20</x:String>
-                                    <x:String>22</x:String>
-                                    <x:String>24</x:String>
-                                    <x:String>26</x:String>
-                                    <x:String>28</x:String>
-                                    <x:String>30</x:String>
-                                    <x:String>32</x:String>
-                                    <x:String>34</x:String>
-                                    <x:String>36</x:String>
                                 </ListBox>
                                 <ListBox x:Name="FontFamilyListBox"
                                          Margin="10, 10, 10, 10"
                                          FontSize="20"
+                                         ScrollViewer.HorizontalScrollBarVisibility="Auto"
                                          SelectionChanged="FontFamilyListBox_SelectionChanged">
-                                    
-                                </ListBox>
-                                <ListBox x:Name="FontFamilyNamesBox"
-                                         FontSize="20"
-                                         >
-                                    
                                 </ListBox>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal"
@@ -107,31 +94,80 @@
                             </StackPanel>
                             <TextBlock x:Name="FontCheckerBlock" 
                                        Grid.Row="3"
-                                       Text="The quick brown fox jumps over the lazy dog 
-                                       The quick brown fox jumps over the lazy dog.
-                                       The quick brown fox jumps over the lazy dog.
-                                       The quick brown fox jumps over the lazy dog.
-                                       The quick brown fox jumps over the lazy dog.
-                                       The quick brown fox jumps over the lazy dog.
-                                       The quick brown fox jumps over the lazy dog.
-                                       The quick brown fox jumps over the lazy dog.
-                                       The quick brown fox jumps over the lazy dog.
-                                       The quick brown fox jumps over the lazy dog.
-                                       The quick brown fox jumps over the lazy dog.
-                                       The quick brown fox jumps over the lazy dog.
-                                       The quick brown fox jumps over the lazy dog.
-                                       The quick brown fox jumps over the lazy dog.
-                                       The quick brown fox jumps over the lazy dog.
-                                       The quick brown fox jumps over the lazy dog.
-                                       The quick brown fox jumps over the lazy dog.
-                                       The quick brown fox jumps over the lazy dog.
-                                       "
                                        TextWrapping="Wrap">
                                 
                             </TextBlock>
                         </Grid>
                     </PickerFlyout>
                 </AppBarButton.Flyout>
+            </AppBarButton>
+            <AppBarButton x:Name="ColorsButton"
+                          Label="Colors"
+                          Icon="Italic"
+                          Click="ColorsButton_Click">
+                <AppBarButton.Flyout>
+                    <Flyout x:Name="ColorsFlyout">
+                        <StackPanel x:Name="ColorsFlyoutStackPanel"
+                                    Margin="10, 5, 10, 5">
+                            <Grid x:Name="ForegroundAndBackgroundGrid">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="35"/>
+                                    <RowDefinition Height="220"/>
+                                    <RowDefinition Height="50"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Row="0"
+                                           Grid.Column="0"
+                                           Text="Font Color"
+                                           FontSize="30"
+                                           HorizontalAlignment="Center"/>
+                                <TextBlock Grid.Row="0"
+                                           Grid.Column="1"
+                                           Text="Background"
+                                           FontSize="30"
+                                           HorizontalAlignment="Center"/>
+                                <ListBox x:Name="FontColorListBox" 
+                                          Grid.Row="1"
+                                          Grid.Column="0"
+                                          FontSize="20"
+                                          SelectionChanged="FontColorListBox_SelectionChanged">
+                                    
+                                </ListBox>
+                                <ListBox x:Name="BackgroundColorListBox"
+                                          Grid.Row="1"
+                                          Grid.Column="1"
+                                          FontSize="20"
+                                          SelectionChanged="BackgroundColorListBox_SelectionChanged">
+                                    
+                                </ListBox>
+                                <Button x:Name="AcceptColorButton"
+                                        Grid.Row="2"
+                                        Grid.Column="0"
+                                        HorizontalAlignment="Center"
+                                        Content="Accept"
+                                        Click="AcceptColorButton_Click"/>
+                                <Button x:Name="CancelColorButton"
+                                        Grid.Row="2"
+                                        Grid.Column="1"
+                                        HorizontalAlignment="Center"
+                                        Content="Cancel"
+                                        Click="CancelColorButton_Click"/>
+                                
+                            </Grid>
+                            <Grid x:Name="ColorTextBlockGrid">
+                                <TextBlock x:Name="ColorTextBlock"
+                                       Height="300"
+                                       VerticalAlignment="Bottom"
+                                       TextWrapping="Wrap"
+                                           ></TextBlock>
+                            </Grid>
+                        </StackPanel>
+                    </Flyout>
+                </AppBarButton.Flyout>
+                
             </AppBarButton>
         </CommandBar>
     </Page.BottomAppBar>

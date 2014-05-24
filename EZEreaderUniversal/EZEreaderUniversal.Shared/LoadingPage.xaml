@@ -20,16 +20,14 @@
                 
             </TextBlock>
             <ProgressBar x:Name="LoadingProgressBar"
-                         IsIndeterminate="False"
+                         IsIndeterminate="True"
                          VerticalAlignment="Center"
                          HorizontalAlignment="Center"
                          Width="200"
                          Height="10"
                          Margin="5, 5, 5, 5"
                          >
-                
             </ProgressBar>
-            
         </StackPanel>
     </Grid>
 </Page>

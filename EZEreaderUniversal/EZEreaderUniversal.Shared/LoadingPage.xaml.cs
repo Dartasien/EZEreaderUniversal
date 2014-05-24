@@ -1,7 +1,6 @@
 ﻿using EZEreaderUniversal.DataModels;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -49,7 +48,6 @@ namespace EZEreaderUniversal
         {
             string originalFile = " ";
             string newFile = "";
-            LoadingProgressBar.Value = 0;
             if (rootPage.FileEvent != null)
             {    
                 
@@ -67,30 +65,23 @@ namespace EZEreaderUniversal
                     {
 
                     }
-                    ///TODO add file operations
                 }
             }
-            LoadingProgressBar.Value = 25;
             string folderName = newFile.Substring(0, newFile.Length - 4);
             await IO.CreateOrGetFolder(folderName);
             await UnZipTheFile(newFile, folderName);
-            LoadingProgressBar.Value = 75;
             await IO.DeleteFileInFolder(sFolder, newFile);
-            LoadingProgressBar.Value = 100;
             addBookToLibrary(folderName);
             this.Frame.Navigate(typeof(MainPage));
         }
 
-        private async void PrintFiles()
-        {
-            var results = await sFolder.GetFilesAsync();
-
-            foreach (StorageFile file in results)
-            {
-                Debug.WriteLine(file.Name);
-            }
-        }
-
+        /// <summary>
+        /// Unzips the .zip file into the specified folder to allow for the reading necessary
+        /// to open the book in this app
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <param name="folderName"></param>
+        /// <returns></returns>
         private async Task UnZipTheFile(string fileName, string folderName)
         {
             StorageFolder folder = await sFolder.GetFolderAsync(folderName);

@@ -15,6 +15,8 @@ using Windows.Storage.Streams;
 using System.Xml.Serialization;
 using Windows.Data.Xml.Dom;
 using CollectionView;
+using Windows.UI;
+using Windows.UI.Xaml.Media;
 
 
 namespace EZEreaderUniversal.DataModels
@@ -127,6 +129,40 @@ namespace EZEreaderUniversal.DataModels
                 {
                     _readingfontfamily = value;
                     NotifyPropertyChanged("ReadingFontFamily");
+                }
+            }
+        }
+
+        private SolidColorBrush _readingfontcolor;
+        public SolidColorBrush ReadingFontColor
+        {
+            get
+            {
+                return _readingfontcolor;
+            }
+            set
+            {
+                if (value != _readingfontcolor)
+                {
+                    _readingfontcolor = value;
+                    NotifyPropertyChanged("ReadingFontColor");
+                }
+            }
+        }
+
+        private SolidColorBrush _backgroundreadingcolor;
+        public SolidColorBrush BackgroundReadingColor
+        {
+            get
+            {
+                return _backgroundreadingcolor;
+            }
+            set
+            {
+                if (value != _backgroundreadingcolor)
+                {
+                    _backgroundreadingcolor = value;
+                    NotifyPropertyChanged("BackgroundReadingColor");
                 }
             }
         }
@@ -277,10 +313,16 @@ namespace EZEreaderUniversal.DataModels
                 int index = tableOfContents.IndexOf('#');
                 tableOfContents = tableOfContents.Substring(0, index);
             }
-            //Debug.WriteLine(tableOfContents);
             return tableOfContents;
         }
 
+        /// <summary>
+        /// Reads the table of contents to find out which chapters are associated
+        /// with which html files.
+        /// </summary>
+        /// <param name="tocLoc"></param>
+        /// <param name="isInStrage"></param>
+        /// <returns></returns>
         private async Task<List<string[]>> GetChapterNamesFromTOC(string tocLoc, bool isInStrage)
         {
             XDocument xdoc;
@@ -314,10 +356,10 @@ namespace EZEreaderUniversal.DataModels
 
                     foreach (var test in chapterNames)
                     {
+                        //only keeps the chapter names that have a chapter html file associated
                         if (test.ChapterName != null && test.ChapterString != null)
                         {
                             arrayOfChapter = new string[2];
-                            //Debug.WriteLine(test.ChapterString);
                             if (test.ChapterString.Contains('#'))
                             {
                                 arrayOfChapter[0] = test.ChapterString.Substring(0, test.ChapterString.IndexOf('#'));
@@ -328,7 +370,6 @@ namespace EZEreaderUniversal.DataModels
                             }
                             arrayOfChapter[1] = test.ChapterName;
                             chapters.Add(arrayOfChapter);
-                            //Debug.WriteLine(test.ChapterName);
                         }
                     }
                    
@@ -743,7 +784,9 @@ namespace EZEreaderUniversal.DataModels
                 }
             }
 
+            //accepts a list of the chapters and their associated html files
             var chapterNames = await GetChapterNamesFromTOC(directoryLoc + tocLoc, isInStorage);
+
             // Will check id of chapters in the manifest against the ids in the spine
             // to find the correct order of the chapters and then adds them to chaptermodel
             int chapterID = 0;
@@ -787,8 +830,6 @@ namespace EZEreaderUniversal.DataModels
                             ChapterID = chapterID,
                             ChapterString = manifestHrefs[i - 1]
                         });
-                        Debug.WriteLine(manifestHrefs[i - 1]);
-                        Debug.WriteLine(chapterName);
                     }
                     chapterID++;
                 }
@@ -880,6 +921,8 @@ namespace EZEreaderUniversal.DataModels
                     this.SortedBooks = new ListCollectionView(this.Library);
                     this.ReadingFontSize = 20;
                     this.ReadingFontFamily = "Segoe UI";
+                    this.ReadingFontColor = new SolidColorBrush(Colors.Black);
+                    this.BackgroundReadingColor = new SolidColorBrush(Colors.White);
                     ImportBook("Pride and Prejudice - Jane Austen_6590", false);
                     
                 }

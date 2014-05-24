@@ -342,6 +342,12 @@ namespace EZEreaderUniversal
             LibrarySource.SortedBooks.Refresh();
         }
 
+        /// <summary>
+        /// Goes to the book that is selected from the LibraryView ListViewCollection
+        /// and opens it up in the reading page.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void LibraryView_Tapped(object sender, TappedRoutedEventArgs e)
         {
             if (LibraryListView.Visibility != Visibility.Visible)
@@ -351,6 +357,12 @@ namespace EZEreaderUniversal
             }
         }
 
+        /// <summary>
+        /// Goes to the new book that is selected from the RecentBooks ListViewCollection
+        /// and opens it up in the reading page.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void RecentReadsView_Tapped(object sender, TappedRoutedEventArgs e)
         {
 

@@ -4,7 +4,6 @@ using System.Globalization;
 using System.Text;
 using Windows.UI.Xaml.Data;
 using EZEreaderUniversal;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.UI.Xaml.Media.Imaging;
