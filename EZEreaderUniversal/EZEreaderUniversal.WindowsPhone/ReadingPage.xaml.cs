@@ -189,14 +189,14 @@ namespace EZEreaderUniversal
         private void SetTestTextBlocksText()
         {
             string testText = "The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog." +
-                                       "The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog." +
-                                       "The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog." +
-                                       "The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog." +
-                                       "The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog." +
-                                       "The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog." +
-                                       "The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog." +
-                                       "The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog." +
-                                       "The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog.";
+                                "The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog." +
+                                "The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog." +
+                                "The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog." +
+                                "The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog." +
+                                "The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog." +
+                                "The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog." +
+                                "The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog." +
+                                "The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog.";
             ColorTextBlock.Text = testText;
             FontCheckerBlock.Text = testText;
             ColorTextBlock.Foreground = rootPage.LibrarySource.ReadingFontColor;
@@ -826,6 +826,19 @@ namespace EZEreaderUniversal
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             ChaptersFlyout.Hide();
+            if ((string)BackgroundColorListBox.SelectedItem != rootPage.LibrarySource.BackgroundReadingColorName)
+            {
+                BackgroundColorListBox.SelectionChanged -= BackgroundColorListBox_SelectionChanged;
+                BackgroundColorListBox.SelectedItem = rootPage.LibrarySource.BackgroundReadingColorName;
+                BackgroundColorListBox.SelectionChanged += BackgroundColorListBox_SelectionChanged;
+            }
+
+            if ((string)FontColorListBox.SelectedItem != rootPage.LibrarySource.ReadingFontColorName)
+            {
+                FontColorListBox.SelectionChanged -= FontColorListBox_SelectionChanged;
+                FontColorListBox.SelectedItem = rootPage.LibrarySource.ReadingFontColorName;
+                FontColorListBox.SelectionChanged += FontColorListBox_SelectionChanged;
+            }
         }
 
         /// <summary>
@@ -841,7 +854,6 @@ namespace EZEreaderUniversal
                 string newForegroundColor = (sender as ListBox).SelectedItem as string;
                 if (AllColorBrushes.ContainsKey(newForegroundColor))
                 {
-                    //rootPage.LibrarySource.BackgroundReadingColor = AllColorBrushes[newBackgroundColor];
                     ColorTextBlock.Foreground = AllColorBrushes[newForegroundColor];
                     ColorTextBlockGrid.UpdateLayout();
                 }
@@ -861,7 +873,6 @@ namespace EZEreaderUniversal
                 string newBackgroundColor = (sender as ListBox).SelectedItem as string;
                 if (AllColorBrushes.ContainsKey(newBackgroundColor))
                 {
-                    //rootPage.LibrarySource.BackgroundReadingColor = AllColorBrushes[newBackgroundColor];
                     ColorTextBlockGrid.Background = AllColorBrushes[newBackgroundColor];
                     ColorTextBlockGrid.UpdateLayout();
                 }
@@ -876,6 +887,19 @@ namespace EZEreaderUniversal
         private void CancelColorButton_Click(object sender, RoutedEventArgs e)
         {
             ColorsFlyout.Hide();
+            if ((string)BackgroundColorListBox.SelectedItem != rootPage.LibrarySource.BackgroundReadingColorName)
+            {
+                BackgroundColorListBox.SelectionChanged -= BackgroundColorListBox_SelectionChanged;
+                BackgroundColorListBox.SelectedItem = rootPage.LibrarySource.BackgroundReadingColorName;
+                BackgroundColorListBox.SelectionChanged += BackgroundColorListBox_SelectionChanged;
+            }
+
+            if ((string)FontColorListBox.SelectedItem != rootPage.LibrarySource.ReadingFontColorName)
+            {
+                FontColorListBox.SelectionChanged -= FontColorListBox_SelectionChanged;
+                FontColorListBox.SelectedItem = rootPage.LibrarySource.ReadingFontColorName;
+                FontColorListBox.SelectionChanged += FontColorListBox_SelectionChanged;
+            }
         }
 
         /// <summary>
@@ -885,7 +909,9 @@ namespace EZEreaderUniversal
         /// <param name="e"></param>
         private async void AcceptColorButton_Click(object sender, RoutedEventArgs e)
         {
+            rootPage.LibrarySource.ReadingFontColorName = (string)FontColorListBox.SelectedItem;
             rootPage.LibrarySource.ReadingFontColor = AllColorBrushes[(string)FontColorListBox.SelectedItem];
+            rootPage.LibrarySource.BackgroundReadingColorName = (string)BackgroundColorListBox.SelectedItem;
             rootPage.LibrarySource.BackgroundReadingColor = AllColorBrushes[(string)BackgroundColorListBox.SelectedItem];
             LayoutRoot.Children.Clear();
             await CreateFirstPage();
@@ -918,6 +944,65 @@ namespace EZEreaderUniversal
                 FontSizeListBox.SelectionChanged -= FontSizeListBox_SelectionChanged;
                 FontSizeListBox.SelectedItem = rootPage.LibrarySource.ReadingFontSize.ToString();
                 FontSizeListBox.SelectionChanged += FontSizeListBox_SelectionChanged;
+            }
+        }
+
+        /// <summary>
+        /// Sets the FontColorListBox selected item to the correct color when opened
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void FontColorListBox_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (FontColorListBox.Items.Contains(rootPage.LibrarySource.ReadingFontColorName))
+            {
+                FontColorListBox.SelectionChanged -= FontColorListBox_SelectionChanged;
+                FontColorListBox.SelectedItem = rootPage.LibrarySource.ReadingFontColorName;
+                FontColorListBox.SelectionChanged += FontColorListBox_SelectionChanged;
+                FontColorListBox.ScrollIntoView(FontColorListBox.SelectedItem);
+            }
+            
+        }
+
+        /// <summary>
+        /// Sets the BackgroundColorListBox selected item to the correct color when opened.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void BackgroundColorListBox_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (BackgroundColorListBox.Items.Contains(rootPage.LibrarySource.BackgroundReadingColorName))
+            {
+                BackgroundColorListBox.SelectionChanged -= BackgroundColorListBox_SelectionChanged;
+                BackgroundColorListBox.SelectedItem = rootPage.LibrarySource.BackgroundReadingColorName;
+                BackgroundColorListBox.SelectionChanged += BackgroundColorListBox_SelectionChanged;
+                BackgroundColorListBox.ScrollIntoView(BackgroundColorListBox.SelectedItem);
+            }
+        }
+
+        /// <summary>
+        /// Sets the ColorTextBlock foreground to the correct color when opened.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ColorTextBlock_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (ColorTextBlock.Foreground != rootPage.LibrarySource.ReadingFontColor)
+            {
+                ColorTextBlock.Foreground = rootPage.LibrarySource.ReadingFontColor;
+            }
+        }
+
+        /// <summary>
+        /// Sets the ColorTextBlockGrid background to the correct color when opened.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ColorTextBlockGrid_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (ColorTextBlockGrid.Background != rootPage.LibrarySource.BackgroundReadingColor)
+            {
+                ColorTextBlockGrid.Background = rootPage.LibrarySource.BackgroundReadingColor;
             }
         }
     }

@@ -133,6 +133,23 @@ namespace EZEreaderUniversal.DataModels
             }
         }
 
+        private string _readingfontcolorname;
+        public string ReadingFontColorName
+        {
+            get
+            {
+                return _readingfontcolorname;
+            }
+            set
+            {
+                if (value != _readingfontcolorname)
+                {
+                    _readingfontcolorname = value;
+                    NotifyPropertyChanged("ReadingFontColorName");
+                }
+            }
+        }
+
         private SolidColorBrush _readingfontcolor;
         public SolidColorBrush ReadingFontColor
         {
@@ -146,6 +163,23 @@ namespace EZEreaderUniversal.DataModels
                 {
                     _readingfontcolor = value;
                     NotifyPropertyChanged("ReadingFontColor");
+                }
+            }
+        }
+
+        private string _backgroundreadingcolorname;
+        public string BackgroundReadingColorName
+        {
+            get
+            {
+                return _backgroundreadingcolorname;
+            }
+            set
+            {
+                if (value != _backgroundreadingcolorname)
+                {
+                    _backgroundreadingcolorname = value;
+                    NotifyPropertyChanged("BackgroundReadingColorName");
                 }
             }
         }
@@ -921,7 +955,9 @@ namespace EZEreaderUniversal.DataModels
                     this.SortedBooks = new ListCollectionView(this.Library);
                     this.ReadingFontSize = 20;
                     this.ReadingFontFamily = "Segoe UI";
+                    this.ReadingFontColorName = "Black";
                     this.ReadingFontColor = new SolidColorBrush(Colors.Black);
+                    this.BackgroundReadingColorName = "White";
                     this.BackgroundReadingColor = new SolidColorBrush(Colors.White);
                     ImportBook("Pride and Prejudice - Jane Austen_6590", false);
                     

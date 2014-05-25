@@ -38,23 +38,38 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <Grid Grid.Column="0"
-                        Tapped="LibraryView_Tapped">
-                <TextBlock HorizontalAlignment="Center" 
-                       Text="Library" 
-                       VerticalAlignment="Top"
-                       Style="{StaticResource SubheaderTextBlockStyle}" />
+                  Tapped="LibraryView_Tapped">
+                <Border x:Name="LibraryBorder"
+                        BorderBrush="Gray"
+                        BorderThickness="3">
+                    <TextBlock x:Name="LibraryTextBlock" 
+                           HorizontalAlignment="Center" 
+                           Text="Library" 
+                           VerticalAlignment="Center"
+                           Style="{StaticResource SubheaderTextBlockStyle}" />
+                </Border>
             </Grid>
             <Grid Grid.Column="1"
-                       Tapped="RecentReadsView_Tapped">
-                <TextBlock HorizontalAlignment="Center"
-                       Text="Recent" 
-                       VerticalAlignment="Top"
-                       Style="{StaticResource SubheaderTextBlockStyle}" />
+                  Tapped="RecentReadsView_Tapped">
+                <Border x:Name="RecentReadsBorder"
+                        BorderBrush="Gray"
+                        BorderThickness="0">
+                    <TextBlock x:Name="RecentReadsTextBlock" 
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               Text="Recent"
+                               Style="{StaticResource SubheaderTextBlockStyle}" />
+                </Border>
             </Grid>
         </Grid>
         <Grid x:Name="ListsGrid" 
               Grid.Row="2" 
               Margin="10, 0,10,10">
+            <Grid.ChildrenTransitions>
+                <TransitionCollection>
+                    <PaneThemeTransition />
+                </TransitionCollection>
+            </Grid.ChildrenTransitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="50"/>

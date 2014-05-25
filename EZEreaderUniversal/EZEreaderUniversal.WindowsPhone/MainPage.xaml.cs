@@ -18,6 +18,7 @@ using EZEreaderUniversal.Common;
 using System.Diagnostics;
 using CollectionView;
 using Windows.UI.Popups;
+using Windows.UI;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -56,17 +57,18 @@ namespace EZEreaderUniversal
         /// This parameter is typically used to configure the page.</param>
         async protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            // TODO: Prepare page for display here.
+            //set which items are visible
             BottomBar.Visibility = Visibility.Collapsed;
             RecentReadsListView.Visibility = Visibility.Collapsed;
             LibraryListView.Visibility = Visibility.Visible;
+            //set which buttons are currently chosen
+            RecentReadsBorder.BorderThickness = new Thickness(0);
+            LibraryBorder.BorderThickness = new Thickness(3);
+            //open data
             await RetrieveLibrary();
+            //make no item currently selected
             LibraryListView.SelectedItem = null;
-            // TODO: If your application contains multiple pages, ensure that you are
-            // handling the hardware Back button by registering for the
-            // Windows.Phone.UI.Input.HardwareButtons.BackPressed event.
-            // If you are using the NavigationHelper provided by some templates,
-            // this event is handled for you.
+            //set a MainPage for other pages to access this
             Current = this;
         }
         
@@ -354,6 +356,8 @@ namespace EZEreaderUniversal
             {
                 LibraryListView.Visibility = Visibility.Visible;
                 RecentReadsListView.Visibility = Visibility.Collapsed;
+                RecentReadsBorder.BorderThickness = new Thickness(0);
+                LibraryBorder.BorderThickness = new Thickness(3);
             }
         }
 
@@ -365,12 +369,12 @@ namespace EZEreaderUniversal
         /// <param name="e"></param>
         private void RecentReadsView_Tapped(object sender, TappedRoutedEventArgs e)
         {
-
             if (RecentReadsListView.Visibility != Visibility.Visible)
             {
-                
                 LibraryListView.Visibility = Visibility.Collapsed;
                 RecentReadsListView.Visibility = Visibility.Visible;
+                RecentReadsBorder.BorderThickness = new Thickness(3);
+                LibraryBorder.BorderThickness = new Thickness(0);
             }
         }
     }

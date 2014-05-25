@@ -130,17 +130,18 @@
                                            FontSize="30"
                                            HorizontalAlignment="Center"/>
                                 <ListBox x:Name="FontColorListBox" 
-                                          Grid.Row="1"
-                                          Grid.Column="0"
-                                          FontSize="20"
-                                          SelectionChanged="FontColorListBox_SelectionChanged">
-                                    
+                                         Grid.Row="1"
+                                         Grid.Column="0"
+                                         FontSize="20"
+                                         Loaded="FontColorListBox_Loaded"
+                                         SelectionChanged="FontColorListBox_SelectionChanged">
                                 </ListBox>
                                 <ListBox x:Name="BackgroundColorListBox"
-                                          Grid.Row="1"
-                                          Grid.Column="1"
-                                          FontSize="20"
-                                          SelectionChanged="BackgroundColorListBox_SelectionChanged">
+                                         Grid.Row="1"
+                                         Grid.Column="1"
+                                         FontSize="20"
+                                         Loaded="BackgroundColorListBox_Loaded"
+                                         SelectionChanged="BackgroundColorListBox_SelectionChanged">
                                     
                                 </ListBox>
                                 <Button x:Name="AcceptColorButton"
@@ -157,11 +158,13 @@
                                         Click="CancelColorButton_Click"/>
                                 
                             </Grid>
-                            <Grid x:Name="ColorTextBlockGrid">
+                            <Grid x:Name="ColorTextBlockGrid"
+                                  Loaded="ColorTextBlockGrid_Loaded">
                                 <TextBlock x:Name="ColorTextBlock"
-                                       Height="300"
-                                       VerticalAlignment="Bottom"
-                                       TextWrapping="Wrap"
+                                           Height="300"
+                                           VerticalAlignment="Bottom"
+                                           TextWrapping="Wrap"
+                                           Loaded="ColorTextBlock_Loaded"
                                            ></TextBlock>
                             </Grid>
                         </StackPanel>
