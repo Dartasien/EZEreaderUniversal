@@ -30,7 +30,6 @@ namespace EZEreaderUniversal
     {
         private static StorageFolder sFolder = ApplicationData.Current.LocalFolder;
         MainPage rootPage = MainPage.Current;
-        //string newBook;
 
         public LoadingPage()
         {
@@ -162,36 +161,14 @@ namespace EZEreaderUniversal
             }
         }
 
-        private static async Task<StorageFolder> CreateOrGetFolders(StorageFolder folder, string[] directoryName)
-        {
-            StorageFolder folderOne = await IO.CreateOrGetFolder(directoryName[0], folder);
-            StorageFolder folderTwo;
-            StorageFolder folderThree;
-            
-            if (directoryName.Length == 2)
-            {
-                return folderOne;
-            }
-            else if (directoryName.Length == 3)
-            {
-                return await IO.CreateOrGetFolder(directoryName[1], folderOne);
-            }
-            else if (directoryName.Length == 4)
-            {
-                folderTwo = await IO.CreateOrGetFolder(directoryName[1], folderOne);
-                return await IO.CreateOrGetFolder(directoryName[2], folderTwo);
-            }
-            else
-            {
-                folderTwo = await IO.CreateOrGetFolder(directoryName[1], folderOne);
-                folderThree = await IO.CreateOrGetFolder(directoryName[2], folderTwo);
-                return await IO.CreateOrGetFolder(directoryName[3], folderThree);
-            }
-        }
-
+        /// <summary>
+        /// Adds to book to the bookmodel collection
+        /// </summary>
+        /// <param name="folderName"></param>
         private void addBookToLibrary(string folderName)
         {
             rootPage.LibrarySource.ImportBook(folderName, true);
         }
+         
     }
 }

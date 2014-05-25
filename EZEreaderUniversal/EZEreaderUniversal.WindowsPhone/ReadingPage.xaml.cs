@@ -17,14 +17,13 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using Windows.Data.Html;
-using HtmlAgilityPack;
 using Windows.UI.Xaml.Documents;
-using System.Diagnostics;
 using Windows.Storage;
 using System.Threading.Tasks;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Popups;
 using System.Reflection;
+using HtmlAgilityPack;
 using Windows.UI;
 
 // The Basic Page item template is documented at http://go.microsoft.com/fwlink/?LinkID=390556
@@ -81,6 +80,35 @@ namespace EZEreaderUniversal
             get { return this.defaultViewModel; }
         }
 
+        #region NavigationHelper registration
+
+        /// <summary>
+        /// The methods provided in this section are simply used to allow
+        /// NavigationHelper to respond to the page's navigation methods.
+        /// <para>
+        /// Page specific logic should be placed in event handlers for the  
+        /// <see cref="NavigationHelper.LoadState"/>
+        /// and <see cref="NavigationHelper.SaveState"/>.
+        /// The navigation parameter is available in the LoadState method 
+        /// in addition to page state preserved during an earlier session.
+        /// </para>
+        /// </summary>
+        /// <param name="e">Provides data for navigation methods and event
+        /// handlers that cannot cancel the navigation request.</param>
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            this.navigationHelper.OnNavigatedTo(e);
+        }
+
+        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        {
+            this.navigationHelper.OnNavigatedFrom(e);
+        }
+
+        #endregion
+
+        #region Navigation Loads and Saves
+
         /// <summary>
         /// Populates the page with content passed during navigation.  Any saved state is also
         /// provided when recreating a page from a prior session.
@@ -123,19 +151,6 @@ namespace EZEreaderUniversal
                 this.Frame.Navigate(typeof(MainPage));
             }
         }
-
-        /// <summary>
-        /// Sets the FontSizeListBox itemssource to a list of font sizes as strings
-        /// </summary>
-        private void SetFontSizes()
-        {
-            fontSizes = new List<string>();
-            for (int i = 12; i < 37; i+=2)
-            {
-                fontSizes.Add(i.ToString());
-            }
-            FontSizeListBox.ItemsSource = fontSizes;
-        }
         
         /// <summary>
         /// Preserves state associated with this page in case the application is suspended or the
@@ -153,7 +168,24 @@ namespace EZEreaderUniversal
                 thisBook.CurrentPage = 0;
                 rootPage.LibrarySource.RecentReads.Remove(thisBook);
             }
-            rootPage.CallUpdateBooks();
+            rootPage.LibrarySource.CallUpdateBooks();
+        }
+
+        #endregion
+
+        #region Flyout Setups
+
+        /// <summary>
+        /// Sets the FontSizeListBox itemssource to a list of font sizes as strings
+        /// </summary>
+        private void SetFontSizes()
+        {
+            fontSizes = new List<string>();
+            for (int i = 12; i < 37; i += 2)
+            {
+                fontSizes.Add(i.ToString());
+            }
+            FontSizeListBox.ItemsSource = fontSizes;
         }
 
         /// <summary>
@@ -220,6 +252,31 @@ namespace EZEreaderUniversal
             ChaptersListBox.Loaded += ChaptersListBox_Loaded;
             ChaptersListBox.SelectionChanged += ChaptersListBox_SelectionChanged;
         }
+
+        /// <summary>
+        /// Adds the list of fontfamily names to the listblock for font selection
+        /// </summary>
+        private void GetSystemFonts()
+        {
+            fontBlocks = new List<TextBlock>();
+            string[] fonts = {"Arial", "Arial Black", "Arial Unicode MS", "Calibri", "Cambria",
+                                 "Cambria Math", "Comic Sans MS", "Candara", "Consolas", "Constantia",
+                                 "Corbel", "Courier New", "George", "Lucida Sans Unicode", "Segoe UI",
+                                 "Symbol", "Tahoma", "Times New Roman", "Trebuchet MS", "Verdana"};
+
+            for (int i = 0; i < fonts.Length; i++)
+            {
+                fontBlocks.Add(new TextBlock());
+                fontBlocks[i].Text = fonts[i];
+                fontBlocks[i].FontFamily = new FontFamily(fonts[i]);
+            }
+            FontFamilyListBox.ItemsSource = fontBlocks;
+            FontFamilyListBox.Loaded += FontFamilyListBox_Loaded;
+        }
+
+        #endregion
+
+        #region Page creation and turning methods
 
         /// <summary>
         /// Takes the chapters full html file and loads it, then converts to text, and finally
@@ -464,67 +521,6 @@ namespace EZEreaderUniversal
             }
         }
 
-        #region NavigationHelper registration
-
-        /// <summary>
-        /// The methods provided in this section are simply used to allow
-        /// NavigationHelper to respond to the page's navigation methods.
-        /// <para>
-        /// Page specific logic should be placed in event handlers for the  
-        /// <see cref="NavigationHelper.LoadState"/>
-        /// and <see cref="NavigationHelper.SaveState"/>.
-        /// The navigation parameter is available in the LoadState method 
-        /// in addition to page state preserved during an earlier session.
-        /// </para>
-        /// </summary>
-        /// <param name="e">Provides data for navigation methods and event
-        /// handlers that cannot cancel the navigation request.</param>
-        protected override void OnNavigatedTo(NavigationEventArgs e)
-        {
-            this.navigationHelper.OnNavigatedTo(e);
-        }
-
-        protected override void OnNavigatedFrom(NavigationEventArgs e)
-        {
-            this.navigationHelper.OnNavigatedFrom(e);
-        }
-
-        #endregion
-
-        /// <summary>
-        /// switches to a new page in the chapter upon tap and switches to
-        /// a new chapter if we hit the last page
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private async void myRTB_Tapped(object sender, TappedRoutedEventArgs e)
-        {
-            
-            Point eTap = e.GetPosition(LayoutRoot.Children.ElementAt(thisBook.CurrentPage));
-
-            if (this.ReadingBottomBar.Visibility == Visibility.Collapsed)
-            {
-                //tap on rightside of the screen makes page turn forwards
-                if (eTap.X > LayoutRoot.ActualWidth * .6)
-                {
-                    await PageTurnForwards();
-                }
-                //tap on left side of the screen makes the page turn backwards
-                else if (eTap.X < LayoutRoot.ActualWidth * .4)
-                {
-                    await PageTurnBack();
-                }
-                else
-                {
-                    this.ReadingBottomBar.Visibility = Visibility.Visible;
-                }
-            }
-            else
-            {
-                this.ReadingBottomBar.Visibility = Visibility.Collapsed;
-            }
-        }
-
         /// <summary>
         /// Will turn the page forward if called, if needed
         /// </summary>
@@ -623,72 +619,80 @@ namespace EZEreaderUniversal
             }
         }
 
+        #endregion
+
+        #region Touch and Tap events
+
         /// <summary>
-        /// Shows the different font sizes in the textblock below the list
+        /// switches to a new page in the chapter upon tap and switches to
+        /// a new chapter if we hit the last page
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void FontSizeListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private async void myRTB_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            string newFont = (string)((sender as ListBox).SelectedItem);
-            FontCheckerBlock.FontSize = Convert.ToInt32(newFont);
-        }
 
-        /// <summary>
-        /// Adds the list of fontfamily names to the listblock for font selection
-        /// </summary>
-        private void GetSystemFonts()
-        {
-            fontBlocks = new List<TextBlock>();
-            string[] fonts = {"Arial", "Arial Black", "Arial Unicode MS", "Calibri", "Cambria",
-                                 "Cambria Math", "Comic Sans MS", "Candara", "Consolas", "Constantia",
-                                 "Corbel", "Courier New", "George", "Lucida Sans Unicode", "Segoe UI",
-                                 "Symbol", "Tahoma", "Times New Roman", "Trebuchet MS", "Verdana"};
+            Point eTap = e.GetPosition(LayoutRoot.Children.ElementAt(thisBook.CurrentPage));
 
-            for (int i = 0; i < fonts.Length; i++)
+            if (this.ReadingBottomBar.Visibility == Visibility.Collapsed)
             {
-                fontBlocks.Add(new TextBlock());
-                fontBlocks[i].Text = fonts[i];
-                fontBlocks[i].FontFamily = new FontFamily(fonts[i]);
-            }
-            FontFamilyListBox.ItemsSource = fontBlocks;
-            FontFamilyListBox.Loaded += FontFamilyListBox_Loaded;
-        }
-
-        /// <summary>
-        /// Sets the currently selected fontfamily as the selected item in FontFamilyListBox
-        /// so that the user knows which is current.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        void FontFamilyListBox_Loaded(object sender, RoutedEventArgs e)
-        {
-            TextBlock fontTextBlock = new TextBlock();
-            fontTextBlock.Text = rootPage.LibrarySource.ReadingFontFamily;
-            fontTextBlock.FontFamily = new FontFamily(rootPage.LibrarySource.ReadingFontFamily);
-
-            foreach (TextBlock item in FontFamilyListBox.Items)
-            {
-                if (item.Text == rootPage.LibrarySource.ReadingFontFamily)
+                //tap on rightside of the screen makes page turn forwards
+                if (eTap.X > LayoutRoot.ActualWidth * .6)
                 {
-                    FontFamilyListBox.SelectionChanged -= FontFamilyListBox_SelectionChanged;
-                    (sender as ListBox).SelectedItem = item;
-                    FontFamilyListBox.SelectionChanged += FontFamilyListBox_SelectionChanged;
-                    FontFamilyListBox.ScrollIntoView(item);
+                    await PageTurnForwards();
+                }
+                //tap on left side of the screen makes the page turn backwards
+                else if (eTap.X < LayoutRoot.ActualWidth * .4)
+                {
+                    await PageTurnBack();
+                }
+                else
+                {
+                    this.ReadingBottomBar.Visibility = Visibility.Visible;
+                }
+            }
+            else
+            {
+                this.ReadingBottomBar.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        /// <summary>
+        /// sets the initial point for swipe detection
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void LayoutRoot_ManipulationStarted(object sender, ManipulationStartedRoutedEventArgs e)
+        {
+            InitialPoint = e.Position;
+        }
+
+        /// <summary>
+        /// handler to page turn depending upon the direction of swipes on the screen
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private async void LayoutRoot_ManipulationDelta(object sender, ManipulationDeltaRoutedEventArgs e)
+        {
+            if (e.IsInertial)
+            {
+                Point currentpoint = e.Position;
+                if (currentpoint.X - InitialPoint.X >= 100)
+                {
+                    await PageTurnBack();
+                    e.Complete();
+                }
+                else if (InitialPoint.X - currentpoint.X >= 100)
+                {
+                    await PageTurnForwards();
+                    e.Complete();
                 }
             }
         }
 
-        /// <summary>
-        /// Shows the different font families in the textblock below the list
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void FontFamilyListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            TextBlock newFontFamily = (TextBlock)((sender as ListBox).SelectedItem);
-            FontCheckerBlock.FontFamily = new FontFamily(newFontFamily.Text);
-        }
+        #endregion
+
+        #region Event Handlers
 
         /// <summary>
         /// Takes the selected font size and font families and applies them to the reading page
@@ -752,7 +756,7 @@ namespace EZEreaderUniversal
             bool chapterChanged = false;
             string newChapter = (string)(sender as ListBox).SelectedItem as string;
             ChaptersListBoxSelectedIndex = (int)(sender as ListBox).SelectedIndex;
-            for (int i = 0; i < thisBook.Chapters.Count; i++ )
+            for (int i = 0; i < thisBook.Chapters.Count; i++)
             {
                 if (newChapter == thisBook.Chapters[i].ChapterName)
                 {
@@ -782,39 +786,6 @@ namespace EZEreaderUniversal
             if (ChaptersListBox.Visibility == Visibility.Visible)
             {
                 ChaptersFlyout.Hide();
-            }
-        }
-
-        /// <summary>
-        /// sets the initial point for swipe detection
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void LayoutRoot_ManipulationStarted(object sender, ManipulationStartedRoutedEventArgs e)
-        {
-            InitialPoint = e.Position;
-        }
-
-        /// <summary>
-        /// handler to page turn depending upon the direction of swipes on the screen
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private async void LayoutRoot_ManipulationDelta(object sender, ManipulationDeltaRoutedEventArgs e)
-        {
-            if (e.IsInertial)
-            {
-                Point currentpoint = e.Position;
-                if (currentpoint.X - InitialPoint.X >= 100)
-                {
-                    await PageTurnBack();
-                    e.Complete();
-                }
-                else if (InitialPoint.X - currentpoint.X >= 100)
-                {
-                    await PageTurnForwards();
-                    e.Complete();
-                }
             }
         }
 
@@ -858,6 +829,41 @@ namespace EZEreaderUniversal
                     ColorTextBlockGrid.UpdateLayout();
                 }
             }
+        }
+
+        /// <summary>
+        /// Sets the currently selected fontfamily as the selected item in FontFamilyListBox
+        /// so that the user knows which is current.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        void FontFamilyListBox_Loaded(object sender, RoutedEventArgs e)
+        {
+            TextBlock fontTextBlock = new TextBlock();
+            fontTextBlock.Text = rootPage.LibrarySource.ReadingFontFamily;
+            fontTextBlock.FontFamily = new FontFamily(rootPage.LibrarySource.ReadingFontFamily);
+
+            foreach (TextBlock item in FontFamilyListBox.Items)
+            {
+                if (item.Text == rootPage.LibrarySource.ReadingFontFamily)
+                {
+                    FontFamilyListBox.SelectionChanged -= FontFamilyListBox_SelectionChanged;
+                    (sender as ListBox).SelectedItem = item;
+                    FontFamilyListBox.SelectionChanged += FontFamilyListBox_SelectionChanged;
+                    FontFamilyListBox.ScrollIntoView(item);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Shows the different font families in the textblock below the list
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void FontFamilyListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            TextBlock newFontFamily = (TextBlock)((sender as ListBox).SelectedItem);
+            FontCheckerBlock.FontFamily = new FontFamily(newFontFamily.Text);
         }
 
         /// <summary>
@@ -948,6 +954,17 @@ namespace EZEreaderUniversal
         }
 
         /// <summary>
+        /// Shows the different font sizes in the textblock below the list
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void FontSizeListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            string newFont = (string)((sender as ListBox).SelectedItem);
+            FontCheckerBlock.FontSize = Convert.ToInt32(newFont);
+        }
+
+        /// <summary>
         /// Sets the FontColorListBox selected item to the correct color when opened
         /// </summary>
         /// <param name="sender"></param>
@@ -1005,5 +1022,6 @@ namespace EZEreaderUniversal
                 ColorTextBlockGrid.Background = rootPage.LibrarySource.BackgroundReadingColor;
             }
         }
+        #endregion
     }
 }

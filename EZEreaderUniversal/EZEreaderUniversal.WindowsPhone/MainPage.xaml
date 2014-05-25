@@ -43,10 +43,12 @@
                         BorderBrush="Gray"
                         BorderThickness="3">
                     <TextBlock x:Name="LibraryTextBlock" 
-                           HorizontalAlignment="Center" 
-                           Text="Library" 
-                           VerticalAlignment="Center"
-                           Style="{StaticResource SubheaderTextBlockStyle}" />
+                               HorizontalAlignment="Center" 
+                               Text="Library"
+                               FontSize="28"
+                               Height="45"
+                               VerticalAlignment="Center"
+                               Style="{StaticResource SubheaderTextBlockStyle}" />
                 </Border>
             </Grid>
             <Grid Grid.Column="1"
@@ -58,7 +60,8 @@
                                HorizontalAlignment="Center"
                                VerticalAlignment="Center"
                                Text="Recent"
-                               Style="{StaticResource SubheaderTextBlockStyle}" />
+                               Height="45"
+                               Style="{StaticResource SubheaderTextBlockStyle}"/>
                 </Border>
             </Grid>
         </Grid>
@@ -109,8 +112,7 @@
                       Margin="15, 0, 15, 0"
                       Tapped="LibraryListView_Tapped_1"
                       IsTabStop="False"
-                      SelectionChanged="LibraryListView_SelectionChanged"
-                      >
+                      SelectionChanged="LibraryListView_SelectionChanged">
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <ListViewItem x:Name="RecentReadsListViewItems"
@@ -142,9 +144,7 @@
                           IsAutoRefreshEnabled="True"
                           Visibility="Visible"
                           Height="50"
-                          Width="320"
-                          >
-                
+                          Width="320">
             </UI:AdControl>
             <Grid x:Name="DetailsGrid"
                   Height="100"
@@ -166,26 +166,27 @@
                          Grid.Row="1"
                          Grid.Column="0"
                          Visibility="Collapsed"
-                         TextChanged="AuthorNameBox_TextChanged"
-                         >
-                    
+                         TextChanged="AuthorNameBox_TextChanged">
                 </TextBox>
             </Grid>
         </Grid>
     </Grid>
     <Page.BottomAppBar>
-        <CommandBar 
-            x:Name="BottomBar">
+        <CommandBar x:Name="BottomBar">
             <AppBarButton Label="Sort By"
                           Icon="Sort">
                 <AppBarButton.Flyout>
                     <MenuFlyout>
                         <MenuFlyout.MenuFlyoutPresenterStyle>
                             <Style TargetType="MenuFlyoutPresenter">
-                                <Setter Property="Background" Value="{StaticResource ApplicationPageBackgroundThemeBrush}"/>
-                                <Setter Property="Foreground" Value="{StaticResource ApplicationForegroundThemeBrush}"/>
-                                <Setter Property="Width" Value="110"/>
-                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                                <Setter Property="Background" 
+                                        Value="{StaticResource ApplicationPageBackgroundThemeBrush}"/>
+                                <Setter Property="Foreground" 
+                                        Value="{StaticResource ApplicationForegroundThemeBrush}"/>
+                                <Setter Property="Width" 
+                                        Value="110"/>
+                                <Setter Property="HorizontalAlignment" 
+                                        Value="Center"/>
                             </Style>
                         </MenuFlyout.MenuFlyoutPresenterStyle>
                         <MenuFlyoutItem Text="By Author"

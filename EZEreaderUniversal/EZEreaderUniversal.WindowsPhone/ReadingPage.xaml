@@ -15,9 +15,7 @@
           VerticalAlignment="Stretch"
           ManipulationStarted="LayoutRoot_ManipulationStarted"
           ManipulationDelta="LayoutRoot_ManipulationDelta"
-          ManipulationMode="All"
-          >
-
+          ManipulationMode="All">
     </Grid>
     <Page.BottomAppBar>
         <CommandBar x:Name="ReadingBottomBar">
@@ -31,9 +29,9 @@
                                     Click="Button_Click"
                                     HorizontalAlignment="Center"/>
                             <ListBox x:Name="ChaptersListBox"
-                                 FontSize="20"
-                                 Background="{StaticResource ApplicationPageBackgroundThemeBrush}"
-                                 Foreground="{StaticResource ApplicationForegroundThemeBrush}">
+                                     FontSize="20"
+                                     Background="{StaticResource ApplicationPageBackgroundThemeBrush}"
+                                     Foreground="{StaticResource ApplicationForegroundThemeBrush}">
                             </ListBox>
                         </StackPanel>
                     </PickerFlyout>
@@ -43,8 +41,7 @@
                           Icon="Font">
                 <AppBarButton.Flyout>
                     <PickerFlyout x:Name="FontFlyout"
-                                  ScrollViewer.VerticalScrollMode="Disabled"
-                                  >
+                                  ScrollViewer.VerticalScrollMode="Disabled">
                         <Grid Margin="10, 10, 10, 10"
                               ScrollViewer.VerticalScrollMode="Disabled">
                             <Grid.RowDefinitions>
@@ -84,18 +81,15 @@
                                         Content="Accept"
                                         Margin="0, 0, 50, 0"
                                         Click="AcceptButton_Click">
-                                    
                                 </Button>
                                 <Button x:Name="CancelButton"
                                         Content="Cancel"
                                         Click="CancelButton_Click">
-                                    
                                 </Button>
                             </StackPanel>
                             <TextBlock x:Name="FontCheckerBlock" 
                                        Grid.Row="3"
                                        TextWrapping="Wrap">
-                                
                             </TextBlock>
                         </Grid>
                     </PickerFlyout>
@@ -122,12 +116,12 @@
                                 <TextBlock Grid.Row="0"
                                            Grid.Column="0"
                                            Text="Font Color"
-                                           FontSize="30"
+                                           FontSize="28"
                                            HorizontalAlignment="Center"/>
                                 <TextBlock Grid.Row="0"
                                            Grid.Column="1"
                                            Text="Background"
-                                           FontSize="30"
+                                           FontSize="28"
                                            HorizontalAlignment="Center"/>
                                 <ListBox x:Name="FontColorListBox" 
                                          Grid.Row="1"
@@ -142,7 +136,6 @@
                                          FontSize="20"
                                          Loaded="BackgroundColorListBox_Loaded"
                                          SelectionChanged="BackgroundColorListBox_SelectionChanged">
-                                    
                                 </ListBox>
                                 <Button x:Name="AcceptColorButton"
                                         Grid.Row="2"
@@ -156,7 +149,6 @@
                                         HorizontalAlignment="Center"
                                         Content="Cancel"
                                         Click="CancelColorButton_Click"/>
-                                
                             </Grid>
                             <Grid x:Name="ColorTextBlockGrid"
                                   Loaded="ColorTextBlockGrid_Loaded">
@@ -164,13 +156,12 @@
                                            Height="300"
                                            VerticalAlignment="Bottom"
                                            TextWrapping="Wrap"
-                                           Loaded="ColorTextBlock_Loaded"
-                                           ></TextBlock>
+                                           Loaded="ColorTextBlock_Loaded">
+                                </TextBlock>
                             </Grid>
                         </StackPanel>
                     </Flyout>
                 </AppBarButton.Flyout>
-                
             </AppBarButton>
         </CommandBar>
     </Page.BottomAppBar>

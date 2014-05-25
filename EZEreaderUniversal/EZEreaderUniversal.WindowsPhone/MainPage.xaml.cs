@@ -15,7 +15,6 @@ using Windows.UI.Xaml.Navigation;
 using EZEreaderUniversal.DataModels;
 using Windows.ApplicationModel.Activation;
 using EZEreaderUniversal.Common;
-using System.Diagnostics;
 using CollectionView;
 using Windows.UI.Popups;
 using Windows.UI;
@@ -41,7 +40,6 @@ namespace EZEreaderUniversal
             set { _fileEventArgs = value; }
         }
 
-
         public MainPage()
         {
             this.InitializeComponent();
@@ -49,7 +47,6 @@ namespace EZEreaderUniversal
             this.NavigationCacheMode = NavigationCacheMode.Required;
         }
 
-        
         /// <summary>
         /// Invoked when this page is about to be displayed in a Frame.
         /// </summary>
@@ -103,11 +100,6 @@ namespace EZEreaderUniversal
             }
         }
 
-        public void CallUpdateBooks()
-        {
-            LibrarySource.CallUpdateBooks();
-        }
-
         /// <summary>
         /// Adds a new book to the library if called
         /// </summary>
@@ -120,6 +112,8 @@ namespace EZEreaderUniversal
                 LibrarySource.Library.Add(newBook.Library[i]);
             }
         }
+
+        #region Event Handlers
 
         /// <summary>
         /// Opens the reading page on the selected book if bottombar or its associated
@@ -281,7 +275,7 @@ namespace EZEreaderUniversal
         private void BookNameBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             ourBook.BookName = BookNameBox.Text;
-            CallUpdateBooks();
+            this.LibrarySource.CallUpdateBooks();
         }
 
         /// <summary>
@@ -292,7 +286,7 @@ namespace EZEreaderUniversal
         private void AuthorNameBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             ourBook.AuthorID = AuthorNameBox.Text;
-            CallUpdateBooks();
+            this.LibrarySource.CallUpdateBooks();
         }
 
         /// <summary>
@@ -377,5 +371,6 @@ namespace EZEreaderUniversal
                 LibraryBorder.BorderThickness = new Thickness(0);
             }
         }
+        #endregion
     }
 }
