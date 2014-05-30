@@ -32,12 +32,27 @@
                        Margin="15, 0, 0, 0" 
                        FontSize="14"/>
         </StackPanel>
+        <Grid x:Name="SearchGrid"
+              Grid.Row="1"
+              Height="100"
+              Margin="10, 0, 60, 0"
+              Visibility="Collapsed">
+            <TextBox x:Name="SearchBookTextBox"
+                     Grid.Row="0"
+                     Grid.Column="0"
+                     Visibility="Collapsed"
+                     KeyDown="SearchBookTextBox_KeyDown"
+                     TextChanged="SearchBookTextBox_TextChanged">
+            </TextBox>
+        </Grid>
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="60"/>
             </Grid.ColumnDefinitions>
-            <Grid Grid.Column="0"
+            <Grid x:Name="LibraryTextBlockGrid" 
+                  Grid.Column="0"
                   Tapped="LibraryView_Tapped">
                 <Border x:Name="LibraryBorder"
                         BorderBrush="Gray"
@@ -51,7 +66,8 @@
                                Style="{StaticResource SubheaderTextBlockStyle}" />
                 </Border>
             </Grid>
-            <Grid Grid.Column="1"
+            <Grid x:Name="RecentReadsTextBlockGrid"
+                  Grid.Column="1"
                   Tapped="RecentReadsView_Tapped">
                 <Border x:Name="RecentReadsBorder"
                         BorderBrush="Gray"
@@ -64,6 +80,38 @@
                                Style="{StaticResource SubheaderTextBlockStyle}"/>
                 </Border>
             </Grid>
+            <Button x:Name="SettingsButton" 
+                    Grid.Column="2"
+                    BorderThickness="0"
+                    HorizontalAlignment="Center"
+                    MaxWidth="40">
+                <Button.Content>
+                    <SymbolIcon Symbol="Setting"/>
+                </Button.Content>
+                <Button.Flyout>
+                    <MenuFlyout>
+                        <MenuFlyout.MenuFlyoutPresenterStyle>
+                            <Style TargetType="MenuFlyoutPresenter">
+                                <Setter Property="Background" 
+                                        Value="{StaticResource ApplicationPageBackgroundThemeBrush}"/>
+                                <Setter Property="Foreground" 
+                                        Value="{StaticResource ApplicationForegroundThemeBrush}"/>
+                                <Setter Property="Width"
+                                        Value="110"/>
+                                <Setter Property="HorizontalAlignment" 
+                                        Value="Center"/>
+                            </Style>
+                        </MenuFlyout.MenuFlyoutPresenterStyle>
+                        <MenuFlyoutItem Text="Search"
+                                        Click="SearchLibrary_Click">
+                        </MenuFlyoutItem>
+                        <MenuFlyoutItem Text="Sort Library by Author"
+                                        Click="SortByAuthor_Click"/>
+                        <MenuFlyoutItem Text="Sort Library by Title"
+                                        Click="SortByTitle_Click"/>
+                    </MenuFlyout>
+                </Button.Flyout>
+            </Button>
         </Grid>
         <Grid x:Name="ListsGrid" 
               Grid.Row="2" 
@@ -117,7 +165,7 @@
                     <DataTemplate>
                         <ListViewItem x:Name="RecentReadsListViewItems"
                                       Tapped="LibraryListView_Tapped"
-                                      RightTapped="LibraryListView_RightTapped">
+                                      RightTapped="RecentReadsListView_RightTapped">
                             <Grid Height="100">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="60"/>
@@ -137,8 +185,8 @@
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
-            <UI:AdControl ApplicationId="test_client"
-                          AdUnitId="Image320_50"
+            <UI:AdControl ApplicationId="efcc0a2a-35ce-45e2-9f84-b8baa193f966"
+                          AdUnitId="10738395"
                           Grid.Row="1"
                           HorizontalAlignment="Center"
                           IsAutoRefreshEnabled="True"
@@ -148,6 +196,7 @@
             </UI:AdControl>
             <Grid x:Name="DetailsGrid"
                   Height="100"
+                  Margin="10, 0, 10, 0"
                   Visibility="Collapsed">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"/>
@@ -173,32 +222,6 @@
     </Grid>
     <Page.BottomAppBar>
         <CommandBar x:Name="BottomBar">
-            <AppBarButton Label="Sort By"
-                          Icon="Sort">
-                <AppBarButton.Flyout>
-                    <MenuFlyout>
-                        <MenuFlyout.MenuFlyoutPresenterStyle>
-                            <Style TargetType="MenuFlyoutPresenter">
-                                <Setter Property="Background" 
-                                        Value="{StaticResource ApplicationPageBackgroundThemeBrush}"/>
-                                <Setter Property="Foreground" 
-                                        Value="{StaticResource ApplicationForegroundThemeBrush}"/>
-                                <Setter Property="Width" 
-                                        Value="110"/>
-                                <Setter Property="HorizontalAlignment" 
-                                        Value="Center"/>
-                            </Style>
-                        </MenuFlyout.MenuFlyoutPresenterStyle>
-                        <MenuFlyoutItem Text="By Author"
-                                        Click="SortByAuthor_Click"
-                                        Width="110"/>
-                        <MenuFlyoutItem Text="By Title"
-                                        Click="SortByTitle_Click"
-                                        Margin="0,0,0,50"
-                                        Width="110"/>
-                    </MenuFlyout>
-                </AppBarButton.Flyout>
-            </AppBarButton>
             <AppBarButton Label="Delete" 
                           Icon="Delete"
                           Click="DeleteBarButton_Click">

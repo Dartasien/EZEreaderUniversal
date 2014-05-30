@@ -42,6 +42,7 @@ namespace EZEreaderUniversal
         private Point InitialPoint;
         Run myRun;
         List<string> chaptersNames;
+        List<int> chaptersNumbers;
         int ChaptersListBoxSelectedIndex;
         string chapterText;
         int pageNumber;
@@ -59,9 +60,7 @@ namespace EZEreaderUniversal
             this.navigationHelper = new NavigationHelper(this);
             this.navigationHelper.LoadState += this.NavigationHelper_LoadState;
             this.navigationHelper.SaveState += this.NavigationHelper_SaveState;
-        }
-
-        
+        }      
 
         /// <summary>
         /// Gets the <see cref="NavigationHelper"/> associated with this <see cref="Page"/>.
@@ -140,7 +139,6 @@ namespace EZEreaderUniversal
             {
                 errorMessage = "Error opening book, possible incorrect format.";
             }
-
             if (errorMessage != "")
             {
                 var messageDialog = new MessageDialog(errorMessage);
@@ -211,7 +209,6 @@ namespace EZEreaderUniversal
             }
             BackgroundColorListBox.ItemsSource = allColorNames;
             FontColorListBox.ItemsSource = allColorNames;
-
         }
 
         /// <summary>
@@ -241,11 +238,13 @@ namespace EZEreaderUniversal
         private void PlaceChaptersInFlyout()
         {
             chaptersNames = new List<string>();
+            chaptersNumbers = new List<int>();
             foreach (var chapter in thisBook.Chapters)
             {
                 if (chapter.ChapterName != "")
                 {
                     chaptersNames.Add(chapter.ChapterName);
+                    chaptersNumbers.Add(chapter.ChapterID);
                 }
             }
             ChaptersListBox.ItemsSource = chaptersNames;
@@ -703,8 +702,10 @@ namespace EZEreaderUniversal
         {
             string newFont = (string)FontSizeListBox.SelectedItem as string;
             rootPage.LibrarySource.ReadingFontSize = Convert.ToInt32(newFont);
+            rootPage.LibrarySource.ReadingFonts.ReadingFontSize = rootPage.LibrarySource.ReadingFontSize;
             TextBlock newFontFamily = (TextBlock)FontFamilyListBox.SelectedItem as TextBlock;
             rootPage.LibrarySource.ReadingFontFamily = newFontFamily.Text;
+            rootPage.LibrarySource.ReadingFonts.ReadingFontFamily = newFontFamily.Text;
             FontFlyout.Hide();
             BottomAppBar.Visibility = Visibility.Collapsed;
             LayoutRoot.Children.Clear();
@@ -734,8 +735,9 @@ namespace EZEreaderUniversal
             {
                 for (int i = 0; i < ChaptersListBox.Items.Count; i++)
                 {
-                    if ((string)ChaptersListBox.Items[i] == thisBook.Chapters[thisBook.CurrentChapter].ChapterName &&
-                        i + 2 > thisBook.CurrentChapter && i - 2 < thisBook.CurrentChapter)
+                    if ((string)ChaptersListBox.Items[i] == 
+                        thisBook.Chapters[thisBook.CurrentChapter].ChapterName &&
+                        thisBook.Chapters[thisBook.CurrentChapter].ChapterID == chaptersNumbers[i])
                     {
                         ChaptersListBox.SelectionChanged -= ChaptersListBox_SelectionChanged;
                         (sender as ListBox).SelectedIndex = i;
@@ -758,13 +760,12 @@ namespace EZEreaderUniversal
             ChaptersListBoxSelectedIndex = (int)(sender as ListBox).SelectedIndex;
             for (int i = 0; i < thisBook.Chapters.Count; i++)
             {
-                if (newChapter == thisBook.Chapters[i].ChapterName)
+                if (newChapter == thisBook.Chapters[i].ChapterName &&
+                    chaptersNumbers[ChaptersListBox.SelectedIndex] ==
+                    thisBook.Chapters[i].ChapterID)
                 {
-                    if (ChaptersListBoxSelectedIndex < i + 2 && ChaptersListBoxSelectedIndex > i - 2)
-                    {
-                        thisBook.CurrentChapter = i;
-                        chapterChanged = true;
-                    }
+                    thisBook.CurrentChapter = i;
+                    chapterChanged = true;
                 }
             }
             ChaptersFlyout.Hide();
@@ -916,8 +917,13 @@ namespace EZEreaderUniversal
         private async void AcceptColorButton_Click(object sender, RoutedEventArgs e)
         {
             rootPage.LibrarySource.ReadingFontColorName = (string)FontColorListBox.SelectedItem;
+            rootPage.LibrarySource.ReadingFonts.ReadingFontColorName = (string)FontColorListBox.SelectedItem;
+
             rootPage.LibrarySource.ReadingFontColor = AllColorBrushes[(string)FontColorListBox.SelectedItem];
+
             rootPage.LibrarySource.BackgroundReadingColorName = (string)BackgroundColorListBox.SelectedItem;
+            rootPage.LibrarySource.ReadingFonts.BackgroundReadingColorName = (string)BackgroundColorListBox.SelectedItem;
+
             rootPage.LibrarySource.BackgroundReadingColor = AllColorBrushes[(string)BackgroundColorListBox.SelectedItem];
             LayoutRoot.Children.Clear();
             await CreateFirstPage();

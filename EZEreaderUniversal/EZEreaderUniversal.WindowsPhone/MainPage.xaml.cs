@@ -32,6 +32,7 @@ namespace EZEreaderUniversal
         public BooksModel LibrarySource;
         public CollectionViewSource LibraryViewSource;
         BookModel ourBook;
+        bool IsRecentReads;
 
         private FileActivatedEventArgs _fileEventArgs = null;
         public FileActivatedEventArgs FileEvent
@@ -43,8 +44,18 @@ namespace EZEreaderUniversal
         public MainPage()
         {
             this.InitializeComponent();
-
+            Application.Current.Suspending += Current_Suspending;
             this.NavigationCacheMode = NavigationCacheMode.Required;
+        }
+
+        async void Current_Suspending(object sender, Windows.ApplicationModel.SuspendingEventArgs e)
+        {
+            if (!LibrarySource.IsDataLoaded)
+            {
+                await LibrarySource.LoadData();
+            }
+
+            await this.LibrarySource.UpdateBooks();
         }
 
         /// <summary>
@@ -55,28 +66,33 @@ namespace EZEreaderUniversal
         async protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             //set which items are visible
+            
             BottomBar.Visibility = Visibility.Collapsed;
             RecentReadsListView.Visibility = Visibility.Collapsed;
             LibraryListView.Visibility = Visibility.Visible;
             //set which buttons are currently chosen
             RecentReadsBorder.BorderThickness = new Thickness(0);
             LibraryBorder.BorderThickness = new Thickness(3);
+            IsRecentReads = false;
             //open data
-            await RetrieveLibrary();
+            if (LibrarySource != null)
+            {
+                if (!LibrarySource.IsDataLoaded)
+                {
+                    await RetrieveLibrary();
+                }
+            }
+            else
+            {
+                await RetrieveLibrary();
+            }
+            LibrarySource.SortByBookNameAscending();
             //make no item currently selected
             LibraryListView.SelectedItem = null;
             //set a MainPage for other pages to access this
             Current = this;
         }
         
-        /// <summary>
-        /// Void method to call RetrieveLibrary from a non-async method
-        /// </summary>
-        public async void CallRetrieveLibrary()
-        {
-            await RetrieveLibrary();
-        }
-
         /// <summary>
         /// Loads the library if it isn't already.
         /// </summary>
@@ -93,23 +109,6 @@ namespace EZEreaderUniversal
                 this.DataContext = LibrarySource;
                 LibraryListView.ItemsSource = LibrarySource.SortedBooks;
                 RecentReadsListView.ItemsSource = LibrarySource.RecentBooks;
-            }
-            else
-            {
-                LibrarySource.CallUpdateBooks();
-            }
-        }
-
-        /// <summary>
-        /// Adds a new book to the library if called
-        /// </summary>
-        /// <param name="newBook"></param>
-        public void AddBookToLibrary(BooksModel newBook)
-        {
-            for (int i = 0; i < newBook.Library.Count; i++)
-            {
-                CallRetrieveLibrary();
-                LibrarySource.Library.Add(newBook.Library[i]);
             }
         }
 
@@ -188,6 +187,27 @@ namespace EZEreaderUniversal
             {
                 BottomBar.Visibility = Visibility.Visible;
             }
+            CloseSearchGrid();
+        }
+
+        /// <summary>
+        /// Displays the bottom bar on right click or long tap on book
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void RecentReadsListView_RightTapped(object sender, RightTappedRoutedEventArgs e)
+        {
+            var listViewItem = sender as ListViewItem;
+            if (listViewItem != null)
+            {
+                ourBook = listViewItem.DataContext as BookModel;
+                IsRecentReads = true;
+            }
+            if (this.BottomBar != null)
+            {
+                BottomBar.Visibility = Visibility.Visible;
+            }
+            CloseSearchGrid();
         }
 
         /// <summary>
@@ -197,16 +217,31 @@ namespace EZEreaderUniversal
         /// <param name="e"></param>
         private async void DeleteBarButton_Click(object sender, RoutedEventArgs e)
         {
-            var messageDialog = new MessageDialog("Are you sure you want to delete " + ourBook.BookName + " ?");
-            messageDialog.Commands.Add(new UICommand("Yes", new UICommandInvokedHandler(this.CommandInvokedHandler)));
-            messageDialog.Commands.Add(new UICommand("Cancel", new UICommandInvokedHandler(this.CommandInvokedHandler)));
-            messageDialog.DefaultCommandIndex = 1;
-            messageDialog.CancelCommandIndex = 1;
-            await messageDialog.ShowAsync();
+            if (!IsRecentReads)
+            {
+                var messageDialog = new MessageDialog("Are you sure you want to delete " + ourBook.BookName + " by " +
+                    ourBook.AuthorID + " from your Library?");
+                messageDialog.Commands.Add(new UICommand("Yes", new UICommandInvokedHandler(this.CommandInvokedHandler)));
+                messageDialog.Commands.Add(new UICommand("Cancel", new UICommandInvokedHandler(this.CommandInvokedHandler)));
+                messageDialog.DefaultCommandIndex = 1;
+                messageDialog.CancelCommandIndex = 1;
+                await messageDialog.ShowAsync();
+            }
+            else
+            {
+                var messageDialog = new MessageDialog("Woul you like to remove " + ourBook.BookName +
+                    " by " + ourBook.AuthorID + " from your Recent list?");
+                messageDialog.Commands.Add(new UICommand("Yes", new UICommandInvokedHandler(this.CommandInvokedHandler)));
+                messageDialog.Commands.Add(new UICommand("Cancel", new UICommandInvokedHandler(this.CommandInvokedHandler)));
+                messageDialog.DefaultCommandIndex = 1;
+                messageDialog.CancelCommandIndex = 1;
+                await messageDialog.ShowAsync();
+            }
         }
 
         /// <summary>
-        /// Deletes a book if the user confirms the choice
+        /// Deletes a book if the user confirms the choice and/or removes it from
+        /// the recent reads listview if so chosen.
         /// </summary>
         /// <param name="command"></param>
         private async void CommandInvokedHandler(IUICommand command)
@@ -215,12 +250,22 @@ namespace EZEreaderUniversal
             {
                 if (ourBook != null)
                 {
-                    await RetrieveLibrary();
+                    if (!LibrarySource.IsDataLoaded)
+                    {
+                        await RetrieveLibrary();
+                    }
                     if (ourBook.IsStarted == true)
                     {
+                        ourBook.CurrentPage = 0;
+                        ourBook.CurrentChapter = 0;
+                        ourBook.IsStarted = false;
+                        ourBook.IsCompleted = false;
                         this.LibrarySource.RecentReads.Remove(ourBook);
                     }
-                    await this.LibrarySource.RemoveBook(ourBook);
+                    if (!IsRecentReads)
+                    {
+                        await this.LibrarySource.RemoveBook(ourBook);
+                    }
                 }
             }
         }
@@ -238,6 +283,7 @@ namespace EZEreaderUniversal
             AuthorNameBox.Visibility = Visibility.Visible;
             BookNameBox.Text = ourBook.BookName;
             AuthorNameBox.Text = ourBook.AuthorID;
+            CloseSearchGrid();
         }
 
         /// <summary>
@@ -265,6 +311,7 @@ namespace EZEreaderUniversal
             DetailsGrid.Visibility = Visibility.Collapsed;
             BookNameBox.Visibility = Visibility.Collapsed;
             AuthorNameBox.Visibility = Visibility.Collapsed;
+            CloseSearchGrid();
         }
 
         /// <summary>
@@ -275,7 +322,6 @@ namespace EZEreaderUniversal
         private void BookNameBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             ourBook.BookName = BookNameBox.Text;
-            this.LibrarySource.CallUpdateBooks();
         }
 
         /// <summary>
@@ -286,7 +332,6 @@ namespace EZEreaderUniversal
         private void AuthorNameBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             ourBook.AuthorID = AuthorNameBox.Text;
-            this.LibrarySource.CallUpdateBooks();
         }
 
         /// <summary>
@@ -297,19 +342,32 @@ namespace EZEreaderUniversal
         /// <param name="e"></param>
         private void SortByAuthor_Click(object sender, RoutedEventArgs e)
         {
-            if (LibrarySource.SortedBooks.SortDescriptions[0].PropertyName != "AuthorID")
+            if (LibrarySource.SortedBooks.SortDescriptions.Count > 0)
             {
-                LibrarySource.SortedBooks.SortDescriptions[0].PropertyName = "AuthorID";
-                LibrarySource.SortedBooks.SortDescriptions[0].Direction = ListSortDirection.Ascending;
-            }
-            else if (LibrarySource.SortedBooks.SortDescriptions[0].Direction != ListSortDirection.Ascending)
-            {
-                LibrarySource.SortedBooks.SortDescriptions[0].Direction = ListSortDirection.Ascending;
+                if (LibrarySource.SortedBooks.SortDescriptions[0].PropertyName != "AuthorID")
+                {
+                    LibrarySource.SortedBooks.SortDescriptions[0].PropertyName = "AuthorID";
+                    LibrarySource.SortedBooks.SortDescriptions[0].Direction = ListSortDirection.Ascending;
+                }
+                else if (LibrarySource.SortedBooks.SortDescriptions[0].Direction != ListSortDirection.Ascending)
+                {
+                    LibrarySource.SortedBooks.SortDescriptions[0].Direction = ListSortDirection.Ascending;
+                }
+                else
+                {
+                    LibrarySource.SortedBooks.SortDescriptions[0].Direction = ListSortDirection.Descending;
+                }
             }
             else
             {
-                LibrarySource.SortedBooks.SortDescriptions[0].Direction = ListSortDirection.Descending;
+                LibrarySource.SortedBooks.SortDescriptions.Add(new SortDescription("AuthorID", ListSortDirection.Ascending));
             }
+
+            if (LibraryListView.Visibility == Visibility.Collapsed)
+            {
+                OpenLibraryListView();
+            }
+            CloseSearchGrid();
             LibrarySource.SortedBooks.Refresh();
         }
 
@@ -322,20 +380,56 @@ namespace EZEreaderUniversal
         /// <param name="e"></param>
         private void SortByTitle_Click(object sender, RoutedEventArgs e)
         {
-            if (LibrarySource.SortedBooks.SortDescriptions[0].PropertyName != "BookName")
+            if (LibrarySource.SortedBooks.SortDescriptions.Count > 0)
             {
-                LibrarySource.SortedBooks.SortDescriptions[0].PropertyName = "BookName";
-                LibrarySource.SortedBooks.SortDescriptions[0].Direction = ListSortDirection.Ascending;
-            }
-            else if (LibrarySource.SortedBooks.SortDescriptions[0].Direction != ListSortDirection.Ascending)
-            {
-                LibrarySource.SortedBooks.SortDescriptions[0].Direction = ListSortDirection.Ascending;
+                if (LibrarySource.SortedBooks.SortDescriptions[0].PropertyName != "BookName")
+                {
+                    LibrarySource.SortedBooks.SortDescriptions[0].PropertyName = "BookName";
+                    LibrarySource.SortedBooks.SortDescriptions[0].Direction = ListSortDirection.Ascending;
+                }
+                else if (LibrarySource.SortedBooks.SortDescriptions[0].Direction != ListSortDirection.Ascending)
+                {
+                    LibrarySource.SortedBooks.SortDescriptions[0].Direction = ListSortDirection.Ascending;
+                }
+                else
+                {
+                    LibrarySource.SortedBooks.SortDescriptions[0].Direction = ListSortDirection.Descending;
+                }
             }
             else
             {
-                LibrarySource.SortedBooks.SortDescriptions[0].Direction = ListSortDirection.Descending;
+                LibrarySource.SortedBooks.SortDescriptions.Add(new SortDescription("BookName", ListSortDirection.Descending));
             }
+
+            if (LibraryListView.Visibility == Visibility.Collapsed)
+            {
+                OpenLibraryListView();
+            }
+            CloseSearchGrid();
             LibrarySource.SortedBooks.Refresh();
+        }
+
+        /// <summary>
+        /// Opens the Library ListView for users to select a new book to read.
+        /// </summary>
+        private void OpenLibraryListView()
+        {
+            RecentReadsBorder.BorderThickness = new Thickness(0);
+            LibraryBorder.BorderThickness = new Thickness(3);
+            RecentReadsListView.Visibility = Visibility.Collapsed;
+            LibraryListView.Visibility = Visibility.Visible;
+        }
+
+        /// <summary>
+        /// Opens the Recent Reads ListView for user to select a recently opened book
+        /// to read.
+        /// </summary>
+        private void OpenRecentReadsListView()
+        {
+            LibraryListView.Visibility = Visibility.Collapsed;
+            RecentReadsListView.Visibility = Visibility.Visible;
+            RecentReadsBorder.BorderThickness = new Thickness(3);
+            LibraryBorder.BorderThickness = new Thickness(0);
         }
 
         /// <summary>
@@ -348,11 +442,9 @@ namespace EZEreaderUniversal
         {
             if (LibraryListView.Visibility != Visibility.Visible)
             {
-                LibraryListView.Visibility = Visibility.Visible;
-                RecentReadsListView.Visibility = Visibility.Collapsed;
-                RecentReadsBorder.BorderThickness = new Thickness(0);
-                LibraryBorder.BorderThickness = new Thickness(3);
+                OpenLibraryListView();
             }
+            CloseSearchGrid();
         }
 
         /// <summary>
@@ -365,12 +457,67 @@ namespace EZEreaderUniversal
         {
             if (RecentReadsListView.Visibility != Visibility.Visible)
             {
-                LibraryListView.Visibility = Visibility.Collapsed;
-                RecentReadsListView.Visibility = Visibility.Visible;
-                RecentReadsBorder.BorderThickness = new Thickness(3);
-                LibraryBorder.BorderThickness = new Thickness(0);
+                OpenRecentReadsListView();
+            }
+            CloseSearchGrid();
+            
+        }
+
+        /// <summary>
+        /// Closes the Search Textbox and clears it, removing the filter on the list
+        /// </summary>
+        private void CloseSearchGrid()
+        {
+            if (SearchGrid.Visibility == Visibility.Visible)
+            {
+                SearchGrid.Visibility = Visibility.Collapsed;
+                LibraryTextBlockGrid.Visibility = Visibility.Visible;
+                RecentReadsTextBlockGrid.Visibility = Visibility.Visible;
+                LibrarySource.SortedBooks.Filter = null;
+                SearchBookTextBox.Text = "";
             }
         }
         #endregion
+
+        /// <summary>
+        /// Opens the grid with textbox for searching the lists
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void SearchLibrary_Click(object sender, RoutedEventArgs e)
+        {
+            OpenLibraryListView();
+            SearchGrid.Visibility = Visibility.Visible;
+            SearchBookTextBox.Visibility = Visibility.Visible;
+            LibraryTextBlockGrid.Visibility = Visibility.Collapsed;
+            RecentReadsTextBlockGrid.Visibility = Visibility.Collapsed;
+        }
+
+        /// <summary>
+        /// Filters the ListCollectionView by author or title as text is entered
+        /// into the box
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void SearchBookTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            string filter = (sender as TextBox).Text;
+            LibrarySource.SortedBooks.Filter = new Predicate<object>(x => ((BookModel)x).AuthorID.ToLower().Contains(filter.ToLower()) 
+                || ((BookModel)x).BookName.ToLower().Contains(filter.ToLower()));
+            LibrarySource.SortedBooks.Refresh();
+        }
+
+        /// <summary>
+        /// Calls the method to close the search grid if the enter key is pressed
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void SearchBookTextBox_KeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            if (e.Key.Equals(Windows.System.VirtualKey.Enter))
+            {
+                CloseSearchGrid();
+            }
+        }
     }
 }

@@ -20,6 +20,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)DataModels\BooksModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DataModels\ChapterModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DataModels\PageModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DataModels\ReadingFontsAndFamilies.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ICollectionViewEx.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ImgConverter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IO.cs" />
@@ -278,7 +279,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Pride and Prejudice - Jane Austen_6590\Pride_and_Prejudice_split_002.html">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Pride and Prejudice - Jane Austen_6590\Pride_and_Prejudice_split_003.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

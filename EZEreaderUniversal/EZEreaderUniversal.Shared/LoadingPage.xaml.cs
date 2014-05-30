@@ -11,6 +11,7 @@ using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Storage;
 using Windows.Storage.Streams;
+using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -70,7 +71,24 @@ namespace EZEreaderUniversal
             await IO.CreateOrGetFolder(folderName);
             await UnZipTheFile(newFile, folderName);
             await IO.DeleteFileInFolder(sFolder, newFile);
-            addBookToLibrary(folderName);
+            string importError = "";
+            try
+            {
+                addBookToLibrary(folderName);
+            }
+            catch (Exception)
+            {
+                importError = "Failed to add book to Library";
+            }
+            if (importError != "")
+            {
+                var messageDialog = new MessageDialog(importError);
+                messageDialog.Commands.Add(new UICommand("Okay"));
+                messageDialog.DefaultCommandIndex = 0;
+                messageDialog.CancelCommandIndex = 0;
+                await messageDialog.ShowAsync();
+                this.Frame.Navigate(typeof(MainPage));
+            }
             this.Frame.Navigate(typeof(MainPage));
         }
 
@@ -165,10 +183,18 @@ namespace EZEreaderUniversal
         /// Adds to book to the bookmodel collection
         /// </summary>
         /// <param name="folderName"></param>
-        private void addBookToLibrary(string folderName)
+        private async void addBookToLibrary(string folderName)
         {
-            rootPage.LibrarySource.ImportBook(folderName, true);
+            var isInLibrary = await rootPage.LibrarySource.ImportBook(folderName, true);
+            if (isInLibrary)
+            {
+                var messageDialog = new MessageDialog("Book already exists in Library.");
+                messageDialog.Commands.Add(new UICommand("Okay"));
+                messageDialog.DefaultCommandIndex = 0;
+                messageDialog.CancelCommandIndex = 0;
+                await messageDialog.ShowAsync();
+                this.Frame.Navigate(typeof(MainPage));
+            }
         }
-         
     }
 }
