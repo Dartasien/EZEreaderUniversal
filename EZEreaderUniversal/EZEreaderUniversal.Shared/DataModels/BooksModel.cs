@@ -303,30 +303,35 @@ namespace EZEreaderUniversal.DataModels
             };
             
             //checks to see if the book already exists
-            foreach (var book in this.Library)
+            if (isInStorage)
             {
-                if (book.BookName == result.BookName)
+                foreach (var book in this.Library)
                 {
-                    if (book.AuthorID == result.AuthorID)
+                    if (book.BookName == result.BookName)
                     {
-                        isInLibrary = true;
-                        //checks to see if its the same folder
-                        //if not, delete the new one to clear up space
-                        if (result.BookID != book.BookID)
+                        if (book.AuthorID == result.AuthorID)
                         {
-                            await IO.DeleteFolderInLocalFolder(result.BookID);
-                        }
+                            isInLibrary = true;
+                            //checks to see if its the same folder
+                            //if not, delete the new one to clear up space
+                            if (result.BookID != book.BookID)
+                            {
+                                await IO.DeleteFolderInLocalFolder(result.BookID);
+                            }
 
+                        }
                     }
                 }
             }
-
             if (!isInLibrary)
             {
                 this.Library.Add(result);
                 SortByBookNameAscending();
                 //uncomment below line to allow for persistent data
-                await UpdateBooks();
+                if (IsDataLoaded)
+                {
+                    await UpdateBooks();
+                }
                 return isInLibrary;
             }
             else
@@ -1260,7 +1265,7 @@ namespace EZEreaderUniversal.DataModels
                     {
                         await SetFonts(fontFile);
                     }
-                    await ImportBook("Pride and Prejudice - Jane Austen_6590", false);
+                    bool test = await ImportBook("Pride and Prejudice - Jane Austen_6590", false);
                 }
             }
 

@@ -75,17 +75,7 @@ namespace EZEreaderUniversal
             LibraryBorder.BorderThickness = new Thickness(3);
             IsRecentReads = false;
             //open data
-            if (LibrarySource != null)
-            {
-                if (!LibrarySource.IsDataLoaded)
-                {
-                    await RetrieveLibrary();
-                }
-            }
-            else
-            {
-                await RetrieveLibrary();
-            }
+            await RetrieveLibrary();
             LibrarySource.SortByBookNameAscending();
             //make no item currently selected
             LibraryListView.SelectedItem = null;
