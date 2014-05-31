@@ -77,6 +77,7 @@ namespace EZEreaderUniversal
             //open data
             await RetrieveLibrary();
             LibrarySource.SortByBookNameAscending();
+            LibraryListView.Focus(FocusState.Programmatic);
             //make no item currently selected
             LibraryListView.SelectedItem = null;
             //set a MainPage for other pages to access this

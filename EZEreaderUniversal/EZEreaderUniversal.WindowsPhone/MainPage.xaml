@@ -20,7 +20,7 @@
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="20"/>
-            <RowDefinition Height="40" />
+            <RowDefinition Height="45" />
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <StackPanel Grid.Row="0"
@@ -34,7 +34,7 @@
         </StackPanel>
         <Grid x:Name="SearchGrid"
               Grid.Row="1"
-              Height="45"
+              Height="55"
               Margin="20, 0, 60, 0"
               Visibility="Collapsed">
             <Grid.ColumnDefinitions>
@@ -52,6 +52,7 @@
             <TextBox x:Name="SearchBookTextBox"
                      Grid.Column="1"
                      Visibility="Collapsed"
+                     VerticalAlignment="Top"
                      KeyDown="SearchBookTextBox_KeyDown"
                      TextChanged="SearchBookTextBox_TextChanged">
             </TextBox>
@@ -207,7 +208,7 @@
             </UI:AdControl>
             <Grid x:Name="DetailsGrid"
                   Height="200"
-                  Margin="10, 0, 10, 0"
+                  Margin="5, 0, 5, 0"
                   Visibility="Collapsed">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="40"/>
@@ -216,23 +217,44 @@
                     <RowDefinition Height="60"/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="45"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
+                <Button BorderThickness="0"
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        HorizontalAlignment="Center"
+                        MaxWidth="45">
+                    <Button.Content>
+                        <SymbolIcon Symbol="Edit"/>
+                    </Button.Content>
+                </Button>
                 <TextBlock Text="Title"
                            Grid.Row="0"
+                           Grid.Column="1"
                            Style="{ThemeResource SubheaderTextBlockStyle}"/>
                 <TextBox x:Name="BookNameBox"
                          Grid.Row="1"
-                         Grid.Column="0"
+                         Grid.Column="1"
                          Visibility="Collapsed"
                          TextChanged="BookNameBox_TextChanged">
                 </TextBox>
+                <Button BorderThickness="0"
+                        Grid.Row="3"
+                        Grid.Column="0"
+                        HorizontalAlignment="Center"
+                     MaxWidth="45">
+                    <Button.Content>
+                        <SymbolIcon Symbol="Edit"/>
+                    </Button.Content>
+                </Button>
                 <TextBlock Text="Author"
                            Grid.Row="2"
+                           Grid.Column="1"
                            Style="{ThemeResource SubheaderTextBlockStyle}"/>
                 <TextBox x:Name="AuthorNameBox"
                          Grid.Row="3"
-                         Grid.Column="0"
+                         Grid.Column="1"
                          Visibility="Collapsed"
                          TextChanged="AuthorNameBox_TextChanged">
                 </TextBox>
