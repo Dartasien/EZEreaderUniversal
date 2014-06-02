@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.Storage.Streams;
+using System.Diagnostics;
 
 namespace EZEreaderUniversal
 {
@@ -61,15 +62,27 @@ namespace EZEreaderUniversal
         /// <returns>sets the img.source to a new filestream</returns>
         public async Task SetSource(BitmapImage img, string path)
         {
+            StorageFile imageFile = null;
             string[] folders = path.Split('/');
-            StorageFolder appBaseFolder = ApplicationData.Current.LocalFolder;
-            StorageFolder imageFolder = await IO.CreateOrGetFolders(appBaseFolder, folders);
-            StorageFile imageFile = await imageFolder.GetFileAsync(folders[folders.Length - 1]);
-            using (var fileStream = await imageFile.OpenReadAsync())
+            Debug.WriteLine(path);
+            try
             {
-                if (fileStream.CanRead)
+                StorageFolder appBaseFolder = ApplicationData.Current.LocalFolder;
+                StorageFolder imageFolder = await IO.CreateOrGetFolders(appBaseFolder, folders);
+                imageFile = await imageFolder.GetFileAsync(folders[folders.Length - 1]);
+            }
+            catch (Exception)
+            {
+                Debug.WriteLine("filenotfound");
+            }
+            if (imageFile != null)
+            {
+                using (var fileStream = await imageFile.OpenReadAsync())
                 {
-                    await img.SetSourceAsync(fileStream);
+                    if (fileStream.CanRead)
+                    {
+                        await img.SetSourceAsync(fileStream);
+                    }
                 }
             }
         }

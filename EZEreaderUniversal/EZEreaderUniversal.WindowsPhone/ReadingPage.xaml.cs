@@ -158,7 +158,7 @@ namespace EZEreaderUniversal
         /// <param name="sender">The source of the event; typically <see cref="NavigationHelper"/></param>
         /// <param name="e">Event data that provides an empty dictionary to be populated with
         /// serializable state.</param>
-        private void NavigationHelper_SaveState(object sender, SaveStateEventArgs e)
+        private async void NavigationHelper_SaveState(object sender, SaveStateEventArgs e)
         {
             if (thisBook.IsCompleted == true)
             {
@@ -166,7 +166,7 @@ namespace EZEreaderUniversal
                 thisBook.CurrentPage = 0;
                 rootPage.LibrarySource.RecentReads.Remove(thisBook);
             }
-            rootPage.LibrarySource.CallUpdateBooks();
+            await rootPage.LibrarySource.UpdateBooks();
         }
 
         #endregion
@@ -339,6 +339,52 @@ namespace EZEreaderUniversal
         }
 
         /// <summary>
+        /// Gets the picture from the titlepage
+        /// </summary>
+        /// <param name="htmlDoc"></param>loader
+        /// <returns></returns>
+        private async Task GetPicFromHTML(HtmlDocument htmlDoc)
+        {
+            StorageFolder chapterFolder;
+            string fullChapterString;
+            string[] st;
+            string contentLoc = thisBook.ContentDirectory;
+            if (thisBook.ContentDirectory.Contains('/'))
+            {
+                st = contentLoc.Split('/');
+                contentLoc = "";
+                for (int i = 0; i < st.Length - 1; i++)
+                {
+                    contentLoc += st[i];
+                }
+                fullChapterString = thisBook.MainDirectory + contentLoc + "/" +
+                    thisBook.Chapters[thisBook.CurrentChapter].ChapterString;
+            }
+            else
+            {
+                fullChapterString = thisBook.MainDirectory +
+                thisBook.Chapters[thisBook.CurrentChapter].ChapterString;
+            }
+
+            string[] fullChapterStrings = fullChapterString.Split('/');
+            string chapterString = fullChapterStrings[fullChapterStrings.Length - 1];
+            string[] chapterStringLoc =
+                fullChapterString.Split('/');
+
+            chapterFolder =
+                await IO.CreateOrGetFolders(appFolder, chapterStringLoc);
+            using (var file = await chapterFolder.OpenStreamForReadAsync(chapterString))
+            {
+                htmlDoc.Load(file);
+                foreach (HtmlNode img in htmlDoc.DocumentNode.Descendants())
+                {
+
+                }
+                chapterText = HtmlUtilities.ConvertToText(htmlDoc.DocumentNode.InnerHtml);
+            }
+        }
+        
+        /// <summary>
         /// getting picture from assets instead of storage and converting it into an image
         /// </summary>
         /// <param name="image"></param>the image to be sent to the container
@@ -360,17 +406,26 @@ namespace EZEreaderUniversal
         private async Task GetPicFromStorage(Image image, InlineUIContainer containers)
         {
             string[] folders = thisBook.CoverPic.Substring(9).Split('/');
-            StorageFolder appBaseFolder = ApplicationData.Current.LocalFolder;
-            StorageFolder imageFolder = await IO.CreateOrGetFolders(appBaseFolder, folders);
-            StorageFile imageFile = await imageFolder.GetFileAsync(folders[folders.Length - 1]);
-            using (var fileStream = await imageFile.OpenReadAsync())
+            StorageFile imageFile = null;
+            try
             {
-                if (fileStream.CanRead)
+                StorageFolder appBaseFolder = ApplicationData.Current.LocalFolder;
+                StorageFolder imageFolder = await IO.CreateOrGetFolders(appBaseFolder, folders);
+                imageFile = await imageFolder.GetFileAsync(folders[folders.Length - 1]);
+            }
+            catch(Exception)
+            { }
+            if (imageFile != null)
+            {
+                using (var fileStream = await imageFile.OpenReadAsync())
                 {
-                    BitmapImage img = new BitmapImage();
-                    await img.SetSourceAsync(fileStream);
-                    image.Source = img;
-                    containers.Child = image;
+                    if (fileStream.CanRead)
+                    {
+                        BitmapImage img = new BitmapImage();
+                        await img.SetSourceAsync(fileStream);
+                        image.Source = img;
+                        containers.Child = image;
+                    }
                 }
             }
         }
@@ -427,6 +482,7 @@ namespace EZEreaderUniversal
             myRTB.IsTextSelectionEnabled = false;
             myRTB.Tapped += myRTB_Tapped;
             myRTB.TextAlignment = TextAlignment.Justify;
+            myRTB.Margin = new Thickness(5, 0, 5, 0);
             myRTB.FontSize = rootPage.LibrarySource.ReadingFontSize;
             myRTB.FontFamily = new FontFamily(rootPage.LibrarySource.ReadingFontFamily);
             myRTB.Foreground = rootPage.LibrarySource.ReadingFontColor;
@@ -455,6 +511,7 @@ namespace EZEreaderUniversal
                 listRTBO.Add(new RichTextBlockOverflow());
                 myRTB.OverflowContentTarget = listRTBO[pageNumber];
                 listRTBO[pageNumber].Visibility = Visibility.Visible;
+                listRTBO[pageNumber].Margin = myRTB.Margin;
                 listRTBO[pageNumber].Tapped += myRTB_Tapped;
                 listRTBO[pageNumber].ManipulationStarted += LayoutRoot_ManipulationStarted;
                 listRTBO[pageNumber].ManipulationDelta += LayoutRoot_ManipulationDelta;
@@ -471,6 +528,7 @@ namespace EZEreaderUniversal
                     listRTBO[pageNumber - 1].OverflowContentTarget = listRTBO[pageNumber];
                     listRTBO[pageNumber - 1].Visibility = Visibility.Collapsed;
                     listRTBO[pageNumber].Visibility = Visibility.Visible;
+                    listRTBO[pageNumber].Margin = myRTB.Margin;
                     listRTBO[pageNumber].Tapped += myRTB_Tapped;
                     listRTBO[pageNumber].ManipulationStarted += LayoutRoot_ManipulationStarted;
                     listRTBO[pageNumber].ManipulationDelta += LayoutRoot_ManipulationDelta;

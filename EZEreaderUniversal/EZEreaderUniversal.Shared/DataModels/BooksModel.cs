@@ -301,7 +301,6 @@ namespace EZEreaderUniversal.DataModels
                 IsStarted = false,
                 IsCompleted = false
             };
-            
             //checks to see if the book already exists
             if (isInStorage)
             {
@@ -761,14 +760,27 @@ namespace EZEreaderUniversal.DataModels
                 xdoc = XDocument.Load(file);
                 XNamespace ns = "http://www.idpf.org/2007/opf";
                 var manifestHref = from x in xdoc.Descendants()
-                                   where (string)x.Attribute("id") == "cover"
-                                   select (string)x.Attribute("href");
-
+                                   where (string)x.Attribute("name") == "cover"
+                                   select (string)x.Attribute("content");
+                string metaCoverName = "";
                 foreach (string s in manifestHref)
                 {
                     if (s != null)
                     {
-                        coverPic += s;
+                        metaCoverName = s;
+                    }
+                }
+                if (metaCoverName != "")
+                {
+                    var findCoverPic = from q in xdoc.Descendants()
+                                       where (string)q.Attribute("id") == metaCoverName
+                                       select (string)q.Attribute("href");
+                    foreach (string test in findCoverPic)
+                    {
+                        if (test != null)
+                        {
+                            coverPic += test;
+                        }
                     }
                 }
             }
@@ -1175,26 +1187,10 @@ namespace EZEreaderUniversal.DataModels
                 await IO.DeleteFolderInLocalFolder(bookToRemove.BookID);
             }
             this.Library.Remove(bookToRemove);
-            CallUpdateBooks();
+            await UpdateBooks();
             NotifyPropertyChanged("Items");
         }
 
-        /// <summary>
-        /// async void method for updating books, calls the real method
-        /// </summary>
-        public async void CallLoadData()
-        {
-            await LoadData();
-        }
-        
-        /// <summary>
-        /// async void method for updating books, calls the real method
-        /// </summary>
-        public async void CallUpdateBooks()
-        {
-            await UpdateBooks();
-        }
-        
         /// <summary>
         /// Method to update the library each time we import/delete a book
         /// todo: add a function that saves the page you are on
