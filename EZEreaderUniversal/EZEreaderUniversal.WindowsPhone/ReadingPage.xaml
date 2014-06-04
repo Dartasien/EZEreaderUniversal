@@ -26,7 +26,7 @@
                     <PickerFlyout x:Name="ChaptersFlyout">
                         <StackPanel>
                             <Button Content="Cancel"
-                                    Click="Button_Click"
+                                    Click="ChaptersFlyoutButton_Click"
                                     HorizontalAlignment="Center"/>
                             <ListBox x:Name="ChaptersListBox"
                                      FontSize="20"
@@ -37,62 +37,74 @@
                     </PickerFlyout>
                 </AppBarButton.Flyout>
             </AppBarButton>
-            <AppBarButton Label="Fonts"
-                          Icon="Font">
+            <AppBarButton x:Name="FontButton" 
+                          Label="Fonts"
+                          Icon="Font"
+                          Click="FontButton_Click">
                 <AppBarButton.Flyout>
-                    <PickerFlyout x:Name="FontFlyout"
-                                  ScrollViewer.VerticalScrollMode="Disabled">
-                        <Grid Margin="10, 10, 10, 10"
-                              ScrollViewer.VerticalScrollMode="Disabled">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="50"/>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="50"/>
-                                <RowDefinition Height="400"/>
-                            </Grid.RowDefinitions>
-                            <TextBlock Text="Font Choices"
-                                       Grid.Row="0"
-                                       Style="{ThemeResource SubheaderTextBlockStyle}"
-                                       FontSize="32"
-                                       HorizontalAlignment="Center"/>
-                            <StackPanel Background="{StaticResource ApplicationPageBackgroundThemeBrush}"
-                                        Grid.Row="1"
-                                        Height="200"
-                                        Orientation="Horizontal">
+                    <Flyout x:Name="FontFlyout">
+                        <StackPanel x:Name="FontsStackPanel">
+                            <Grid x:Name="FontFlyoutGrid">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="50"/>
+                                    <RowDefinition Height="250"/>
+                                    <RowDefinition Height="50"/>
+                                    <RowDefinition Height="700"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Text="Font Choices"
+                                           Grid.Row="0"
+                                           Style="{ThemeResource SubheaderTextBlockStyle}"
+                                           FontSize="32"
+                                           HorizontalAlignment="Center"/>
                                 <ListBox x:Name="FontSizeListBox"
-                                     Width="50"
-                                     FontSize="20"
-                                     Margin="10, 10, 50, 10"
-                                     HorizontalAlignment="Left"
-                                     SelectionChanged="FontSizeListBox_SelectionChanged"
-                                     ScrollViewer.HorizontalScrollBarVisibility="Auto">
-                                </ListBox>
-                                <ListBox x:Name="FontFamilyListBox"
-                                         Margin="10, 10, 10, 10"
+                                         Width="50"
+                                         Grid.Row="1"
                                          FontSize="20"
-                                         ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                         Margin="10, 10, 50, 10"
+                                         HorizontalAlignment="Left"
+                                         Loaded="FontSizeListBox_Loaded"
+                                         SelectionChanged="FontSizeListBox_SelectionChanged">                              </ListBox>
+                                <ListBox x:Name="FontFamilyListBox"
+                                         Grid.Row="1"
+                                         Loaded="FontFamilyListBox_Loaded"
+                                         Margin="60, 10, 10, 10"
+                                         FontSize="20"
                                          SelectionChanged="FontFamilyListBox_SelectionChanged">
                                 </ListBox>
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal"
-                                        Grid.Row="2"
-                                        HorizontalAlignment="Center">
-                                <Button x:Name="AcceptButton" 
-                                        Content="Accept"
-                                        Margin="0, 0, 50, 0"
-                                        Click="AcceptButton_Click">
-                                </Button>
-                                <Button x:Name="CancelButton"
-                                        Content="Cancel"
-                                        Click="CancelButton_Click">
-                                </Button>
-                            </StackPanel>
-                            <TextBlock x:Name="FontCheckerBlock" 
-                                       Grid.Row="3"
-                                       TextWrapping="Wrap">
-                            </TextBlock>
-                        </Grid>
-                    </PickerFlyout>
+                                <StackPanel Orientation="Horizontal"
+                                            Grid.Row="2"
+                                            HorizontalAlignment="Center">
+                                    <Button x:Name="AcceptButton" 
+                                            BorderThickness="0"
+                                            HorizontalAlignment="Left"
+                                            Click="FontFlyoutAcceptButton_Click">
+                                        <Button.Content>
+                                            <SymbolIcon Symbol="Accept"/>
+                                        </Button.Content>
+                                    </Button>
+                                    <Button x:Name="CancelButton"
+                                            HorizontalAlignment="Center"
+                                            BorderThickness="0"
+                                            Click="FontFlyoutCancelButton_Click">
+                                        <Button.Content>
+                                            <SymbolIcon Symbol="Cancel"/>
+                                        </Button.Content>
+                                    </Button>
+                                    <Button x:Name="DefaultButton"
+                                            Content="Default"
+                                            BorderThickness="0"
+                                            HorizontalAlignment="Right"
+                                            Click="FontsDefaultButton_Click">
+                                    </Button>
+                                </StackPanel>
+                                <TextBlock x:Name="FontCheckerBlock" 
+                                           Grid.Row="3"
+                                           Loaded="FontCheckerBlock_Loaded"
+                                           TextWrapping="Wrap">
+                                </TextBlock>
+                            </Grid>
+                        </StackPanel>
+                    </Flyout>
                 </AppBarButton.Flyout>
             </AppBarButton>
             <AppBarButton x:Name="ColorsButton"
@@ -101,63 +113,77 @@
                           Click="ColorsButton_Click">
                 <AppBarButton.Flyout>
                     <Flyout x:Name="ColorsFlyout">
-                        <StackPanel x:Name="ColorsFlyoutStackPanel"
-                                    Margin="10, 5, 10, 5">
-                            <Grid x:Name="ForegroundAndBackgroundGrid">
+                        <StackPanel x:Name="ColorsFlyoutStackPanel">
+                            <Grid x:Name="ForegroundAndBackgroundGrid"
+                                  Margin="5, 5, 5, 5">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="35"/>
-                                    <RowDefinition Height="220"/>
+                                    <RowDefinition Height="250"/>
                                     <RowDefinition Height="50"/>
+                                    <RowDefinition Height="700"/>
                                 </Grid.RowDefinitions>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Row="0"
-                                           Grid.Column="0"
                                            Text="Font Color"
                                            FontSize="28"
-                                           HorizontalAlignment="Center"/>
+                                           Margin="10, 0, 0, 0"
+                                           HorizontalAlignment="Left"/>
                                 <TextBlock Grid.Row="0"
-                                           Grid.Column="1"
                                            Text="Background"
                                            FontSize="28"
-                                           HorizontalAlignment="Center"/>
+                                           Margin="0, 0, 10, 0"
+                                           HorizontalAlignment="Right"/>
                                 <ListBox x:Name="FontColorListBox" 
                                          Grid.Row="1"
-                                         Grid.Column="0"
                                          FontSize="20"
+                                         Width="200"
+                                         Margin="5, 0, 5, 0"
+                                         HorizontalAlignment="Left"
                                          Loaded="FontColorListBox_Loaded"
                                          SelectionChanged="FontColorListBox_SelectionChanged">
                                 </ListBox>
                                 <ListBox x:Name="BackgroundColorListBox"
                                          Grid.Row="1"
-                                         Grid.Column="1"
                                          FontSize="20"
+                                         Width="200"
+                                         Margin="210, 0, 5, 0"
                                          Loaded="BackgroundColorListBox_Loaded"
                                          SelectionChanged="BackgroundColorListBox_SelectionChanged">
                                 </ListBox>
-                                <Button x:Name="AcceptColorButton"
-                                        Grid.Row="2"
-                                        Grid.Column="0"
-                                        HorizontalAlignment="Center"
-                                        Content="Accept"
-                                        Click="AcceptColorButton_Click"/>
-                                <Button x:Name="CancelColorButton"
-                                        Grid.Row="2"
-                                        Grid.Column="1"
-                                        HorizontalAlignment="Center"
-                                        Content="Cancel"
-                                        Click="CancelColorButton_Click"/>
-                            </Grid>
-                            <Grid x:Name="ColorTextBlockGrid"
-                                  Loaded="ColorTextBlockGrid_Loaded">
-                                <TextBlock x:Name="ColorTextBlock"
-                                           Height="300"
-                                           VerticalAlignment="Bottom"
-                                           TextWrapping="Wrap"
-                                           Loaded="ColorTextBlock_Loaded">
-                                </TextBlock>
+                                <StackPanel Orientation="Horizontal"
+                                            HorizontalAlignment="Center"
+                                            Grid.Row="2">
+                                    <Button x:Name="AcceptColorButton"
+                                            HorizontalAlignment="Center"
+                                            BorderThickness="0"
+                                            Click="AcceptColorButton_Click">
+                                        <Button.Content>
+                                            <SymbolIcon Symbol="Accept"/>
+                                        </Button.Content>
+                                    </Button>
+                                    <Button x:Name="CancelColorButton"
+                                            HorizontalAlignment="Center"
+                                            BorderThickness="0"
+                                            Click="CancelColorButton_Click">
+                                        <Button.Content>
+                                            <SymbolIcon Symbol="Cancel"/>
+                                        </Button.Content>
+                                    </Button>
+                                    <Button x:Name="ColorsDefaultButton"
+                                            HorizontalAlignment="Right"
+                                            BorderThickness="0"
+                                            Content="Default"
+                                            Click="ColorsDefaultButton_Click"/>
+                                </StackPanel>
+                                <Grid x:Name="ColorTextBlockGrid"
+                                      Grid.Row="3"
+                                      Loaded="ColorTextBlockGrid_Loaded">
+                                    <TextBlock x:Name="ColorTextBlock"
+                                               Margin="5, 0, 5, 0"
+                                               VerticalAlignment="Top"
+                                               TextWrapping="Wrap"
+                                               Loaded="ColorTextBlock_Loaded">
+                                    </TextBlock>
+                                </Grid>
                             </Grid>
                         </StackPanel>
                     </Flyout>

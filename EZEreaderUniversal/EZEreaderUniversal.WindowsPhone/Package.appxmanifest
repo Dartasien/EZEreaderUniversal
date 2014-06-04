@@ -25,8 +25,11 @@
           </FileTypeAssociation>
         </Extension>
       </Extensions>
-      <m3:VisualElements DisplayName="EZ Ereader" Square150x150Logo="Assets\Logo.png" Square44x44Logo="Assets\SmallLogo.png" Description="An ereader for EPub(non-DRM) format ebooks." ForegroundText="light" BackgroundColor="transparent">
+      <m3:VisualElements DisplayName="EZ Ereader" Square150x150Logo="Assets\Logo.png" Square44x44Logo="Assets\SmallLogo.png" Description="An ereader for EPub(non-DRM) format ebooks." ForegroundText="light" BackgroundColor="gray">
         <m3:DefaultTile Wide310x150Logo="Assets\WideLogo.png" Square71x71Logo="Assets\Square71x71Logo.png">
+          <m3:ShowNameOnTiles>
+            <m3:ShowOn Tile="square150x150Logo" />
+          </m3:ShowNameOnTiles>
         </m3:DefaultTile>
         <m3:SplashScreen Image="Assets\SplashScreen.png" BackgroundColor="gray" />
         <m3:ApplicationView MinWidth="width320" />

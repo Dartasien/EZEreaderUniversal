@@ -260,7 +260,7 @@ namespace EZEreaderUniversal
             fontBlocks = new List<TextBlock>();
             string[] fonts = {"Arial", "Arial Black", "Arial Unicode MS", "Calibri", "Cambria",
                                  "Cambria Math", "Comic Sans MS", "Candara", "Consolas", "Constantia",
-                                 "Corbel", "Courier New", "George", "Lucida Sans Unicode", "Segoe UI",
+                                 "Corbel", "Courier New", "Georgia", "Lucida Sans Unicode", "Segoe UI",
                                  "Symbol", "Tahoma", "Times New Roman", "Trebuchet MS", "Verdana"};
 
             for (int i = 0; i < fonts.Length; i++)
@@ -270,7 +270,6 @@ namespace EZEreaderUniversal
                 fontBlocks[i].FontFamily = new FontFamily(fonts[i]);
             }
             FontFamilyListBox.ItemsSource = fontBlocks;
-            FontFamilyListBox.Loaded += FontFamilyListBox_Loaded;
         }
 
         #endregion
@@ -284,12 +283,13 @@ namespace EZEreaderUniversal
         private async Task CreateFirstPage()
         {
             HtmlDocument htmlDoc = new HtmlDocument();
+            Image image = new Image();
+            InlineUIContainer containers = new InlineUIContainer();
             
             if (thisBook.CurrentChapter == 0)
             {
                 //adds image to the first page of each book from assets or storage
-                Image image = new Image();
-                InlineUIContainer containers = new InlineUIContainer();
+                
                 if ((thisBook.CoverPic.Length > 9) && (thisBook.CoverPic.ToLower().Substring(0, 9).Equals("isostore:")))
                 {
                     await GetPicFromStorage(image, containers);
@@ -338,15 +338,17 @@ namespace EZEreaderUniversal
             
         }
 
+        /* partial implementation working on html parsing for images
         /// <summary>
         /// Gets the picture from the titlepage
         /// </summary>
         /// <param name="htmlDoc"></param>loader
         /// <returns></returns>
-        private async Task GetPicFromHTML(HtmlDocument htmlDoc)
+        private async Task GetPicFromHTML(HtmlDocument htmlDoc, Image image, InlineUIContainer containers)
         {
             StorageFolder chapterFolder;
             string fullChapterString;
+            string imageString = "";
             string[] st;
             string contentLoc = thisBook.ContentDirectory;
             if (thisBook.ContentDirectory.Contains('/'))
@@ -378,12 +380,21 @@ namespace EZEreaderUniversal
                 htmlDoc.Load(file);
                 foreach (HtmlNode img in htmlDoc.DocumentNode.Descendants())
                 {
-
+                    imageString = img.Attributes["src"].Value;
                 }
-                chapterText = HtmlUtilities.ConvertToText(htmlDoc.DocumentNode.InnerHtml);
+
+                if (imageString == "")
+                {
+                    foreach (HtmlNode img in htmlDoc.DocumentNode.Descendants())
+                    {
+                        imageString = img.Attributes["href"].Value;
+                    }
+                }
+                //chapterText = HtmlUtilities.ConvertToText(htmlDoc.DocumentNode.InnerHtml);
             }
         }
-        
+        */
+
         /// <summary>
         /// getting picture from assets instead of storage and converting it into an image
         /// </summary>
@@ -538,7 +549,6 @@ namespace EZEreaderUniversal
                     LayoutRoot.UpdateLayout();
                 }
             }
-            thisBook.Chapters[thisBook.CurrentChapter].PageCount = LayoutRoot.Children.Count();
         }
 
         /// <summary>
@@ -673,6 +683,7 @@ namespace EZEreaderUniversal
                 thisBook.CurrentChapter--;
                 LayoutRoot.Children.Clear();
                 await CreateFirstPage();
+                ReturnToFirstPage();
             }
         }
 
@@ -752,22 +763,87 @@ namespace EZEreaderUniversal
         #region Event Handlers
 
         /// <summary>
+        /// Sets the FontSizeListBox to the already chosen font when opened
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void FontSizeListBox_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (fontSizes.Contains(rootPage.LibrarySource.ReadingFontSize.ToString()))
+            {
+                FontSizeListBox.SelectionChanged -= FontSizeListBox_SelectionChanged;
+                FontSizeListBox.SelectedItem = rootPage.LibrarySource.ReadingFontSize.ToString();
+                FontSizeListBox.SelectionChanged += FontSizeListBox_SelectionChanged;
+                FontSizeListBox.ScrollIntoView(FontSizeListBox.SelectedItem);
+            }
+        }
+
+        /// <summary>
+        /// Shows the different font sizes in the textblock below the list
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void FontSizeListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            string newFont = (string)((sender as ListBox).SelectedItem);
+            FontCheckerBlock.FontSize = Convert.ToInt32(newFont);
+        }
+
+        /// <summary>
+        /// Sets the currently selected fontfamily as the selected item in FontFamilyListBox
+        /// so that the user knows which is current.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        void FontFamilyListBox_Loaded(object sender, RoutedEventArgs e)
+        {
+            TextBlock fontTextBlock = new TextBlock();
+            fontTextBlock.Text = rootPage.LibrarySource.ReadingFontFamily;
+            fontTextBlock.FontFamily = new FontFamily(rootPage.LibrarySource.ReadingFontFamily);
+
+            foreach (TextBlock item in FontFamilyListBox.Items)
+            {
+                if (item.Text == rootPage.LibrarySource.ReadingFontFamily)
+                {
+                    FontFamilyListBox.SelectionChanged -= FontFamilyListBox_SelectionChanged;
+                    (sender as ListBox).SelectedItem = item;
+                    FontFamilyListBox.SelectionChanged += FontFamilyListBox_SelectionChanged;
+                    FontFamilyListBox.ScrollIntoView(FontFamilyListBox.SelectedItem);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Shows the different font families in the textblock below the list
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void FontFamilyListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if ((sender as ListBox).SelectedItem != null)
+            {
+                TextBlock newFontFamily = (TextBlock)((sender as ListBox).SelectedItem);
+                FontCheckerBlock.FontFamily = new FontFamily(newFontFamily.Text);
+                FontCheckerBlock.UpdateLayout();
+            }
+        }
+
+        /// <summary>
         /// Takes the selected font size and font families and applies them to the reading page
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private async void AcceptButton_Click(object sender, RoutedEventArgs e)
+        private async void FontFlyoutAcceptButton_Click(object sender, RoutedEventArgs e)
         {
-            string newFont = (string)FontSizeListBox.SelectedItem as string;
-            rootPage.LibrarySource.ReadingFontSize = Convert.ToInt32(newFont);
+            rootPage.LibrarySource.ReadingFontSize = (int)FontCheckerBlock.FontSize;
             rootPage.LibrarySource.ReadingFonts.ReadingFontSize = rootPage.LibrarySource.ReadingFontSize;
             TextBlock newFontFamily = (TextBlock)FontFamilyListBox.SelectedItem as TextBlock;
             rootPage.LibrarySource.ReadingFontFamily = newFontFamily.Text;
             rootPage.LibrarySource.ReadingFonts.ReadingFontFamily = newFontFamily.Text;
-            FontFlyout.Hide();
             BottomAppBar.Visibility = Visibility.Collapsed;
             LayoutRoot.Children.Clear();
             await CreateFirstPage();
+            FontFlyout.Hide();
         }
 
         /// <summary>
@@ -775,8 +851,32 @@ namespace EZEreaderUniversal
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void CancelButton_Click(object sender, RoutedEventArgs e)
+        private void FontFlyoutCancelButton_Click(object sender, RoutedEventArgs e)
         {
+            BottomAppBar.Visibility = Visibility.Collapsed;
+            FontFlyout.Hide();
+        }
+
+        private void FontCheckerBlock_Loaded(object sender, RoutedEventArgs e)
+        {
+            FontCheckerBlock.FontSize = rootPage.LibrarySource.ReadingFontSize;
+            FontCheckerBlock.FontFamily = new FontFamily(rootPage.LibrarySource.ReadingFontFamily);
+        }
+
+        /// <summary>
+        /// Resets the fonts to program defaults for the user
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private async void FontsDefaultButton_Click(object sender, RoutedEventArgs e)
+        {
+            rootPage.LibrarySource.ReadingFontSize = 20;
+            rootPage.LibrarySource.ReadingFonts.ReadingFontSize = 20;
+            rootPage.LibrarySource.ReadingFontFamily = "Segoe UI";
+            rootPage.LibrarySource.ReadingFonts.ReadingFontFamily = "Segoe UI";
+            BottomAppBar.Visibility = Visibility.Collapsed;
+            LayoutRoot.Children.Clear();
+            await CreateFirstPage();
             FontFlyout.Hide();
         }
 
@@ -853,7 +953,7 @@ namespace EZEreaderUniversal
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void ChaptersFlyoutButton_Click(object sender, RoutedEventArgs e)
         {
             ChaptersFlyout.Hide();
             if ((string)BackgroundColorListBox.SelectedItem != rootPage.LibrarySource.BackgroundReadingColorName)
@@ -869,6 +969,25 @@ namespace EZEreaderUniversal
                 FontColorListBox.SelectedItem = rootPage.LibrarySource.ReadingFontColorName;
                 FontColorListBox.SelectionChanged += FontColorListBox_SelectionChanged;
             }
+        }
+
+        /// <summary>
+        /// Sets the FontColorListBox selected item to the correct color when opened
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void FontColorListBox_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (FontColorListBox.Items.Contains(rootPage.LibrarySource.ReadingFontColorName))
+            {
+                FontColorListBox.SelectionChanged -= FontColorListBox_SelectionChanged;
+                FontColorListBox.SelectedItem = rootPage.LibrarySource.ReadingFontColorName;
+                FontColorListBox.SelectionChanged += FontColorListBox_SelectionChanged;
+                FontColorListBox.ScrollIntoView(FontColorListBox.Items.First());
+                FontColorListBox.UpdateLayout();
+            }
+            FontColorListBox.ScrollIntoView(FontColorListBox.SelectedItem);
+
         }
 
         /// <summary>
@@ -891,38 +1010,21 @@ namespace EZEreaderUniversal
         }
 
         /// <summary>
-        /// Sets the currently selected fontfamily as the selected item in FontFamilyListBox
-        /// so that the user knows which is current.
+        /// Sets the BackgroundColorListBox selected item to the correct color when opened.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        void FontFamilyListBox_Loaded(object sender, RoutedEventArgs e)
+        private void BackgroundColorListBox_Loaded(object sender, RoutedEventArgs e)
         {
-            TextBlock fontTextBlock = new TextBlock();
-            fontTextBlock.Text = rootPage.LibrarySource.ReadingFontFamily;
-            fontTextBlock.FontFamily = new FontFamily(rootPage.LibrarySource.ReadingFontFamily);
-
-            foreach (TextBlock item in FontFamilyListBox.Items)
+            if (BackgroundColorListBox.Items.Contains(rootPage.LibrarySource.BackgroundReadingColorName))
             {
-                if (item.Text == rootPage.LibrarySource.ReadingFontFamily)
-                {
-                    FontFamilyListBox.SelectionChanged -= FontFamilyListBox_SelectionChanged;
-                    (sender as ListBox).SelectedItem = item;
-                    FontFamilyListBox.SelectionChanged += FontFamilyListBox_SelectionChanged;
-                    FontFamilyListBox.ScrollIntoView(item);
-                }
+                BackgroundColorListBox.SelectionChanged -= BackgroundColorListBox_SelectionChanged;
+                BackgroundColorListBox.SelectedItem = rootPage.LibrarySource.BackgroundReadingColorName;
+                BackgroundColorListBox.SelectionChanged += BackgroundColorListBox_SelectionChanged;
+                BackgroundColorListBox.ScrollIntoView(BackgroundColorListBox.Items.First());
+                BackgroundColorListBox.UpdateLayout();
+                BackgroundColorListBox.ScrollIntoView(BackgroundColorListBox.SelectedItem);
             }
-        }
-
-        /// <summary>
-        /// Shows the different font families in the textblock below the list
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void FontFamilyListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            TextBlock newFontFamily = (TextBlock)((sender as ListBox).SelectedItem);
-            FontCheckerBlock.FontFamily = new FontFamily(newFontFamily.Text);
         }
 
         /// <summary>
@@ -945,29 +1047,6 @@ namespace EZEreaderUniversal
         }
 
         /// <summary>
-        /// Hides the ColorFlyout without accepting any changes
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void CancelColorButton_Click(object sender, RoutedEventArgs e)
-        {
-            ColorsFlyout.Hide();
-            if ((string)BackgroundColorListBox.SelectedItem != rootPage.LibrarySource.BackgroundReadingColorName)
-            {
-                BackgroundColorListBox.SelectionChanged -= BackgroundColorListBox_SelectionChanged;
-                BackgroundColorListBox.SelectedItem = rootPage.LibrarySource.BackgroundReadingColorName;
-                BackgroundColorListBox.SelectionChanged += BackgroundColorListBox_SelectionChanged;
-            }
-
-            if ((string)FontColorListBox.SelectedItem != rootPage.LibrarySource.ReadingFontColorName)
-            {
-                FontColorListBox.SelectionChanged -= FontColorListBox_SelectionChanged;
-                FontColorListBox.SelectedItem = rootPage.LibrarySource.ReadingFontColorName;
-                FontColorListBox.SelectionChanged += FontColorListBox_SelectionChanged;
-            }
-        }
-
-        /// <summary>
         /// Hides the ColorFlyout and accepts the changes, updating the layoutroot and its objects
         /// </summary>
         /// <param name="sender"></param>
@@ -976,89 +1055,42 @@ namespace EZEreaderUniversal
         {
             rootPage.LibrarySource.ReadingFontColorName = (string)FontColorListBox.SelectedItem;
             rootPage.LibrarySource.ReadingFonts.ReadingFontColorName = (string)FontColorListBox.SelectedItem;
-
             rootPage.LibrarySource.ReadingFontColor = AllColorBrushes[(string)FontColorListBox.SelectedItem];
-
             rootPage.LibrarySource.BackgroundReadingColorName = (string)BackgroundColorListBox.SelectedItem;
             rootPage.LibrarySource.ReadingFonts.BackgroundReadingColorName = (string)BackgroundColorListBox.SelectedItem;
-
             rootPage.LibrarySource.BackgroundReadingColor = AllColorBrushes[(string)BackgroundColorListBox.SelectedItem];
+            BottomAppBar.Visibility = Visibility.Collapsed;
             LayoutRoot.Children.Clear();
             await CreateFirstPage();
             ColorsFlyout.Hide();
         }
 
         /// <summary>
-        /// Hides the ColorsFlyout if the appbarbutton is clicked while it's already opened
-        /// and accepts no changes
+        /// Hides the ColorFlyout without accepting any changes
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void ColorsButton_Click(object sender, RoutedEventArgs e)
+        private void CancelColorButton_Click(object sender, RoutedEventArgs e)
         {
-            if (ColorTextBlockGrid.Visibility == Visibility.Visible)
-            {
-                ColorsFlyout.Hide();
-            }
+            BottomAppBar.Visibility = Visibility.Collapsed;
+            ColorsFlyout.Hide();
         }
 
         /// <summary>
-        /// Sets the FontSizeListBox to the already chosen font when opened
+        /// Sets the default color scheme back to the original for the user
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void FontSizeListBox_Loaded(object sender, RoutedEventArgs e)
+        private async void ColorsDefaultButton_Click(object sender, RoutedEventArgs e)
         {
-            if (fontSizes.Contains(rootPage.LibrarySource.ReadingFontSize.ToString()))
-            {
-                FontSizeListBox.SelectionChanged -= FontSizeListBox_SelectionChanged;
-                FontSizeListBox.SelectedItem = rootPage.LibrarySource.ReadingFontSize.ToString();
-                FontSizeListBox.SelectionChanged += FontSizeListBox_SelectionChanged;
-            }
-        }
-
-        /// <summary>
-        /// Shows the different font sizes in the textblock below the list
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void FontSizeListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            string newFont = (string)((sender as ListBox).SelectedItem);
-            FontCheckerBlock.FontSize = Convert.ToInt32(newFont);
-        }
-
-        /// <summary>
-        /// Sets the FontColorListBox selected item to the correct color when opened
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void FontColorListBox_Loaded(object sender, RoutedEventArgs e)
-        {
-            if (FontColorListBox.Items.Contains(rootPage.LibrarySource.ReadingFontColorName))
-            {
-                FontColorListBox.SelectionChanged -= FontColorListBox_SelectionChanged;
-                FontColorListBox.SelectedItem = rootPage.LibrarySource.ReadingFontColorName;
-                FontColorListBox.SelectionChanged += FontColorListBox_SelectionChanged;
-                FontColorListBox.ScrollIntoView(FontColorListBox.SelectedItem);
-            }
-            
-        }
-
-        /// <summary>
-        /// Sets the BackgroundColorListBox selected item to the correct color when opened.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void BackgroundColorListBox_Loaded(object sender, RoutedEventArgs e)
-        {
-            if (BackgroundColorListBox.Items.Contains(rootPage.LibrarySource.BackgroundReadingColorName))
-            {
-                BackgroundColorListBox.SelectionChanged -= BackgroundColorListBox_SelectionChanged;
-                BackgroundColorListBox.SelectedItem = rootPage.LibrarySource.BackgroundReadingColorName;
-                BackgroundColorListBox.SelectionChanged += BackgroundColorListBox_SelectionChanged;
-                BackgroundColorListBox.ScrollIntoView(BackgroundColorListBox.SelectedItem);
-            }
+            rootPage.LibrarySource.BackgroundReadingColorName = "White";
+            rootPage.LibrarySource.BackgroundReadingColor = new SolidColorBrush(Colors.White);
+            rootPage.LibrarySource.ReadingFontColorName = "Black";
+            rootPage.LibrarySource.ReadingFontColor = new SolidColorBrush(Colors.Black);
+            BottomAppBar.Visibility = Visibility.Collapsed;
+            LayoutRoot.Children.Clear();
+            await CreateFirstPage();
+            ColorsFlyout.Hide();
         }
 
         /// <summary>
@@ -1086,6 +1118,30 @@ namespace EZEreaderUniversal
                 ColorTextBlockGrid.Background = rootPage.LibrarySource.BackgroundReadingColor;
             }
         }
+
+        /// <summary>
+        /// Hides the ColorsFlyout if the appbarbutton is clicked while it's already opened
+        /// and accepts no changes
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ColorsButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (ColorTextBlockGrid.Visibility == Visibility.Visible)
+            {
+                ColorsFlyout.Hide();
+            }
+        }
+
         #endregion
+
+        private void FontButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (FontCheckerBlock.Visibility == Visibility.Visible)
+            {
+                FontFlyoutGrid.UpdateLayout();
+                FontFlyout.Hide();
+            }
+        }
     }
 }

@@ -37,24 +37,7 @@ namespace EZEreaderUniversal.DataModels
             }
         }
 
-        private ReadingFontsAndFamilies _readingfonts;
-
-        public ReadingFontsAndFamilies ReadingFonts
-        {
-            get
-            {
-                return _readingfonts;
-            }
-            set
-            {
-                if (value != _readingfonts)
-                {
-                    _readingfonts = value;
-                    NotifyPropertyChanged("ReadingFonts");
-                }
-            }
-        }
-
+       
         private ListCollectionView _sortedBooks;
         public ListCollectionView SortedBooks
         { 
@@ -149,6 +132,23 @@ namespace EZEreaderUniversal.DataModels
                 {
                     _readingfontfamily = value;
                     NotifyPropertyChanged("ReadingFontFamily");
+                }
+            }
+        }
+
+        private ReadingFontsAndFamilies _readingfonts;
+        public ReadingFontsAndFamilies ReadingFonts
+        {
+            get
+            {
+                return _readingfonts;
+            }
+            set
+            {
+                if (value != _readingfonts)
+                {
+                    _readingfonts = value;
+                    NotifyPropertyChanged("ReadingFonts");
                 }
             }
         }

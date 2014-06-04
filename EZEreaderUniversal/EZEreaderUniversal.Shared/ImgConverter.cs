@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.Storage.Streams;
-using System.Diagnostics;
 
 namespace EZEreaderUniversal
 {
@@ -31,9 +30,7 @@ namespace EZEreaderUniversal
             if ((path.Length > 9) && (path.ToLower().Substring(0, 9).Equals("isostore:")))
             {
                 BitmapImage bmp = new BitmapImage();
-
                 SetSourceOne(bmp, path.Substring(9));
-
                 return bmp;
             }
             return path;
@@ -64,7 +61,6 @@ namespace EZEreaderUniversal
         {
             StorageFile imageFile = null;
             string[] folders = path.Split('/');
-            Debug.WriteLine(path);
             try
             {
                 StorageFolder appBaseFolder = ApplicationData.Current.LocalFolder;
@@ -73,7 +69,6 @@ namespace EZEreaderUniversal
             }
             catch (Exception)
             {
-                Debug.WriteLine("filenotfound");
             }
             if (imageFile != null)
             {
