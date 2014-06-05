@@ -25,6 +25,7 @@ using Windows.UI.Popups;
 using System.Reflection;
 using HtmlAgilityPack;
 using Windows.UI;
+using System.Xml.Linq;
 
 // The Basic Page item template is documented at http://go.microsoft.com/fwlink/?LinkID=390556
 
@@ -292,7 +293,8 @@ namespace EZEreaderUniversal
                 
                 if ((thisBook.CoverPic.Length > 9) && (thisBook.CoverPic.ToLower().Substring(0, 9).Equals("isostore:")))
                 {
-                    await GetPicFromStorage(image, containers);
+                    string imageString = thisBook.CoverPic.Substring(9);
+                    await GetPicFromStorage(imageString, image, containers);
                 }
                 else
                 {
@@ -318,16 +320,36 @@ namespace EZEreaderUniversal
                     htmlDoc.Load(thisBook.MainDirectory +
                         thisBook.Chapters[thisBook.CurrentChapter].ChapterString);
                     chapterText = HtmlUtilities.ConvertToText(htmlDoc.DocumentNode.InnerHtml);
+                    
                 }
                 
                 myRun = new Run();
-                if (chapterText == "")
+                if (string.IsNullOrWhiteSpace(chapterText))
                 {
-                    chapterText = " ";
+                    
+                    string newImage = await GetPicFromHTML(htmlDoc);
+                    await GetPicFromStorage(newImage, image, containers);
+                    if (newImage != "")
+                    {
+                        para = new Paragraph();
+                        para.Inlines.Add(containers);
+                    }
+                    else
+                    {
+                     
+                        chapterText = " ";
+                        myRun.Text = chapterText;
+                        para = new Paragraph();
+                        para.Inlines.Add(myRun);
+                    }
                 }
-                myRun.Text = chapterText;
-                para = new Paragraph();
-                para.Inlines.Add(myRun);
+                else
+                {
+                    myRun.Text = chapterText;
+                    para = new Paragraph();
+                    para.Inlines.Add(myRun);
+                }
+                
                 SetmyRTB();
                 pageNumber = 0;
                 myRTB.Blocks.Add(para);
@@ -338,13 +360,12 @@ namespace EZEreaderUniversal
             
         }
 
-        /* partial implementation working on html parsing for images
         /// <summary>
         /// Gets the picture from the titlepage
         /// </summary>
         /// <param name="htmlDoc"></param>loader
         /// <returns></returns>
-        private async Task GetPicFromHTML(HtmlDocument htmlDoc, Image image, InlineUIContainer containers)
+        private async Task<string> GetPicFromHTML(HtmlDocument htmlDoc)
         {
             StorageFolder chapterFolder;
             string fullChapterString;
@@ -377,23 +398,98 @@ namespace EZEreaderUniversal
                 await IO.CreateOrGetFolders(appFolder, chapterStringLoc);
             using (var file = await chapterFolder.OpenStreamForReadAsync(chapterString))
             {
-                htmlDoc.Load(file);
-                foreach (HtmlNode img in htmlDoc.DocumentNode.Descendants())
+                XDocument xdoc = XDocument.Load(file);
+                XNamespace ns = "http://www.w3.org/1999/xhtml";
+
+                var picLoc = from x in xdoc.Descendants()
+                             select (string)x.Attribute("src");
+
+                foreach (var src in picLoc)
                 {
-                    imageString = img.Attributes["src"].Value;
+                    if (src != null)
+                    {
+                        imageString = src;
+                    }
                 }
 
                 if (imageString == "")
                 {
-                    foreach (HtmlNode img in htmlDoc.DocumentNode.Descendants())
+                    var picLocHref = from x in xdoc.Descendants()
+                                     select (string)x.Attribute("href");
+
+                    foreach (var href in picLocHref)
                     {
-                        imageString = img.Attributes["href"].Value;
+                        if (href != null)
+                        {
+                            imageString = href;
+                        }
                     }
                 }
-                //chapterText = HtmlUtilities.ConvertToText(htmlDoc.DocumentNode.InnerHtml);
+                imageString = GetHTMLPicFromString(imageString, contentLoc, fullChapterString);
             }
+            return imageString;
         }
-        */
+
+        /// <summary>
+        /// Gets the actual location of a pic contained in a pic only html chapter
+        /// </summary>
+        /// <param name="imageString">image location from html file</param>
+        /// <param name="contentLoc">location of most content</param>
+        /// <param name="fullChapterString">location of the chapter including book folder</param>
+        /// <returns></returns>
+        private string GetHTMLPicFromString(string imageString, string contentLoc, string fullChapterString)
+        {
+            if (imageString != "")
+            {
+                if (imageString.Contains(".jpeg") || imageString.Contains(".jpg") ||
+                    imageString.Contains(".png"))
+                {
+                    if (imageString.Contains("/"))
+                    {
+                        string[] imageStringSplit = imageString.Split('/');
+                        if (thisBook.ContentDirectory.Contains("/"))
+                        {
+                            imageString = thisBook.MainDirectory + contentLoc + "/";
+                        }
+                        else
+                        {
+                            imageString = thisBook.MainDirectory;
+                        }
+                        if (!imageStringSplit[0].Contains("."))
+                        {
+                            for (int i = 0; i < imageStringSplit.Length - 1; i++)
+                            {
+                                imageString += imageStringSplit[i] + "/";
+                            }
+                            imageString += imageStringSplit[imageStringSplit.Length - 1];
+                        }
+                        else
+                        {
+                            for (int i = 1; i < imageStringSplit.Length - 1; i++)
+                            {
+                                imageString += imageStringSplit[i] + "/";
+                            }
+                            imageString += imageStringSplit[imageStringSplit.Length - 1];
+                        }
+                    }
+                    else
+                    {
+                        string fullImageString = "";
+                        if (thisBook.ContentDirectory.Contains("/"))
+                        {
+                            fullImageString = thisBook.MainDirectory + contentLoc + "/" + imageString;
+                        }
+                        else
+                        {
+                            fullImageString = thisBook.MainDirectory + imageString;
+                        }
+                        imageString = fullImageString;
+                    }
+                }
+            }
+            return imageString;
+        }
+
 
         /// <summary>
         /// getting picture from assets instead of storage and converting it into an image
@@ -408,15 +504,16 @@ namespace EZEreaderUniversal
             containers.Child = image;
         }
 
+
         /// <summary>
         /// Load the picture from storage and convert into an image to be displayed in rtb
         /// </summary>
         /// <param name="image"></param>the image to be sent to the container
         /// <param name="containers"></param>the inlineuicontainer to be added to the paragraph
         /// <returns></returns>
-        private async Task GetPicFromStorage(Image image, InlineUIContainer containers)
+        private async Task GetPicFromStorage(string imageString, Image image, InlineUIContainer containers)
         {
-            string[] folders = thisBook.CoverPic.Substring(9).Split('/');
+            string[] folders = imageString.Split('/');
             StorageFile imageFile = null;
             try
             {
@@ -647,6 +744,8 @@ namespace EZEreaderUniversal
         /// </summary>
         private async Task CreateBackwardsPages()
         {
+            Image image = new Image();
+            InlineUIContainer containers = new InlineUIContainer();
             if (thisBook.CurrentChapter > 1)
             {
                 thisBook.CurrentChapter--;
@@ -663,13 +762,33 @@ namespace EZEreaderUniversal
                     chapterText = HtmlUtilities.ConvertToText(htmlDoc.DocumentNode.InnerHtml);
                 }
                 myRun = new Run();
+                myRun = new Run();
                 if (chapterText == "")
                 {
-                    chapterText = " ";
+
+                    string newImage = await GetPicFromHTML(htmlDoc);
+                    await GetPicFromStorage(newImage, image, containers);
+                    if (newImage != "")
+                    {
+                        para = new Paragraph();
+                        para.Inlines.Add(containers);
+                    }
+                    else
+                    {
+
+                        chapterText = " ";
+                        myRun.Text = chapterText;
+                        para = new Paragraph();
+                        para.Inlines.Add(myRun);
+                    }
                 }
-                myRun.Text = chapterText;
-                para = new Paragraph();
-                para.Inlines.Add(myRun);
+                else
+                {
+                    myRun.Text = chapterText;
+                    para = new Paragraph();
+                    para.Inlines.Add(myRun);
+                }
+                
                 SetmyRTB();
                 myRTB.Blocks.Clear();
                 myRTB.Blocks.Add(para);
@@ -857,6 +976,11 @@ namespace EZEreaderUniversal
             FontFlyout.Hide();
         }
 
+        /// <summary>
+        /// Sets the font of the textblock used to check if a user would like to change their fonts
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void FontCheckerBlock_Loaded(object sender, RoutedEventArgs e)
         {
             FontCheckerBlock.FontSize = rootPage.LibrarySource.ReadingFontSize;
@@ -878,6 +1002,20 @@ namespace EZEreaderUniversal
             LayoutRoot.Children.Clear();
             await CreateFirstPage();
             FontFlyout.Hide();
+        }
+
+        /// <summary>
+        /// Closes the fontflyout if the appbarbutton is clicked again while its open
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void FontButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (FontCheckerBlock.Visibility == Visibility.Visible)
+            {
+                FontFlyoutGrid.UpdateLayout();
+                FontFlyout.Hide();
+            }
         }
 
         /// <summary>
@@ -1135,13 +1273,5 @@ namespace EZEreaderUniversal
 
         #endregion
 
-        private void FontButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (FontCheckerBlock.Visibility == Visibility.Visible)
-            {
-                FontFlyoutGrid.UpdateLayout();
-                FontFlyout.Hide();
-            }
-        }
     }
 }

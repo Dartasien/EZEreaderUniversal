@@ -97,11 +97,15 @@
                                             Click="FontsDefaultButton_Click">
                                     </Button>
                                 </StackPanel>
-                                <TextBlock x:Name="FontCheckerBlock" 
-                                           Grid.Row="3"
-                                           Loaded="FontCheckerBlock_Loaded"
-                                           TextWrapping="Wrap">
-                                </TextBlock>
+                                <Grid Grid.Row="3"
+                                      Background="White"
+                                      Margin="5, 0, 5, 0">
+                                    <TextBlock x:Name="FontCheckerBlock" 
+                                               Loaded="FontCheckerBlock_Loaded"
+                                               Foreground="Black"
+                                               TextWrapping="Wrap">
+                                    </TextBlock>
+                                </Grid>
                             </Grid>
                         </StackPanel>
                     </Flyout>
@@ -181,6 +185,7 @@
                                                Margin="5, 0, 5, 0"
                                                VerticalAlignment="Top"
                                                TextWrapping="Wrap"
+                                               FontSize="20"
                                                Loaded="ColorTextBlock_Loaded">
                                     </TextBlock>
                                 </Grid>
