@@ -197,7 +197,15 @@
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
-
+            <UI:AdControl ApplicationId="efcc0a2a-35ce-45e2-9f84-b8baa193f966"
+                          AdUnitId="10738395"
+                          Grid.Row="1"
+                          HorizontalAlignment="Center"
+                          IsAutoRefreshEnabled="True"
+                          Visibility="Visible"
+                          Height="50"
+                          Width="320">
+            </UI:AdControl>
             <Grid x:Name="DetailsGrid"
                   Height="200"
                   Margin="5, 0, 5, 0"

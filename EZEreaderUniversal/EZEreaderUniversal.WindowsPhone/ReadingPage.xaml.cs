@@ -372,60 +372,61 @@ namespace EZEreaderUniversal
             string imageString = "";
             string[] st;
             string contentLoc = thisBook.ContentDirectory;
-            if (thisBook.ContentDirectory.Contains('/'))
+            if (thisBook.IsoStore)
             {
-                st = contentLoc.Split('/');
-                contentLoc = "";
-                for (int i = 0; i < st.Length - 1; i++)
+                if (thisBook.ContentDirectory.Contains('/'))
                 {
-                    contentLoc += st[i];
-                }
-                fullChapterString = thisBook.MainDirectory + contentLoc + "/" +
-                    thisBook.Chapters[thisBook.CurrentChapter].ChapterString;
-            }
-            else
-            {
-                fullChapterString = thisBook.MainDirectory +
-                thisBook.Chapters[thisBook.CurrentChapter].ChapterString;
-            }
-
-            string[] fullChapterStrings = fullChapterString.Split('/');
-            string chapterString = fullChapterStrings[fullChapterStrings.Length - 1];
-            string[] chapterStringLoc =
-                fullChapterString.Split('/');
-
-            chapterFolder =
-                await IO.CreateOrGetFolders(appFolder, chapterStringLoc);
-            using (var file = await chapterFolder.OpenStreamForReadAsync(chapterString))
-            {
-                XDocument xdoc = XDocument.Load(file);
-                XNamespace ns = "http://www.w3.org/1999/xhtml";
-
-                var picLoc = from x in xdoc.Descendants()
-                             select (string)x.Attribute("src");
-
-                foreach (var src in picLoc)
-                {
-                    if (src != null)
+                    st = contentLoc.Split('/');
+                    contentLoc = "";
+                    for (int i = 0; i < st.Length - 1; i++)
                     {
-                        imageString = src;
+                        contentLoc += st[i];
                     }
+                    fullChapterString = thisBook.MainDirectory + contentLoc + "/" +
+                        thisBook.Chapters[thisBook.CurrentChapter].ChapterString;
+                }
+                else
+                {
+                    fullChapterString = thisBook.MainDirectory +
+                    thisBook.Chapters[thisBook.CurrentChapter].ChapterString;
                 }
 
-                if (imageString == "")
-                {
-                    var picLocHref = from x in xdoc.Descendants()
-                                     select (string)x.Attribute("href");
+                string[] fullChapterStrings = fullChapterString.Split('/');
+                string chapterString = fullChapterStrings[fullChapterStrings.Length - 1];
+                string[] chapterStringLoc = fullChapterString.Split('/');
+                chapterFolder = await IO.CreateOrGetFolders(appFolder, chapterStringLoc);
 
-                    foreach (var href in picLocHref)
+                using (var file = await chapterFolder.OpenStreamForReadAsync(chapterString))
+                {
+                    XDocument xdoc = XDocument.Load(file);
+                    XNamespace ns = "http://www.w3.org/1999/xhtml";
+
+                    var picLoc = from x in xdoc.Descendants()
+                                 select (string)x.Attribute("src");
+
+                    foreach (var src in picLoc)
                     {
-                        if (href != null)
+                        if (src != null)
                         {
-                            imageString = href;
+                            imageString = src;
                         }
                     }
+
+                    if (imageString == "")
+                    {
+                        var picLocHref = from x in xdoc.Descendants()
+                                         select (string)x.Attribute("href");
+
+                        foreach (var href in picLocHref)
+                        {
+                            if (href != null)
+                            {
+                                imageString = href;
+                            }
+                        }
+                    }
+                    imageString = GetHTMLPicFromString(imageString, contentLoc, fullChapterString);
                 }
-                imageString = GetHTMLPicFromString(imageString, contentLoc, fullChapterString);
             }
             return imageString;
         }
@@ -706,7 +707,6 @@ namespace EZEreaderUniversal
                     LayoutRoot.Children.Clear();
                     await CreateFirstPage();
                 }
-
             }
             else
             {
