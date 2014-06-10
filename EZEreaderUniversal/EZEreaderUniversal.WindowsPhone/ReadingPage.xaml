@@ -74,7 +74,7 @@
                                 <StackPanel Orientation="Horizontal"
                                             Grid.Row="2"
                                             HorizontalAlignment="Center">
-                                    <Button x:Name="AcceptButton" 
+                                    <Button x:Name="FontFlyoutAcceptButton" 
                                             BorderThickness="0"
                                             HorizontalAlignment="Left"
                                             Click="FontFlyoutAcceptButton_Click">

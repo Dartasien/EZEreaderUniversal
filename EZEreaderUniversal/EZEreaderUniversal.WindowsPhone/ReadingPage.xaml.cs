@@ -317,10 +317,15 @@ namespace EZEreaderUniversal
                 }
                 else
                 {
-                    htmlDoc.Load(thisBook.MainDirectory +
-                        thisBook.Chapters[thisBook.CurrentChapter].ChapterString);
-                    chapterText = HtmlUtilities.ConvertToText(htmlDoc.DocumentNode.InnerHtml);
                     
+                    var chapterPath = thisBook.MainDirectory + thisBook.Chapters[thisBook.CurrentChapter].ChapterString;
+                    Uri chapterUri = new Uri("ms-appx:///" + chapterPath, UriKind.Absolute);
+                    var chapterFile = await Windows.Storage.StorageFile.GetFileFromApplicationUriAsync(chapterUri);
+                    using (var chapterStream = await chapterFile.OpenStreamForReadAsync())
+                    {
+                        htmlDoc.Load(chapterStream);
+                        chapterText = HtmlUtilities.ConvertToText(htmlDoc.DocumentNode.InnerHtml);
+                    }
                 }
                 
                 myRun = new Run();
@@ -514,16 +519,37 @@ namespace EZEreaderUniversal
         /// <returns></returns>
         private async Task GetPicFromStorage(string imageString, Image image, InlineUIContainer containers)
         {
-            string[] folders = imageString.Split('/');
+            
             StorageFile imageFile = null;
-            try
+            if (thisBook.IsoStore)
             {
-                StorageFolder appBaseFolder = ApplicationData.Current.LocalFolder;
-                StorageFolder imageFolder = await IO.CreateOrGetFolders(appBaseFolder, folders);
-                imageFile = await imageFolder.GetFileAsync(folders[folders.Length - 1]);
+                string[] folders = imageString.Split('/');
+                try
+                {
+                    StorageFolder appBaseFolder = ApplicationData.Current.LocalFolder;
+                    StorageFolder imageFolder = await IO.CreateOrGetFolders(appBaseFolder, folders);
+                    imageFile = await imageFolder.GetFileAsync(folders[folders.Length - 1]);
+                }
+                catch (Exception)
+                { }
             }
-            catch(Exception)
-            { }
+            else
+            {
+                try
+                {
+                    Uri chapterUri = new Uri("ms-appx:///" + imageString, UriKind.Absolute);
+                    var chapterFile = await Windows.Storage.StorageFile.GetFileFromApplicationUriAsync(chapterUri);
+                    using (var chapterStream = await chapterFile.OpenReadAsync())
+                    {
+                        BitmapImage img = new BitmapImage();
+                        await img.SetSourceAsync(chapterStream);
+                        image.Source = img;
+                        containers.Child = image;
+                    }
+                }
+                catch (Exception)
+                { }
+            }
             if (imageFile != null)
             {
                 using (var fileStream = await imageFile.OpenReadAsync())
@@ -537,6 +563,7 @@ namespace EZEreaderUniversal
                     }
                 }
             }
+            
         }
 
         /// <summary>
@@ -757,9 +784,14 @@ namespace EZEreaderUniversal
                 }
                 else
                 {
-                    htmlDoc.Load(thisBook.MainDirectory +
-                        thisBook.Chapters[thisBook.CurrentChapter].ChapterString);
-                    chapterText = HtmlUtilities.ConvertToText(htmlDoc.DocumentNode.InnerHtml);
+                    var chapterPath = thisBook.MainDirectory + thisBook.Chapters[thisBook.CurrentChapter].ChapterString;
+                    Uri chapterUri = new Uri("ms-appx:///" + chapterPath, UriKind.Absolute);
+                    var chapterFile = await Windows.Storage.StorageFile.GetFileFromApplicationUriAsync(chapterUri);
+                    using (var chapterStream = await chapterFile.OpenStreamForReadAsync())
+                    {
+                        htmlDoc.Load(chapterStream);
+                        chapterText = HtmlUtilities.ConvertToText(htmlDoc.DocumentNode.InnerHtml);
+                    }
                 }
                 myRun = new Run();
                 myRun = new Run();

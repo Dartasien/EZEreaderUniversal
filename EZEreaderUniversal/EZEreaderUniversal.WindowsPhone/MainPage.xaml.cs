@@ -245,7 +245,7 @@ namespace EZEreaderUniversal
                     {
                         await RetrieveLibrary();
                     }
-                    if (ourBook.IsStarted == true)
+                    if (this.LibrarySource.RecentReads.Contains(ourBook))
                     {
                         ourBook.CurrentPage = 0;
                         ourBook.CurrentChapter = 0;
