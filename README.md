@@ -9,11 +9,9 @@ EZEreaderUniversal
       Using Visual Studio 2013
       
           - Installed Nuget Packages
-              -HtmlAgilityPack (Note: To add to Windows Phone you have to add a reference by linking to the sl3-wp.dll
+              -HtmlAgilityPack (Note: To add to Windows Phone you have to add a reference by linking to the winrt45
                                       in the Windows Store references after adding to Windows Store(Incorrect Nuget
                                       install issue))
-              
-              
               
               
       Current Progress is only for Windows Phone 8.1.
