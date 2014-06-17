@@ -16,6 +16,10 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)ChapterToC.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Common\NavigationHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Common\ObservableDictionary.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Common\RelayCommand.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Common\SuspensionManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DataModels\BookModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DataModels\BooksModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DataModels\ChapterModel.cs" />
@@ -30,6 +34,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="$(MSBuildThisFileDirectory)Common\ReadMe.txt" />
     <Content Include="$(MSBuildThisFileDirectory)Pride and Prejudice - Jane Austen_6590\content.opf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

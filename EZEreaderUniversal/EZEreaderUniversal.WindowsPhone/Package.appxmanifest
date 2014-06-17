@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/2010/manifest" xmlns:m2="http://schemas.microsoft.com/appx/2013/manifest" xmlns:m3="http://schemas.microsoft.com/appx/2014/manifest" xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest">
-  <Identity Name="46781dartasien.EZEreader" Publisher="CN=B7579ACC-A5EB-4345-B6BF-04A2FD7670DB" Version="1.1.0.1" />
+  <Identity Name="46781dartasien.EZEreader" Publisher="CN=B7579ACC-A5EB-4345-B6BF-04A2FD7670DB" Version="1.1.0.2" />
   <mp:PhoneIdentity PhoneProductId="fb16ccaf-a208-453c-9f26-060b0364d941" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
     <DisplayName>EZ Ereader</DisplayName>
