@@ -14,4 +14,8 @@ EZEreaderUniversal
                                       install issue))
               
               
-      Current Progress is only for Windows Phone 8.1.
+      Currently released on the Windows Phone Store for Windows Phone 8.1 users
+           http://www.windowsphone.com/en-us/store/app/ez-ereader/
+           
+           
+      Progress now on Windows 8.1 Store version.
