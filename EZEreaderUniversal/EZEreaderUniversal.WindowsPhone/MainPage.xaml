@@ -197,8 +197,8 @@
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
-            <UI:AdControl ApplicationId="efcc0a2a-35ce-45e2-9f84-b8baa193f966"
-                          AdUnitId="10738395"
+            <UI:AdControl ApplicationId="8060ef0f-e397-4971-8d0c-8ce021139454"
+                          AdUnitId="10803171"
                           Grid.Row="1"
                           HorizontalAlignment="Center"
                           IsAutoRefreshEnabled="True"
