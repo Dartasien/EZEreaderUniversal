@@ -399,7 +399,7 @@ namespace EZEreaderUniversal
                 string[] fullChapterStrings = fullChapterString.Split('/');
                 string chapterString = fullChapterStrings[fullChapterStrings.Length - 1];
                 string[] chapterStringLoc = fullChapterString.Split('/');
-                chapterFolder = await IO.CreateOrGetFolders(appFolder, chapterStringLoc);
+                chapterFolder = await Io.CreateOrGetFolders(appFolder, chapterStringLoc);
 
                 using (var file = await chapterFolder.OpenStreamForReadAsync(chapterString))
                 {
@@ -527,7 +527,7 @@ namespace EZEreaderUniversal
                 try
                 {
                     StorageFolder appBaseFolder = ApplicationData.Current.LocalFolder;
-                    StorageFolder imageFolder = await IO.CreateOrGetFolders(appBaseFolder, folders);
+                    StorageFolder imageFolder = await Io.CreateOrGetFolders(appBaseFolder, folders);
                     imageFile = await imageFolder.GetFileAsync(folders[folders.Length - 1]);
                 }
                 catch (Exception)
@@ -600,7 +600,7 @@ namespace EZEreaderUniversal
                 fullChapterString.Split('/');
 
             chapterFolder =
-                await IO.CreateOrGetFolders(appFolder, chapterStringLoc);
+                await Io.CreateOrGetFolders(appFolder, chapterStringLoc);
             using (var file = await chapterFolder.OpenStreamForReadAsync(chapterString))
             {
                 htmlDoc.Load(file);

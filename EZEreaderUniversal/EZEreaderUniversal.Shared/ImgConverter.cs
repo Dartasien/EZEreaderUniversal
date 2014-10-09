@@ -1,13 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Text;
 using Windows.UI.Xaml.Data;
-using EZEreaderUniversal;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.UI.Xaml.Media.Imaging;
-using Windows.Storage.Streams;
 
 namespace EZEreaderUniversal
 {
@@ -24,12 +19,12 @@ namespace EZEreaderUniversal
         /// <returns></returns>
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            string path = value as string;
+            var path = value as string;
             if (String.IsNullOrEmpty(path))
                 return null;
-            if ((path.Length > 9) && (path.ToLower().Substring(0, 9).Equals("isostore:")))
+            if (path != null && ((path.Length > 9) && (path.ToLower().Substring(0, 9).Equals("isostore:"))))
             {
-                BitmapImage bmp = new BitmapImage();
+                var bmp = new BitmapImage();
                 SetSourceOne(bmp, path.Substring(9));
                 return bmp;
             }
@@ -64,7 +59,7 @@ namespace EZEreaderUniversal
             try
             {
                 StorageFolder appBaseFolder = ApplicationData.Current.LocalFolder;
-                StorageFolder imageFolder = await IO.CreateOrGetFolders(appBaseFolder, folders);
+                StorageFolder imageFolder = await Io.CreateOrGetFolders(appBaseFolder, folders);
                 imageFile = await imageFolder.GetFileAsync(folders[folders.Length - 1]);
             }
             catch (Exception)

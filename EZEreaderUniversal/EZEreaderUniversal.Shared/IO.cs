@@ -13,9 +13,9 @@ using Windows.UI.Xaml.Media.Imaging;
 
 namespace EZEreaderUniversal
 {
-    class IO
+    class Io
     {
-        private static StorageFolder AppBaseFolder = ApplicationData.Current.LocalFolder;
+        private static readonly StorageFolder AppBaseFolder = ApplicationData.Current.LocalFolder;
         
         
         /// <summary>
@@ -180,45 +180,36 @@ namespace EZEreaderUniversal
         /// <returns></returns>
         public static async Task<StorageFolder> CreateOrGetFolders(StorageFolder folder, string[] directoryName)
         {
-            StorageFolder folderOne = await IO.CreateOrGetFolder(directoryName[0], folder);
+            StorageFolder folderOne = await CreateOrGetFolder(directoryName[0], folder);
             StorageFolder folderTwo;
             StorageFolder folderThree;
             StorageFolder folderFour;
             StorageFolder folderFive;
 
-            if (directoryName.Length == 2)
+            switch (directoryName.Length)
             {
-                return folderOne;
-            }
-            else if (directoryName.Length == 3)
-            {
-                return await IO.CreateOrGetFolder(directoryName[1], folderOne);
-            }
-            else if (directoryName.Length == 4)
-            {
-                folderTwo = await IO.CreateOrGetFolder(directoryName[1], folderOne);
-                return await IO.CreateOrGetFolder(directoryName[2], folderTwo);
-            }
-            else if (directoryName.Length == 5)
-            {
-                folderTwo = await IO.CreateOrGetFolder(directoryName[1], folderOne);
-                folderThree = await IO.CreateOrGetFolder(directoryName[2], folderTwo);
-                return await IO.CreateOrGetFolder(directoryName[3], folderThree);
-            }
-            else if (directoryName.Length == 6)
-            {
-                folderTwo = await IO.CreateOrGetFolder(directoryName[1], folderOne);
-                folderThree = await IO.CreateOrGetFolder(directoryName[2], folderTwo);
-                folderFour = await IO.CreateOrGetFolder(directoryName[3], folderThree);
-                return await IO.CreateOrGetFolder(directoryName[4], folderFour);
-            }
-            else
-            {
-                folderTwo = await IO.CreateOrGetFolder(directoryName[1], folderOne);
-                folderThree = await IO.CreateOrGetFolder(directoryName[2], folderTwo);
-                folderFour = await IO.CreateOrGetFolder(directoryName[3], folderThree);
-                folderFive = await IO.CreateOrGetFolder(directoryName[4], folderFour);
-                return await IO.CreateOrGetFolder(directoryName[4], folderFive);
+                case 2:
+                    return folderOne;
+                case 3:
+                    return await CreateOrGetFolder(directoryName[1], folderOne);
+                case 4:
+                    folderTwo = await CreateOrGetFolder(directoryName[1], folderOne);
+                    return await CreateOrGetFolder(directoryName[2], folderTwo);
+                case 5:
+                    folderTwo = await CreateOrGetFolder(directoryName[1], folderOne);
+                    folderThree = await CreateOrGetFolder(directoryName[2], folderTwo);
+                    return await CreateOrGetFolder(directoryName[3], folderThree);
+                case 6:
+                    folderTwo = await CreateOrGetFolder(directoryName[1], folderOne);
+                    folderThree = await CreateOrGetFolder(directoryName[2], folderTwo);
+                    folderFour = await CreateOrGetFolder(directoryName[3], folderThree);
+                    return await CreateOrGetFolder(directoryName[4], folderFour);
+                default:
+                    folderTwo = await CreateOrGetFolder(directoryName[1], folderOne);
+                    folderThree = await CreateOrGetFolder(directoryName[2], folderTwo);
+                    folderFour = await CreateOrGetFolder(directoryName[3], folderThree);
+                    folderFive = await CreateOrGetFolder(directoryName[4], folderFour);
+                    return await CreateOrGetFolder(directoryName[4], folderFive);
             }
         }
 
@@ -335,7 +326,7 @@ namespace EZEreaderUniversal
         /// <returns>Entire contents of the file as a string</returns>
         public static async Task<string> ReadStringFromFile(StorageFile f)
         {
-            string result = null;
+            string result;
 
             try
             {
@@ -392,7 +383,7 @@ namespace EZEreaderUniversal
             if (picLoc.Contains("/"))
             {
                 picLoc2 = picLoc.Split('/');
-                newFolder = await IO.CreateOrGetFolders(AppBaseFolder, picLoc2);
+                newFolder = await CreateOrGetFolders(AppBaseFolder, picLoc2);
                 using (Stream fileSource = await newFolder.OpenStreamForReadAsync(picLoc2[picLoc2.Length - 1]))
                 {
                     await fileSource.CopyToAsync(ras.AsStreamForWrite());

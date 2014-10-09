@@ -1,23 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using EZEreaderUniversal.DataModels;
 using Windows.ApplicationModel.Activation;
-using EZEreaderUniversal.Common;
 using CollectionView;
 using Windows.UI.Popups;
-using Windows.UI;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -26,26 +16,22 @@ namespace EZEreaderUniversal
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class MainPage : Page
+    public sealed partial class MainPage
     {
         public static MainPage Current;
         public BooksModel LibrarySource;
         public CollectionViewSource LibraryViewSource;
-        BookModel ourBook;
-        bool IsRecentReads;
+        BookModel _ourBook;
+        bool _isRecentReads;
 
-        private FileActivatedEventArgs _fileEventArgs = null;
-        public FileActivatedEventArgs FileEvent
-        {
-            get { return _fileEventArgs; }
-            set { _fileEventArgs = value; }
-        }
+        public FileActivatedEventArgs FileEvent { get; set; }
 
         public MainPage()
         {
-            this.InitializeComponent();
+            FileEvent = null;
+            InitializeComponent();
             Application.Current.Suspending += Current_Suspending;
-            this.NavigationCacheMode = NavigationCacheMode.Required;
+            NavigationCacheMode = NavigationCacheMode.Required;
         }
 
         async void Current_Suspending(object sender, Windows.ApplicationModel.SuspendingEventArgs e)
@@ -55,7 +41,7 @@ namespace EZEreaderUniversal
                 await LibrarySource.LoadData();
             }
 
-            await this.LibrarySource.UpdateBooks();
+            await LibrarySource.UpdateBooks();
         }
 
         /// <summary>
@@ -73,7 +59,7 @@ namespace EZEreaderUniversal
             //set which buttons are currently chosen
             RecentReadsBorder.BorderThickness = new Thickness(0);
             LibraryBorder.BorderThickness = new Thickness(3);
-            IsRecentReads = false;
+            _isRecentReads = false;
             //open data
             await RetrieveLibrary();
             LibrarySource.SortByBookNameAscending();
@@ -97,7 +83,7 @@ namespace EZEreaderUniversal
                 {
                     await LibrarySource.LoadData();
                 }
-                this.DataContext = LibrarySource;
+                DataContext = LibrarySource;
                 LibraryListView.ItemsSource = LibrarySource.SortedBooks;
                 RecentReadsListView.ItemsSource = LibrarySource.RecentBooks;
             }
@@ -125,19 +111,19 @@ namespace EZEreaderUniversal
                 var listViewItem = sender as ListViewItem;
                 if (listViewItem != null)
                 {
-                    ourBook = listViewItem.DataContext as BookModel;
+                    _ourBook = listViewItem.DataContext as BookModel;
                 }
-                this.LibraryListView.SelectedItem = null;
-                if (ourBook != null)
+                LibraryListView.SelectedItem = null;
+                if (_ourBook != null)
                 {
-                    if (ourBook.IsStarted != true)
+                    if (_ourBook.IsStarted != true)
                     {
-                        ourBook.IsStarted = true;
-                        this.LibrarySource.RecentReads.Add(ourBook);
+                        _ourBook.IsStarted = true;
+                        LibrarySource.RecentReads.Add(_ourBook);
                     }
-                    ourBook.OpenedRecentlyTime = DateTime.Now.Ticks;
+                    _ourBook.OpenedRecentlyTime = DateTime.Now.Ticks;
                     LibrarySource.SortBooksByAccessDate();
-                    this.Frame.Navigate(typeof(ReadingPage), ourBook);
+                    Frame.Navigate(typeof(ReadingPage), _ourBook);
                 }
             }
         }
@@ -159,7 +145,7 @@ namespace EZEreaderUniversal
         /// </summary>
         internal void NavigateToFilePage()
         {
-            this.Frame.Navigate(typeof(LoadingPage));
+            Frame.Navigate(typeof(LoadingPage));
         }
 
         /// <summary>
@@ -172,9 +158,9 @@ namespace EZEreaderUniversal
             var listViewItem = sender as ListViewItem;
             if (listViewItem != null)
             {
-                ourBook = listViewItem.DataContext as BookModel;
+                _ourBook = listViewItem.DataContext as BookModel;
             }
-            if (this.BottomBar != null)
+            if (BottomBar != null)
             {
                 BottomBar.Visibility = Visibility.Visible;
             }
@@ -191,10 +177,10 @@ namespace EZEreaderUniversal
             var listViewItem = sender as ListViewItem;
             if (listViewItem != null)
             {
-                ourBook = listViewItem.DataContext as BookModel;
-                IsRecentReads = true;
+                _ourBook = listViewItem.DataContext as BookModel;
+                _isRecentReads = true;
             }
-            if (this.BottomBar != null)
+            if (BottomBar != null)
             {
                 BottomBar.Visibility = Visibility.Visible;
             }
@@ -208,10 +194,10 @@ namespace EZEreaderUniversal
         /// <param name="e"></param>
         private async void DeleteBarButton_Click(object sender, RoutedEventArgs e)
         {
-            if (!IsRecentReads)
+            if (!_isRecentReads)
             {
-                var messageDialog = new MessageDialog("Are you sure you want to delete " + ourBook.BookName + " by " +
-                    ourBook.AuthorID + " from your Library?");
+                var messageDialog = new MessageDialog("Are you sure you want to delete " + _ourBook.BookName + " by " +
+                    _ourBook.AuthorID + " from your Library?");
                 messageDialog.Commands.Add(new UICommand("Yes", new UICommandInvokedHandler(this.CommandInvokedHandler)));
                 messageDialog.Commands.Add(new UICommand("Cancel", new UICommandInvokedHandler(this.CommandInvokedHandler)));
                 messageDialog.DefaultCommandIndex = 1;
@@ -220,8 +206,8 @@ namespace EZEreaderUniversal
             }
             else
             {
-                var messageDialog = new MessageDialog("Woul you like to remove " + ourBook.BookName +
-                    " by " + ourBook.AuthorID + " from your Recent list?");
+                var messageDialog = new MessageDialog("Woul you like to remove " + _ourBook.BookName +
+                    " by " + _ourBook.AuthorID + " from your Recent list?");
                 messageDialog.Commands.Add(new UICommand("Yes", new UICommandInvokedHandler(this.CommandInvokedHandler)));
                 messageDialog.Commands.Add(new UICommand("Cancel", new UICommandInvokedHandler(this.CommandInvokedHandler)));
                 messageDialog.DefaultCommandIndex = 1;
@@ -239,23 +225,23 @@ namespace EZEreaderUniversal
         {
             if (command.Label == "Yes")
             {
-                if (ourBook != null)
+                if (_ourBook != null)
                 {
                     if (!LibrarySource.IsDataLoaded)
                     {
                         await RetrieveLibrary();
                     }
-                    if (this.LibrarySource.RecentReads.Contains(ourBook))
+                    if (LibrarySource.RecentReads.Contains(_ourBook))
                     {
-                        ourBook.CurrentPage = 0;
-                        ourBook.CurrentChapter = 0;
-                        ourBook.IsStarted = false;
-                        ourBook.IsCompleted = false;
-                        this.LibrarySource.RecentReads.Remove(ourBook);
+                        _ourBook.CurrentPage = 0;
+                        _ourBook.CurrentChapter = 0;
+                        _ourBook.IsStarted = false;
+                        _ourBook.IsCompleted = false;
+                        LibrarySource.RecentReads.Remove(_ourBook);
                     }
-                    if (!IsRecentReads)
+                    if (!_isRecentReads)
                     {
-                        await this.LibrarySource.RemoveBook(ourBook);
+                        await LibrarySource.RemoveBook(_ourBook);
                     }
                 }
             }
@@ -272,8 +258,8 @@ namespace EZEreaderUniversal
             DetailsGrid.Visibility = Visibility.Visible;
             BookNameBox.Visibility = Visibility.Visible;
             AuthorNameBox.Visibility = Visibility.Visible;
-            BookNameBox.Text = ourBook.BookName;
-            AuthorNameBox.Text = ourBook.AuthorID;
+            BookNameBox.Text = _ourBook.BookName;
+            AuthorNameBox.Text = _ourBook.AuthorID;
             CloseSearchGrid();
         }
 
@@ -312,7 +298,7 @@ namespace EZEreaderUniversal
         /// <param name="e"></param>
         private void BookNameBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            ourBook.BookName = BookNameBox.Text;
+            _ourBook.BookName = BookNameBox.Text;
         }
 
         /// <summary>
@@ -322,7 +308,7 @@ namespace EZEreaderUniversal
         /// <param name="e"></param>
         private void AuthorNameBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            ourBook.AuthorID = AuthorNameBox.Text;
+            _ourBook.AuthorID = AuthorNameBox.Text;
         }
 
         /// <summary>
@@ -492,9 +478,13 @@ namespace EZEreaderUniversal
         /// <param name="e"></param>
         private void SearchBookTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            string filter = (sender as TextBox).Text;
-            LibrarySource.SortedBooks.Filter = new Predicate<object>(x => ((BookModel)x).AuthorID.ToLower().Contains(filter.ToLower()) 
-                || ((BookModel)x).BookName.ToLower().Contains(filter.ToLower()));
+            var textBox = sender as TextBox;
+            if (textBox != null)
+            {
+                string filter = textBox.Text;
+                LibrarySource.SortedBooks.Filter = x => ((BookModel)x).AuthorID.ToLower().Contains(filter.ToLower()) 
+                                                        || ((BookModel)x).BookName.ToLower().Contains(filter.ToLower());
+            }
             LibrarySource.SortedBooks.Refresh();
         }
 

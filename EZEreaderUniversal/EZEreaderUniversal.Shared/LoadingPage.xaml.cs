@@ -1,23 +1,11 @@
-﻿using EZEreaderUniversal.DataModels;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Activation;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.Storage;
-using Windows.Storage.Streams;
 using Windows.UI.Popups;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
@@ -27,17 +15,17 @@ namespace EZEreaderUniversal
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class LoadingPage : Page
+    public sealed partial class LoadingPage
     {
         private static StorageFolder sFolder = ApplicationData.Current.LocalFolder;
         MainPage rootPage = MainPage.Current;
 
         public LoadingPage()
         {
-            this.InitializeComponent();
+            InitializeComponent();
         }
 
-        private FileActivatedEventArgs _fileEventArgs = null;
+        private FileActivatedEventArgs _fileEventArgs;
         public FileActivatedEventArgs FileEvent
         {
             get { return _fileEventArgs; }
@@ -46,17 +34,17 @@ namespace EZEreaderUniversal
 
         protected async override void OnNavigatedTo(NavigationEventArgs e)
         {
-            string originalFile = " ";
             string newFile = "";
             if (rootPage.FileEvent != null)
             {    
                 
-                foreach (StorageFile file in rootPage.FileEvent.Files)
+                foreach (var storageItem in rootPage.FileEvent.Files)
                 {
-                    originalFile = file.Name;
+                    var file = (StorageFile) storageItem;
+                    string originalFile = file.Name;
                     newFile = originalFile.Substring(0, originalFile.Length - 4);
                     newFile += "zip";
-                    await IO.DeleteFileInFolder(sFolder, newFile);
+                    await Io.DeleteFileInFolder(sFolder, newFile);
                     try
                     {
                         await file.CopyAsync(sFolder, newFile);
@@ -68,13 +56,13 @@ namespace EZEreaderUniversal
                 }
             }
             string folderName = newFile.Substring(0, newFile.Length - 4);
-            await IO.CreateOrGetFolder(folderName);
+            await Io.CreateOrGetFolder(folderName);
             await UnZipTheFile(newFile, folderName);
-            await IO.DeleteFileInFolder(sFolder, newFile);
+            await Io.DeleteFileInFolder(sFolder, newFile);
             string importError = "";
             try
             {
-                addBookToLibrary(folderName);
+                AddBookToLibrary(folderName);
             }
             catch (Exception)
             {
@@ -87,9 +75,9 @@ namespace EZEreaderUniversal
                 messageDialog.DefaultCommandIndex = 0;
                 messageDialog.CancelCommandIndex = 0;
                 await messageDialog.ShowAsync();
-                this.Frame.Navigate(typeof(MainPage));
+                Frame.Navigate(typeof(MainPage));
             }
-            this.Frame.Navigate(typeof(MainPage));
+            Frame.Navigate(typeof(MainPage));
         }
 
         /// <summary>
@@ -127,7 +115,7 @@ namespace EZEreaderUniversal
                             else
                             {
                                 string[] directoryName = entry.FullName.Split('/');
-                                StorageFolder lastFolder = await IO.CreateOrGetFolders(folder, directoryName);
+                                StorageFolder lastFolder = await Io.CreateOrGetFolders(folder, directoryName);
                                 using (var file = entry.Open())
                                 {
                                     StorageFile newFile = null;
@@ -183,7 +171,7 @@ namespace EZEreaderUniversal
         /// Adds to book to the bookmodel collection
         /// </summary>
         /// <param name="folderName"></param>
-        private async void addBookToLibrary(string folderName)
+        private async void AddBookToLibrary(string folderName)
         {
             var isInLibrary = await rootPage.LibrarySource.ImportBook(folderName, true);
             if (isInLibrary)
@@ -193,7 +181,7 @@ namespace EZEreaderUniversal
                 messageDialog.DefaultCommandIndex = 0;
                 messageDialog.CancelCommandIndex = 0;
                 await messageDialog.ShowAsync();
-                this.Frame.Navigate(typeof(MainPage));
+                Frame.Navigate(typeof(MainPage));
             }
         }
     }

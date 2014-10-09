@@ -5,11 +5,11 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Reflection;
-using Windows.UI.Xaml.Data;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI.Xaml.Data;
 
-namespace CollectionView
+namespace EZEreaderUniversal
 {
     /// <summary>
     /// Simple implementation of the <see cref="ICollectionViewEx"/> interface, 
@@ -156,7 +156,7 @@ namespace CollectionView
         /// </summary>
         protected virtual void OnVectorChanged(IVectorChangedEventArgs e)
         {
-            if (this.IsAddingNew || this.IsEditingItem)
+            if (IsAddingNew || IsEditingItem)
             {
                 throw new NotSupportedException("Cannot change collection while adding or editing items.");
             }
@@ -476,7 +476,7 @@ namespace CollectionView
         class VectorChangedEventArgs : IVectorChangedEventArgs
         {
             CollectionChange _cc = CollectionChange.Reset;
-            uint _index = (uint)0xffff;
+            uint _index = 0xffff;
 
             static VectorChangedEventArgs _reset = new VectorChangedEventArgs(CollectionChange.Reset);
             public static VectorChangedEventArgs Reset
@@ -685,7 +685,7 @@ namespace CollectionView
                 _addItem = Activator.CreateInstance(_itemType);
                 if (_addItem != null)
                 {
-                    this.Add(_addItem);
+                    Add(_addItem);
                 }
             }
             return _addItem;
@@ -694,7 +694,7 @@ namespace CollectionView
         {
             if (_addItem != null)
             {
-                this.Remove(_addItem);
+                Remove(_addItem);
                 _addItem = null;
             }
         }

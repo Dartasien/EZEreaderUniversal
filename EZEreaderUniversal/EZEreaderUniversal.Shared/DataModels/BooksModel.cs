@@ -3,18 +3,11 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Windows.Storage;
 using System.IO;
-using System.Windows;
-using System.Xml;
 using System.Xml.Linq;
-using System.Diagnostics;
-using Windows.Storage.Streams;
-using System.Xml.Serialization;
 using Windows.Data.Xml.Dom;
-using CollectionView;
 using Windows.UI;
 using Windows.UI.Xaml.Media;
 using System.Reflection;
@@ -25,8 +18,8 @@ namespace EZEreaderUniversal.DataModels
     public class BooksModel : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
-        StorageFolder appFolder = ApplicationData.Current.LocalFolder;
-        Dictionary<String, SolidColorBrush> AllColorBrushes;
+        readonly StorageFolder _appFolder = ApplicationData.Current.LocalFolder;
+        Dictionary<String, SolidColorBrush> _allColorBrushes;
 
         private void NotifyPropertyChanged(String p)
         {
@@ -243,18 +236,17 @@ namespace EZEreaderUniversal.DataModels
         /// </summary>
         private void SetColors()
         {
-            SolidColorBrush brush = new SolidColorBrush(Colors.White);
             var colors = typeof(Colors).GetRuntimeProperties().ToList();
-            AllColorBrushes = new Dictionary<string, SolidColorBrush>();
+            _allColorBrushes = new Dictionary<string, SolidColorBrush>();
             foreach (PropertyInfo color in colors)
             {
                 Color testColor = (Color)color.GetValue(null, null);
                 string colorName = color.Name;
-                brush = new SolidColorBrush(testColor);
-                AllColorBrushes.Add(colorName, brush);
+                SolidColorBrush brush = new SolidColorBrush(testColor);
+                _allColorBrushes.Add(colorName, brush);
             }
             List<string> allColorNames = new List<string>();
-            foreach (string key in AllColorBrushes.Keys)
+            foreach (string key in _allColorBrushes.Keys)
             {
                 allColorNames.Add(key);
             }
@@ -263,11 +255,11 @@ namespace EZEreaderUniversal.DataModels
         /// <summary>
         /// Method to search for a book
         /// </summary>
-        /// <param name="bookID"></param>
+        /// <param name="bookId"></param>
         /// <returns>BookModel class</returns>
-        public BookModel GetItem(string bookID)
+        public BookModel GetItem(string bookId)
         {
-            BookModel result = this.Library.Where(f => f.BookID == bookID).FirstOrDefault();
+            BookModel result = Library.FirstOrDefault(f => f.BookID == bookId);
             return result;
         }
 
@@ -278,23 +270,24 @@ namespace EZEreaderUniversal.DataModels
         public async Task<bool> ImportBook(string folderName, bool isInStorage)
         {
             bool isInLibrary = false;
-            string bookID = folderName;
-            string directoryLoc = bookID + "/";
-            string contentOPFLoc = await FindContentOPF(directoryLoc, isInStorage);
+            string bookId = folderName;
+            string directoryLoc = bookId + "/";
+            string contentOpfLoc = await FindContentOpf(directoryLoc, isInStorage);
             string dateKey = DateTime.Now.Ticks.ToString();
-            string tableOfContentsNCX = await GetNCXTableOfContents(directoryLoc + contentOPFLoc, isInStorage);
-            List<string[]> NCXTableOfContents = await GetChaptersFromNCXToC(directoryLoc + tableOfContentsNCX, contentOPFLoc, isInStorage);
+            string tableOfContentsNcx = await GetNcxTableOfContents(directoryLoc + contentOpfLoc, isInStorage);
+            List<string[]> ncxTableOfContents = await GetChaptersFromNcxtoC(directoryLoc + tableOfContentsNcx, contentOpfLoc, isInStorage);
             //string tableOfContents = await GetTableOfContents(directoryLoc + contentOPFLoc, isInStorage);
-            BookModel result = new BookModel() { 
-                BookID = bookID,
-                BookName = await FindTitle(directoryLoc + contentOPFLoc, isInStorage), 
-                AuthorID = await FindAuthor(directoryLoc + contentOPFLoc, isInStorage),
-                TableOfContents = tableOfContentsNCX,
+            var result = new BookModel
+            { 
+                BookID = bookId,
+                BookName = await FindTitle(directoryLoc + contentOpfLoc, isInStorage), 
+                AuthorID = await FindAuthor(directoryLoc + contentOpfLoc, isInStorage),
+                TableOfContents = tableOfContentsNcx,
                 AddedDate = dateKey,
-                CoverPic = await GetCoverPic(directoryLoc, isInStorage, contentOPFLoc),
+                CoverPic = await GetCoverPic(directoryLoc, isInStorage, contentOpfLoc),
                 MainDirectory = directoryLoc,
-                ContentDirectory = contentOPFLoc,
-                Chapters = await ParseBookManifest(directoryLoc + contentOPFLoc, NCXTableOfContents, isInStorage),
+                ContentDirectory = contentOpfLoc,
+                Chapters = await ParseBookManifest(directoryLoc + contentOpfLoc, ncxTableOfContents, isInStorage),
                 CurrentChapter = 0,
                 CurrentPage = 0,
                 IsoStore = isInStorage,
@@ -304,7 +297,7 @@ namespace EZEreaderUniversal.DataModels
             //checks to see if the book already exists
             if (isInStorage)
             {
-                foreach (var book in this.Library)
+                foreach (var book in Library)
                 {
                     if (book.BookName == result.BookName)
                     {
@@ -315,7 +308,7 @@ namespace EZEreaderUniversal.DataModels
                             //if not, delete the new one to clear up space
                             if (result.BookID != book.BookID)
                             {
-                                await IO.DeleteFolderInLocalFolder(result.BookID);
+                                await Io.DeleteFolderInLocalFolder(result.BookID);
                             }
 
                         }
@@ -324,18 +317,18 @@ namespace EZEreaderUniversal.DataModels
             }
             if (!isInLibrary)
             {
-                this.Library.Add(result);
+                Library.Add(result);
                 SortByBookNameAscending();
                 //uncomment below line to allow for persistent data
                 if (IsDataLoaded)
                 {
                     await UpdateBooks();
                 }
-                return isInLibrary;
+                return false;
             }
             else
             {
-                return isInLibrary;
+                return true;
             }
             
         }
@@ -345,18 +338,18 @@ namespace EZEreaderUniversal.DataModels
         /// </summary>
         /// <param name="directoryLoc">location of book main folder</param>
         /// <param name="isInStorage">boolean if book is in storage or assets</param>
-        /// <param name="contentOPFLoc">location of content.opf folder</param>
+        /// <param name="contentOpfLoc">location of content.opf folder</param>
         /// <returns></returns>
-        public async Task<string> GetCoverPic(string directoryLoc, bool isInStorage, string contentOPFLoc)
+        public async Task<string> GetCoverPic(string directoryLoc, bool isInStorage, string contentOpfLoc)
         {
             string coverPic;
             if (isInStorage)
             {
-                coverPic = "isostore:" + await GetStoragePicLocationFromContentOPF(directoryLoc, contentOPFLoc);
+                coverPic = "isostore:" + await GetStoragePicLocationFromContentOpf(directoryLoc, contentOpfLoc);
             }
             else
             {
-               return coverPic = directoryLoc + "cover.jpeg";
+               return directoryLoc + "cover.jpeg";
             }
             return coverPic;
         }
@@ -364,29 +357,29 @@ namespace EZEreaderUniversal.DataModels
         /// <summary>
         /// Method to find the location of the Table of Contents of the book
         /// </summary>
-        /// <param name="contentOPF">string location of the content.opf file</param>
+        /// <param name="contentOpf">string location of the content.opf file</param>
         /// <param name="isInStorage">bool that tells if location is assets or storage</param>
         /// <returns></returns>
-        public async Task<string> GetTableOfContents(string contentOPF, bool isInStorage)
+        public async Task<string> GetTableOfContents(string contentOpf, bool isInStorage)
         {
             XDocument xdoc;
             string tableOfContents = "test";
-            StorageFolder newFolder;
-            string newContentOPF = contentOPF;
+            string newContentOpf = contentOpf;
             if (isInStorage)
             {
-                if (contentOPF.Contains('/'))
+                StorageFolder newFolder;
+                if (contentOpf.Contains('/'))
                 {
-                    string[] newContent = contentOPF.Split('/');
-                    newFolder = await FindContentOPFFolder(contentOPF, newContent);
-                    newContentOPF = newContent[newContent.Length - 1];
+                    string[] newContent = contentOpf.Split('/');
+                    newFolder = await FindContentOpfFolder(newContent);
+                    newContentOpf = newContent[newContent.Length - 1];
                 }
                 else
                 {
-                    newFolder = appFolder;
+                    newFolder = _appFolder;
                 }
                 using (var file = await 
-                    newFolder.OpenStreamForReadAsync(newContentOPF))
+                    newFolder.OpenStreamForReadAsync(newContentOpf))
                 {
                     xdoc = XDocument.Load(file);
                     XNamespace ns = "http://www.idpf.org/2007/opf";
@@ -406,7 +399,7 @@ namespace EZEreaderUniversal.DataModels
             }
             else
             {
-                xdoc = XDocument.Load(contentOPF);
+                xdoc = XDocument.Load(contentOpf);
                 XNamespace ns = "http://www.idpf.org/2007/opf";
                 var tocLoc = from q in xdoc.Descendants()
                              where (string)q.Attribute("type") == "toc"
@@ -431,29 +424,29 @@ namespace EZEreaderUniversal.DataModels
         /// <summary>
         /// Method to find the location of the Table of Contents of the book
         /// </summary>
-        /// <param name="contentOPF">string location of the content.opf file</param>
+        /// <param name="contentOpf">string location of the content.opf file</param>
         /// <param name="isInStorage">bool that tells if location is assets or storage</param>
         /// <returns></returns>
-        public async Task<string> GetNCXTableOfContents(string contentOPF, bool isInStorage)
+        public async Task<string> GetNcxTableOfContents(string contentOpf, bool isInStorage)
         {
             XDocument xdoc;
             string tableOfContents = "test";
             StorageFolder newFolder;
-            string newContentOPF = contentOPF;
+            string newContentOpf = contentOpf;
             if (isInStorage)
             {
-                if (contentOPF.Contains('/'))
+                if (contentOpf.Contains('/'))
                 {
-                    string[] newContent = contentOPF.Split('/');
-                    newFolder = await FindContentOPFFolder(contentOPF, newContent);
-                    newContentOPF = newContent[newContent.Length - 1];
+                    string[] newContent = contentOpf.Split('/');
+                    newFolder = await FindContentOpfFolder(newContent);
+                    newContentOpf = newContent[newContent.Length - 1];
                 }
                 else
                 {
-                    newFolder = appFolder;
+                    newFolder = _appFolder;
                 }
                 using (var file = await
-                    newFolder.OpenStreamForReadAsync(newContentOPF))
+                    newFolder.OpenStreamForReadAsync(newContentOpf))
                 {
                     xdoc = XDocument.Load(file);
                     XNamespace ns = "http://www.idpf.org/2007/opf";
@@ -473,7 +466,7 @@ namespace EZEreaderUniversal.DataModels
             }
             else
             {
-                xdoc = XDocument.Load(contentOPF);
+                xdoc = XDocument.Load(contentOpf);
                 XNamespace ns = "http://www.idpf.org/2007/opf";
                 var tocLoc = from q in xdoc.Descendants()
                              where (string)q.Attribute("id") == "ncx"
@@ -499,10 +492,10 @@ namespace EZEreaderUniversal.DataModels
         /// Grabs the chapter names and order of chapters from the Table of Contents
         /// </summary>
         /// <param name="ncxToCLoc">location of toc.ncx file</param>
-        /// <param name="contentOPFLoc">location of content.opf file</param>
+        /// <param name="contentOpfLoc">location of content.opf file</param>
         /// <param name="isInStorage">boolean if book is in storage</param>
         /// <returns>list of strings[] with chaptername and chapterlocation</returns>
-        private async Task<List<string[]>> GetChaptersFromNCXToC(string ncxToCLoc, string contentOPFLoc, bool isInStorage)
+        private async Task<List<string[]>> GetChaptersFromNcxtoC(string ncxToCLoc, string contentOpfLoc, bool isInStorage)
         {
             List<string[]> tocIndex = new List<string[]>();
             XDocument xdoc;
@@ -515,27 +508,27 @@ namespace EZEreaderUniversal.DataModels
                 if (newTocLoc.Contains('/'))
                 {
                     string[] splitTocLoc = newTocLoc.Split('/');
-                    if (contentOPFLoc.Contains('/'))
+                    if (contentOpfLoc.Contains('/'))
                     {
                         fullTocLoc = new List<string>();
-                        string[] contentOPFDir = contentOPFLoc.Split('/');
+                        string[] contentOpfDir = contentOpfLoc.Split('/');
                         for (int i = 0; i < splitTocLoc.Length - 1; i++)
                         {
                             fullTocLoc.Add(splitTocLoc[i]);
                         }
-                        for (int i = 0; i < contentOPFDir.Length - 1; i++)
+                        for (int i = 0; i < contentOpfDir.Length - 1; i++)
                         {
-                            fullTocLoc.Add(contentOPFDir[i]);
+                            fullTocLoc.Add(contentOpfDir[i]);
                         }
                         fullTocLoc.Add(splitTocLoc[splitTocLoc.Length - 1]);
                         splitTocLoc = fullTocLoc.ToArray();
                     }
-                    storageFolder = await FindContentOPFFolder(ncxToCLoc, splitTocLoc);
+                    storageFolder = await FindContentOpfFolder(splitTocLoc);
                     newTocLoc = splitTocLoc[splitTocLoc.Length - 1];
                 }
                 else
                 {
-                    storageFolder = appFolder;
+                    storageFolder = _appFolder;
                 }
                 using (var file = await storageFolder.OpenStreamForReadAsync(newTocLoc))
                 {
@@ -551,7 +544,8 @@ namespace EZEreaderUniversal.DataModels
                     var chapterStrings = from q in xdoc.Root.Element(ns + "navMap").Descendants()
                                          select (string)q.Attribute("src");
 
-                    var chaptersNames = chapterNames.ToArray();
+                    var chapterToCs = chapterNames as ChapterToC[] ?? chapterNames.ToArray();
+                    var chaptersNames = chapterToCs.ToArray();
                     List<string> chaptersString = new List<string>();
                     foreach (var newString in chapterStrings)
                     {
@@ -561,7 +555,7 @@ namespace EZEreaderUniversal.DataModels
                         }
                     }
                     
-                    for (int i = 0; i < chapterNames.Count(); i++)
+                    for (int i = 0; i < chapterToCs.Count(); i++)
                     {
                         chaptersNames[i].ChapterString = chaptersString[i];
                     }
@@ -597,17 +591,11 @@ namespace EZEreaderUniversal.DataModels
                 var chapterStrings = from q in xdoc.Root.Element(ns + "navMap").Descendants()
                                      select (string)q.Attribute("src");
 
-                var chaptersNames = chapterNames.ToArray();
-                List<string> chaptersString = new List<string>();
-                foreach (var newString in chapterStrings)
-                {
-                    if (newString != null)
-                    {
-                        chaptersString.Add(newString);
-                    }
-                }
+                var chapterToCs = chapterNames as ChapterToC[] ?? chapterNames.ToArray();
+                var chaptersNames = chapterToCs.ToArray();
+                var chaptersString = chapterStrings.Where(newString => newString != null).ToList();
 
-                for (int i = 0; i < chapterNames.Count(); i++)
+                for (var i = 0; i < chapterToCs.Count(); i++)
                 {
                     chaptersNames[i].ChapterString = chaptersString[i];
                 }
@@ -729,20 +717,20 @@ namespace EZEreaderUniversal.DataModels
         /// parse the content.opf file for the location/name of the cover pic if the book is in storage
         /// </summary>
         /// <param name="directoryLoc">location of book</param>
-        /// <param name="contentOPFLoc">location of content.opf file</param>
+        /// <param name="contentOpfLoc">location of content.opf file</param>
         /// <returns>string of the location of cover picture</returns>
-        public async Task<string> GetStoragePicLocationFromContentOPF(string directoryLoc, string contentOPFLoc)
+        public async Task<string> GetStoragePicLocationFromContentOpf(string directoryLoc, string contentOpfLoc)
         {
             XDocument xdoc;
-            string contentOPF = directoryLoc + contentOPFLoc;
+            string contentOpf = directoryLoc + contentOpfLoc;
             StorageFolder newFolder;
-            string newContentOPF = contentOPF;
+            string newContentOpf = contentOpf;
             string coverPic = "test";
-            if (contentOPF.Contains('/'))
+            if (contentOpf.Contains('/'))
             {
-                string[] newContent = contentOPF.Split('/');
-                newFolder = await FindContentOPFFolder(contentOPF, newContent);
-                newContentOPF = newContent[newContent.Length - 1];
+                string[] newContent = contentOpf.Split('/');
+                newFolder = await FindContentOpfFolder(newContent);
+                newContentOpf = newContent[newContent.Length - 1];
                 coverPic = "";
                 for(int i = 0; i < newContent.Length -1; i ++)
                 {
@@ -752,10 +740,10 @@ namespace EZEreaderUniversal.DataModels
             }
             else
             {
-                newFolder = appFolder;
+                newFolder = _appFolder;
             }
             using (var file = await
-                newFolder.OpenStreamForReadAsync(newContentOPF))
+                newFolder.OpenStreamForReadAsync(newContentOpf))
             {
                 xdoc = XDocument.Load(file);
                 XNamespace ns = "http://www.idpf.org/2007/opf";
@@ -792,14 +780,15 @@ namespace EZEreaderUniversal.DataModels
         /// so that you can find chapters, cover page, and any other items you might want or need.
         /// </summary>
         /// <param name="directoryLoc"></param>
+        /// <param name="isInStorage"></param>
         /// <returns></returns>
-        private async Task<string> FindContentOPF(string directoryLoc, bool isInStorage)
+        private async Task<string> FindContentOpf(string directoryLoc, bool isInStorage)
         {
             XDocument xdoc;
             if (isInStorage)
             {
                 string newDirectory = directoryLoc.Substring(0, directoryLoc.Length - 1);
-                StorageFolder folder = await appFolder.GetFolderAsync(newDirectory);
+                StorageFolder folder = await _appFolder.GetFolderAsync(newDirectory);
                 StorageFolder metaFolder = await folder.GetFolderAsync("META-INF");
                 StorageFile file = await metaFolder.GetFileAsync("container.xml");
 
@@ -807,18 +796,18 @@ namespace EZEreaderUniversal.DataModels
                 {
                     xdoc = XDocument.Load(fileStream);
 
-                    var contentOPFLoc = from q in xdoc.Descendants()
+                    var contentOpfLoc = from q in xdoc.Descendants()
                                         select (string)q.Attribute("full-path");
-                    string contentOPF = "test";
-                    foreach (string s in contentOPFLoc)
+                    string contentOpf = "test";
+                    foreach (string s in contentOpfLoc)
                     {
                         if (s != null)
                         {
-                            contentOPF = s;
+                            contentOpf = s;
                         }
                     }
 
-                    return contentOPF;
+                    return contentOpf;
                 }
                 
             }
@@ -826,18 +815,18 @@ namespace EZEreaderUniversal.DataModels
             {
                 xdoc = XDocument.Load(directoryLoc + "META-INF/container.xml");
 
-                var contentOPFLoc = from q in xdoc.Descendants()
+                var contentOpfLoc = from q in xdoc.Descendants()
                                     select (string)q.Attribute("full-path");
-                string contentOPF = "test";
-                foreach (string s in contentOPFLoc)
+                string contentOpf = "test";
+                foreach (string s in contentOpfLoc)
                 {
                     if (s != null)
                     {
-                        contentOPF = s;
+                        contentOpf = s;
                     }
                 }
 
-                return contentOPF;
+                return contentOpf;
             }
         }
 
@@ -845,31 +834,30 @@ namespace EZEreaderUniversal.DataModels
         /// Parse the content.opf xml file for the authors name and arrange it to show
         /// the first name then the last name
         /// </summary>
-        /// <param name="contentOPF">directory of the content.opf file</param>
+        /// <param name="contentOpf">directory of the content.opf file</param>
+        /// <param name="isInStorage"></param>
         /// <returns>First name and last name as a single string</returns>
-        private async Task<string> FindAuthor(string contentOPF, bool isInStorage)
+        private async Task<string> FindAuthor(string contentOpf, bool isInStorage)
         {
-            XDocument xdoc1;
-            XmlDocument xdoc;
             string authorName = "test";
-            StorageFolder newFolder;
-            string newContentOPF = contentOPF;
+            string newContentOpf = contentOpf;
             if (isInStorage)
             {
-                if (contentOPF.Contains('/'))
+                StorageFolder newFolder;
+                if (contentOpf.Contains('/'))
                 {
-                    string[] newContent = contentOPF.Split('/');
-                    newFolder = await FindContentOPFFolder(contentOPF, newContent);
-                    newContentOPF = newContent[newContent.Length - 1];
+                    string[] newContent = contentOpf.Split('/');
+                    newFolder = await FindContentOpfFolder(newContent);
+                    newContentOpf = newContent[newContent.Length - 1];
                 }
                 else
                 {
-                    newFolder = appFolder;
+                    newFolder = _appFolder;
                 }
                 var file = await
-                newFolder.GetFileAsync(newContentOPF);
+                newFolder.GetFileAsync(newContentOpf);
                 XNamespace ns = "http://www.idpf.org/2007/opf";
-                xdoc = await XmlDocument.LoadFromFileAsync(file);
+                XmlDocument xdoc = await XmlDocument.LoadFromFileAsync(file);
 
                 var author = xdoc.GetElementsByTagName("dc:creator");
 
@@ -884,7 +872,7 @@ namespace EZEreaderUniversal.DataModels
             }
             else
             {
-                xdoc1 = XDocument.Load(contentOPF);
+                XDocument xdoc1 = XDocument.Load(contentOpf);
                 XNamespace ns = "http://www.idpf.org/2007/opf";
                 var author = from q in xdoc1.Descendants()
                              select (string)q.Attribute(ns + "file-as");
@@ -915,90 +903,75 @@ namespace EZEreaderUniversal.DataModels
         /// <summary>
         /// Finds the folder that contains the content.opf folder for loading the file
         /// </summary>
-        /// <param name="contentOPF"></param>
         /// <param name="newContent"></param>
         /// <returns></returns>
-        private async Task<StorageFolder> FindContentOPFFolder(string contentOPF, string[] newContent)
+        private async Task<StorageFolder> FindContentOpfFolder(string[] newContent)
         {
             StorageFolder directoryFolder;
             StorageFolder folderOne;
             StorageFolder folderTwo;
             StorageFolder folderThree;
 
-            
-            if (newContent.Length == 2)
+            switch (newContent.Length)
             {
-                return await IO.CreateOrGetFolder(newContent[0], appFolder);
-            }
-            else if (newContent.Length == 3)
-            {
-                directoryFolder = await IO.CreateOrGetFolder(newContent[0], appFolder);
-                return await IO.CreateOrGetFolder(newContent[1], directoryFolder);
-            }
-            else if (newContent.Length == 4)
-            {
-                directoryFolder = await IO.CreateOrGetFolder(newContent[0], appFolder);
-                folderOne = await IO.CreateOrGetFolder(newContent[1], directoryFolder);
-                return await IO.CreateOrGetFolder(newContent[2], folderOne);
-            }
-            else if (newContent.Length == 5)
-            {
-                directoryFolder = await IO.CreateOrGetFolder(newContent[0], appFolder);
-                folderOne = await IO.CreateOrGetFolder(newContent[1], directoryFolder);
-                folderTwo = await IO.CreateOrGetFolder(newContent[2], folderOne);
-                return await IO.CreateOrGetFolder(newContent[3], folderTwo);
-            }
-            else
-            {
-                directoryFolder = await IO.CreateOrGetFolder(newContent[0], appFolder);
-                folderOne = await IO.CreateOrGetFolder(newContent[1], directoryFolder);
-                folderTwo = await IO.CreateOrGetFolder(newContent[2], folderOne);
-                folderThree = await IO.CreateOrGetFolder(newContent[3], folderTwo);
-                return await IO.CreateOrGetFolder(newContent[4], folderThree);
+                case 2:
+                    return await Io.CreateOrGetFolder(newContent[0], _appFolder);
+                case 3:
+                    directoryFolder = await Io.CreateOrGetFolder(newContent[0], _appFolder);
+                    return await Io.CreateOrGetFolder(newContent[1], directoryFolder);
+                case 4:
+                    directoryFolder = await Io.CreateOrGetFolder(newContent[0], _appFolder);
+                    folderOne = await Io.CreateOrGetFolder(newContent[1], directoryFolder);
+                    return await Io.CreateOrGetFolder(newContent[2], folderOne);
+                case 5:
+                    directoryFolder = await Io.CreateOrGetFolder(newContent[0], _appFolder);
+                    folderOne = await Io.CreateOrGetFolder(newContent[1], directoryFolder);
+                    folderTwo = await Io.CreateOrGetFolder(newContent[2], folderOne);
+                    return await Io.CreateOrGetFolder(newContent[3], folderTwo);
+                default:
+                    directoryFolder = await Io.CreateOrGetFolder(newContent[0], _appFolder);
+                    folderOne = await Io.CreateOrGetFolder(newContent[1], directoryFolder);
+                    folderTwo = await Io.CreateOrGetFolder(newContent[2], folderOne);
+                    folderThree = await Io.CreateOrGetFolder(newContent[3], folderTwo);
+                    return await Io.CreateOrGetFolder(newContent[4], folderThree);
             }
         }
 
         /// <summary>
         /// Find the book's title from the content.opf xml by parsing
         /// </summary>
-        /// <param name="contentOPF">content.opf file location string</param>
+        /// <param name="contentOpf">content.opf file location string</param>
+        /// <param name="isInStorage"></param>
         /// <returns>title of the book as a string</returns>
-        private async Task<string> FindTitle(string contentOPF, bool isInStorage)
+        private async Task<string> FindTitle(string contentOpf, bool isInStorage)
         {
-            List<string> bookTitle = new List<string>();
-            StorageFolder newFolder;
-            string newContentOPF = contentOPF;
-            XmlDocument xdoc;
+            var bookTitle = new List<string>();
+            string newContentOpf = contentOpf;
             if (isInStorage)
             {
-                if (contentOPF.Contains('/'))
+                StorageFolder newFolder;
+                if (contentOpf.Contains('/'))
                 {
-                    string[] newContent = contentOPF.Split('/');
-                    newFolder = await FindContentOPFFolder(contentOPF, newContent);
-                    newContentOPF = newContent[newContent.Length -1];
+                    string[] newContent = contentOpf.Split('/');
+                    newFolder = await FindContentOpfFolder(newContent);
+                    newContentOpf = newContent[newContent.Length -1];
                 }
                 else
                 {
-                    newFolder = appFolder;
+                    newFolder = _appFolder;
                 }
                 var file = await
-                newFolder.GetFileAsync(newContentOPF);
+                newFolder.GetFileAsync(newContentOpf);
                 
-                xdoc = await XmlDocument.LoadFromFileAsync(file);
+                XmlDocument xdoc = await XmlDocument.LoadFromFileAsync(file);
 
                 var content = xdoc.GetElementsByTagName("dc:title");
-                    
-                foreach (var s in content)
-                {
-                    if (s != null)
-                    {
-                        bookTitle.Add(s.InnerText);
-                    }
-                }
+
+                bookTitle.AddRange(from s in content where s != null select s.InnerText);
             }
             else
             {
-                XDocument xdoc1 = XDocument.Load(contentOPF);
+                XDocument xdoc1 = XDocument.Load(contentOpf);
 
                 var content = from q in xdoc1.Descendants()
                               select (string)q.Attribute("content");
@@ -1043,34 +1016,35 @@ namespace EZEreaderUniversal.DataModels
         /// <summary>
         /// Method to parse the manifest portion of the content.opf
         /// </summary>
-        /// <param name="contentOPF">string of content.opf directory</param>
-        /// <returns>List</string></returns>
-        private async Task<List<ChapterModel>> ParseBookManifest(string contentOPF, List<string[]> chapterNames, bool isInStorage)
+        /// <param name="contentOpf">string of content.opf directory</param>
+        /// <param name="chapterNames"></param>
+        /// <param name="isInStorage"></param>
+        /// <returns>List</returns>
+        private async Task<List<ChapterModel>> ParseBookManifest(string contentOpf, List<string[]> chapterNames, bool isInStorage)
         {
-            List<string> manifestHrefs = new List<string>();
-            List<string> manifestIDs = new List<string>();
-            List<string> spineIdrefs = new List<string>();
-            List<ChapterModel> chapterCollection = new List<ChapterModel>();
+            var manifestHrefs = new List<string>();
+            var manifestIDs = new List<string>();
+            var chapterCollection = new List<ChapterModel>();
             IEnumerable<string> idrefs;
             IEnumerable<string> manifestHref;
-            IEnumerable<string> manifestID;
+            IEnumerable<string> manifestId;
             XDocument xdoc;
-            StorageFolder newFolder;
-            string newContentOPF = contentOPF;
+            string newContentOpf = contentOpf;
             if (isInStorage)
             {
-                if (contentOPF.Contains('/'))
+                StorageFolder newFolder;
+                if (contentOpf.Contains('/'))
                 {
-                    string[] newContent = contentOPF.Split('/');
-                    newFolder = await FindContentOPFFolder(contentOPF, newContent);
-                    newContentOPF = newContent[newContent.Length - 1];
+                    string[] newContent = contentOpf.Split('/');
+                    newFolder = await FindContentOpfFolder(newContent);
+                    newContentOpf = newContent[newContent.Length - 1];
                 }
                 else
                 {
-                    newFolder = appFolder;
+                    newFolder = _appFolder;
                 }
                 using (var file = await
-                    newFolder.OpenStreamForReadAsync(newContentOPF))
+                    newFolder.OpenStreamForReadAsync(newContentOpf))
                 {
                     xdoc = XDocument.Load(file);
                     //parse for idrefs in the manifest section
@@ -1082,13 +1056,13 @@ namespace EZEreaderUniversal.DataModels
                                        select (string)x.Attribute("href");
 
                     //parse for the ids in spine for chapter order
-                    manifestID = from x in xdoc.Descendants()
+                    manifestId = from x in xdoc.Descendants()
                                      select (string)x.Attribute("id");
                 }
             }
             else
             {
-                xdoc = XDocument.Load(contentOPF);
+                xdoc = XDocument.Load(contentOpf);
                 //parse for idrefs in the manifest section
                 idrefs = from q in xdoc.Descendants()
                              select (string)q.Attribute("idref");
@@ -1098,7 +1072,7 @@ namespace EZEreaderUniversal.DataModels
                                    select (string)x.Attribute("href");
 
                 //parse for the ids in spine for chapter order
-                manifestID = from x in xdoc.Descendants()
+                manifestId = from x in xdoc.Descendants()
                                  select (string)x.Attribute("id");
             }
 
@@ -1110,7 +1084,7 @@ namespace EZEreaderUniversal.DataModels
                 }
             }
             
-            foreach (string p in manifestID)
+            foreach (string p in manifestId)
             {
                 if (p != null)
                 {
@@ -1123,7 +1097,7 @@ namespace EZEreaderUniversal.DataModels
 
             // Will check id of chapters in the manifest against the ids in the spine
             // to find the correct order of the chapters and then adds them to chaptermodel
-            int chapterID = 0;
+            var chapterId = 0;
             foreach (string s in idrefs)
             {
                 for (int i = 0; i < manifestIDs.Count(); i++ )
@@ -1153,23 +1127,20 @@ namespace EZEreaderUniversal.DataModels
                             */
                             foreach (string[] t in chapterNames)
                             {
-                                var test0 = checkChapterName;
-                                var test1 = t[0];
-                                var test2 = t[1];
                                 if (checkChapterName == t[0])
                                 {
                                     chapterName = t[1];
                                 }
                             }
                         }
-                        chapterCollection.Add(new ChapterModel()
+                        chapterCollection.Add(new ChapterModel
                         {
                             ChapterName = chapterName,
-                            ChapterID = chapterID,
+                            ChapterID = chapterId,
                             ChapterString = manifestHrefs[i - 1]
                         });
                     }
-                    chapterID++;
+                    chapterId++;
                 }
             }
 
@@ -1182,11 +1153,11 @@ namespace EZEreaderUniversal.DataModels
         /// <param name="bookToRemove"></param>
         public async Task RemoveBook(BookModel bookToRemove)
         {
-            if (bookToRemove.IsoStore == true)
+            if (bookToRemove.IsoStore)
             {
-                await IO.DeleteFolderInLocalFolder(bookToRemove.BookID);
+                await Io.DeleteFolderInLocalFolder(bookToRemove.BookID);
             }
-            this.Library.Remove(bookToRemove);
+            Library.Remove(bookToRemove);
             await UpdateBooks();
             NotifyPropertyChanged("Items");
         }
@@ -1198,19 +1169,19 @@ namespace EZEreaderUniversal.DataModels
         /// <returns>Task</returns>
         public async Task UpdateBooks()
         {
-            StorageFolder appStorageFolder = IO.GetAppStorageFolder();
-            await IO.DeleteFileInFolder(appStorageFolder, "librarybooks.xml");
-            await IO.DeleteFileInFolder(appStorageFolder, "recentreads.xml");
-            await IO.DeleteFileInFolder(appStorageFolder, "fontfile.xml");
-            string libraryBooksAsXML = IO.SerializeToString(this.Library);
-            string recentReadsAsXML = IO.SerializeToString(this.RecentReads);
-            string fontsAsXML = IO.SerializeToString(this.ReadingFonts);
-            StorageFile dataFile = await IO.CreateFileInFolder(appStorageFolder, "librarybooks.xml");
-            StorageFile recentReadsFile = await IO.CreateFileInFolder(appStorageFolder, "recentreads.xml");
-            StorageFile fontFile = await IO.CreateFileInFolder(appStorageFolder, "fontfile.xml");
-            await IO.WriteStringToFile(dataFile, libraryBooksAsXML);
-            await IO.WriteStringToFile(recentReadsFile, recentReadsAsXML);
-            await IO.WriteStringToFile(fontFile, fontsAsXML);
+            StorageFolder appStorageFolder = Io.GetAppStorageFolder();
+            await Io.DeleteFileInFolder(appStorageFolder, "librarybooks.xml");
+            await Io.DeleteFileInFolder(appStorageFolder, "recentreads.xml");
+            await Io.DeleteFileInFolder(appStorageFolder, "fontfile.xml");
+            string libraryBooksAsXml = Io.SerializeToString(Library);
+            string recentReadsAsXml = Io.SerializeToString(RecentReads);
+            string fontsAsXml = Io.SerializeToString(ReadingFonts);
+            StorageFile dataFile = await Io.CreateFileInFolder(appStorageFolder, "librarybooks.xml");
+            StorageFile recentReadsFile = await Io.CreateFileInFolder(appStorageFolder, "recentreads.xml");
+            StorageFile fontFile = await Io.CreateFileInFolder(appStorageFolder, "fontfile.xml");
+            await Io.WriteStringToFile(dataFile, libraryBooksAsXml);
+            await Io.WriteStringToFile(recentReadsFile, recentReadsAsXml);
+            await Io.WriteStringToFile(fontFile, fontsAsXml);
         }
 
         /// <summary>
@@ -1223,18 +1194,18 @@ namespace EZEreaderUniversal.DataModels
             //uncomment below to clear the library
             //await IO.DeleteAllFilesInLocalFolder();
             StorageFolder appStorageFolder = ApplicationData.Current.LocalFolder;
-            StorageFile dataFile = await IO.GetFileInFolder(appStorageFolder, "librarybooks.xml");
-            StorageFile fontFile = await IO.GetFileInFolder(appStorageFolder, "fontfile.xml");
-            StorageFile recentReadsFile = await IO.GetFileInFolder(appStorageFolder, "recentreads.xml");
+            StorageFile dataFile = await Io.GetFileInFolder(appStorageFolder, "librarybooks.xml");
+            StorageFile fontFile = await Io.GetFileInFolder(appStorageFolder, "fontfile.xml");
+            StorageFile recentReadsFile = await Io.GetFileInFolder(appStorageFolder, "recentreads.xml");
             SetColors();
 
             if (dataFile != null)
             {
                 if (!IsDataLoaded)
                 {
-                    string itemsAsXML = await IO.ReadStringFromFile(dataFile);
-                    this.Library = IO.SerializeFromString<ObservableCollection<BookModel>>(itemsAsXML);
-                    this.SortedBooks = new ListCollectionView(this.Library);
+                    string itemsAsXml = await Io.ReadStringFromFile(dataFile);
+                    Library = Io.SerializeFromString<ObservableCollection<BookModel>>(itemsAsXml);
+                    SortedBooks = new ListCollectionView(Library);
                     if (fontFile == null)
                     {
                         CreateNewFonts();
@@ -1251,8 +1222,8 @@ namespace EZEreaderUniversal.DataModels
                 if (!IsDataLoaded)
                 {
                     
-                    this.Library = new ObservableCollection<BookModel>();
-                    this.SortedBooks = new ListCollectionView(this.Library);
+                    Library = new ObservableCollection<BookModel>();
+                    SortedBooks = new ListCollectionView(Library);
                     if (fontFile == null)
                     {
                         CreateNewFonts();
@@ -1270,9 +1241,9 @@ namespace EZEreaderUniversal.DataModels
 
                 if (!IsDataLoaded)
                 {
-                    string recentReadsAsXML = await IO.ReadStringFromFile(dataFile);
-                    this.RecentReads = IO.SerializeFromString<ObservableCollection<BookModel>>(recentReadsAsXML);
-                    this.RecentBooks = new ListCollectionView(this.RecentReads);
+                    var recentReadsAsXml = await Io.ReadStringFromFile(dataFile);
+                    RecentReads = Io.SerializeFromString<ObservableCollection<BookModel>>(recentReadsAsXml);
+                    RecentBooks = new ListCollectionView(RecentReads);
                 }
             }
             else
@@ -1281,13 +1252,13 @@ namespace EZEreaderUniversal.DataModels
                 if (!IsDataLoaded)
                 {
 
-                    this.RecentReads = new ObservableCollection<BookModel>();
-                    this.RecentBooks = new ListCollectionView(this.RecentReads);
+                    RecentReads = new ObservableCollection<BookModel>();
+                    RecentBooks = new ListCollectionView(RecentReads);
                     
                 }
             }
             NotifyPropertyChanged("Items");
-            this.IsDataLoaded = true;
+            IsDataLoaded = true;
         }
 
         /// <summary>
@@ -1297,14 +1268,14 @@ namespace EZEreaderUniversal.DataModels
         /// <returns></returns>
         private async Task SetFonts(StorageFile fontFile)
         {
-            string fontsAsXML = await IO.ReadStringFromFile(fontFile);
-            this.ReadingFonts = IO.SerializeFromString<ReadingFontsAndFamilies>(fontsAsXML);
-            this.ReadingFontSize = ReadingFonts.ReadingFontSize;
-            this.ReadingFontFamily = ReadingFonts.ReadingFontFamily;
-            this.ReadingFontColorName = ReadingFonts.ReadingFontColorName;
-            this.ReadingFontColor = AllColorBrushes[ReadingFontColorName];
-            this.BackgroundReadingColorName = ReadingFonts.BackgroundReadingColorName;
-            this.BackgroundReadingColor = AllColorBrushes[BackgroundReadingColorName];
+            string fontsAsXml = await Io.ReadStringFromFile(fontFile);
+            ReadingFonts = Io.SerializeFromString<ReadingFontsAndFamilies>(fontsAsXml);
+            ReadingFontSize = ReadingFonts.ReadingFontSize;
+            ReadingFontFamily = ReadingFonts.ReadingFontFamily;
+            ReadingFontColorName = ReadingFonts.ReadingFontColorName;
+            ReadingFontColor = _allColorBrushes[ReadingFontColorName];
+            BackgroundReadingColorName = ReadingFonts.BackgroundReadingColorName;
+            BackgroundReadingColor = _allColorBrushes[BackgroundReadingColorName];
         }
 
         /// <summary>
@@ -1312,17 +1283,19 @@ namespace EZEreaderUniversal.DataModels
         /// </summary>
         private void CreateNewFonts()
         {
-            ReadingFonts = new ReadingFontsAndFamilies();
-            ReadingFonts.ReadingFontSize = 20;
-            ReadingFonts.ReadingFontFamily = "Segoe UI";
-            ReadingFonts.ReadingFontColorName = "Black";
-            ReadingFonts.BackgroundReadingColorName = "White";
-            this.ReadingFontSize = ReadingFonts.ReadingFontSize;
-            this.ReadingFontFamily = ReadingFonts.ReadingFontFamily;
-            this.ReadingFontColorName = ReadingFonts.ReadingFontColorName;
-            this.ReadingFontColor = AllColorBrushes[ReadingFontColorName];
-            this.BackgroundReadingColorName = ReadingFonts.BackgroundReadingColorName;
-            this.BackgroundReadingColor = AllColorBrushes[BackgroundReadingColorName];
+            ReadingFonts = new ReadingFontsAndFamilies
+            {
+                ReadingFontSize = 20,
+                ReadingFontFamily = "Segoe UI",
+                ReadingFontColorName = "Black",
+                BackgroundReadingColorName = "White"
+            };
+            ReadingFontSize = ReadingFonts.ReadingFontSize;
+            ReadingFontFamily = ReadingFonts.ReadingFontFamily;
+            ReadingFontColorName = ReadingFonts.ReadingFontColorName;
+            ReadingFontColor = _allColorBrushes[ReadingFontColorName];
+            BackgroundReadingColorName = ReadingFonts.BackgroundReadingColorName;
+            BackgroundReadingColor = _allColorBrushes[BackgroundReadingColorName];
         }
     }
 }
