@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.Storage;
@@ -29,7 +30,6 @@ namespace EZEreaderUniversal.DataModels
                 handler(this, new PropertyChangedEventArgs(p));
             }
         }
-
        
         private ListCollectionView _sortedBooks;
         public ListCollectionView SortedBooks
@@ -61,7 +61,6 @@ namespace EZEreaderUniversal.DataModels
 
 
         private ListCollectionView _recentbooks;
-
         public ListCollectionView RecentBooks
         {
             get
@@ -274,7 +273,8 @@ namespace EZEreaderUniversal.DataModels
             string directoryLoc = bookId + "/";
             string contentOpfLoc = await FindContentOpf(directoryLoc, isInStorage);
             string dateKey = DateTime.Now.Ticks.ToString();
-            string tableOfContentsNcx = await GetNcxTableOfContents(directoryLoc + contentOpfLoc, isInStorage);
+            var tableOfContentsNcx = await GetNcxTableOfContents(directoryLoc + contentOpfLoc, isInStorage);
+            
             List<string[]> ncxTableOfContents = await GetChaptersFromNcxtoC(directoryLoc + tableOfContentsNcx, contentOpfLoc, isInStorage);
             //string tableOfContents = await GetTableOfContents(directoryLoc + contentOPFLoc, isInStorage);
             var result = new BookModel
@@ -450,13 +450,13 @@ namespace EZEreaderUniversal.DataModels
                 {
                     xdoc = XDocument.Load(file);
                     XNamespace ns = "http://www.idpf.org/2007/opf";
-                    var tocLoc = from x in xdoc.Descendants()
-                                 where (string)x.Attribute("id") == "ncx"
-                                 select (string)x.Attribute("href");
 
+                    var tocLoc = from x in xdoc.Descendants()
+                        select (string) x.Attribute("href");
+                    
                     foreach (string s in tocLoc)
                     {
-                        if (s != null)
+                        if (s != null && s.Contains(".ncx"))
                         {
                             tableOfContents = s;
                         }
@@ -471,7 +471,7 @@ namespace EZEreaderUniversal.DataModels
                 var tocLoc = from q in xdoc.Descendants()
                              where (string)q.Attribute("id") == "ncx"
                              select (string)q.Attribute("href");
-                foreach (string s in tocLoc)
+                foreach (var s in tocLoc)
                 {
                     if (s != null)
                     {
