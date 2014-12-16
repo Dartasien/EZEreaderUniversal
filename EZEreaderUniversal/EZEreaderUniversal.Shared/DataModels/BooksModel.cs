@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.Storage;
@@ -58,7 +57,6 @@ namespace EZEreaderUniversal.DataModels
                 NotifyPropertyChanged("Library");
             }
         }
-
 
         private ListCollectionView _recentbooks;
         public ListCollectionView RecentBooks
