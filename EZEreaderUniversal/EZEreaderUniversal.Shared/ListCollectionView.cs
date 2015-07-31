@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Linq;
 using System.Reflection;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
@@ -86,7 +87,7 @@ namespace EZEreaderUniversal
         /// <summary>
         /// Gets or sets the collection from which to create the view.
         /// </summary>
-        public object Source
+        private object Source
         {
             get { return _source; }
             set
@@ -133,23 +134,20 @@ namespace EZEreaderUniversal
         /// </summary>
         protected virtual void OnCurrentChanging(CurrentChangingEventArgs e)
         {
-            if (_updating <= 0)
-            {
-                if (CurrentChanging != null)
-                    CurrentChanging(this, e);
-            }
+            if (_updating > 0) return;
+            if (CurrentChanging != null)
+                CurrentChanging(this, e);
         }
+
         /// <summary>
         /// Raises the <see cref="CurrentChanged"/> event.
         /// </summary>
         protected virtual void OnCurrentChanged(object e)
         {
-            if (_updating <= 0)
-            {
-                if (CurrentChanged != null)
-                    CurrentChanged(this, e);
-                OnPropertyChanged("CurrentItem");
-            }
+            if (_updating > 0) return;
+            if (CurrentChanged != null)
+                CurrentChanged(this, e);
+            OnPropertyChanged("CurrentItem");
         }
         /// <summary>
         /// Raises the <see cref="VectorChanged"/> event.
@@ -161,12 +159,10 @@ namespace EZEreaderUniversal
                 throw new NotSupportedException("Cannot change collection while adding or editing items.");
             }
 
-            if (_updating <= 0)
-            {
-                if (VectorChanged != null)
-                    VectorChanged(this, e);
-                OnPropertyChanged("Count");
-            }
+            if (_updating > 0) return;
+            if (VectorChanged != null)
+                VectorChanged(this, e);
+            OnPropertyChanged("Count");
         }
         /// <summary>
         /// Enters a defer cycle that you can use to merge changes to the view and delay
@@ -185,38 +181,36 @@ namespace EZEreaderUniversal
         // the original source has changed, update our source list
         void _sourceCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            if (_updating <= 0)
+            if (_updating > 0) return;
+            switch (e.Action)
             {
-                switch (e.Action)
-                {
-                    case NotifyCollectionChangedAction.Add:
-                        if (e.NewItems.Count == 1)
-                        {
-                            HandleItemAdded(e.NewStartingIndex, e.NewItems[0]);
-                        }
-                        else
-                        {
-                            HandleSourceChanged();
-                        }
-                        break;
-                    case NotifyCollectionChangedAction.Remove:
-                        if (e.OldItems.Count == 1)
-                        {
-                            HandleItemRemoved(e.OldStartingIndex, e.OldItems[0]);
-                        }
-                        else
-                        {
-                            HandleSourceChanged();
-                        }
-                        break;
-                    case NotifyCollectionChangedAction.Move:
-                    case NotifyCollectionChangedAction.Replace:
-                    case NotifyCollectionChangedAction.Reset:
+                case NotifyCollectionChangedAction.Add:
+                    if (e.NewItems.Count == 1)
+                    {
+                        HandleItemAdded(e.NewStartingIndex, e.NewItems[0]);
+                    }
+                    else
+                    {
                         HandleSourceChanged();
-                        break;
-                    default:
-                        throw new Exception("Unrecognized collection change notification: " + e.Action.ToString());
-                }
+                    }
+                    break;
+                case NotifyCollectionChangedAction.Remove:
+                    if (e.OldItems.Count == 1)
+                    {
+                        HandleItemRemoved(e.OldStartingIndex, e.OldItems[0]);
+                    }
+                    else
+                    {
+                        HandleSourceChanged();
+                    }
+                    break;
+                case NotifyCollectionChangedAction.Move:
+                case NotifyCollectionChangedAction.Replace:
+                case NotifyCollectionChangedAction.Reset:
+                    HandleSourceChanged();
+                    break;
+                default:
+                    throw new Exception("Unrecognized collection change notification: " + e.Action.ToString());
             }
         }
 
@@ -266,7 +260,7 @@ namespace EZEreaderUniversal
                 // (counting from the bottom is more efficient for the
                 // most common case which is appending to the source collection)
                 var visibleBelowIndex = 0;
-                for (int i = index; i < _sourceList.Count; i++)
+                for (var i = index; i < _sourceList.Count; i++)
                 {
                     if (!_filter(_sourceList[i]))
                     {
@@ -286,7 +280,7 @@ namespace EZEreaderUniversal
             }
 
             // notify listeners
-            var e = new VectorChangedEventArgs(CollectionChange.ItemInserted, index, item);
+            var e = new VectorChangedEventArgs(CollectionChange.ItemInserted, index);
             OnVectorChanged(e);
         }
 
@@ -300,7 +294,7 @@ namespace EZEreaderUniversal
             }
 
             // compute index into view
-            if (index < 0 || index >= _view.Count || !object.Equals(_view[index], item))
+            if (index < 0 || index >= _view.Count || !Equals(_view[index], item))
             {
                 index = _view.IndexOf(item);
             }
@@ -319,7 +313,7 @@ namespace EZEreaderUniversal
             }
 
             // notify listeners
-            var e = new VectorChangedEventArgs(CollectionChange.ItemRemoved, index, item);
+            var e = new VectorChangedEventArgs(CollectionChange.ItemRemoved, index);
             OnVectorChanged(e);
         }
 
@@ -337,20 +331,17 @@ namespace EZEreaderUniversal
             var ie = Source as IEnumerable;
             if (ie != null)
             {
-                foreach (var item in ie)
+                foreach (var item in ie.Cast<object>().Where(item => _filter == null || _filter(item)))
                 {
-                    if (_filter == null || _filter(item))
+                    if (_sort.Count > 0)
                     {
-                        if (_sort.Count > 0)
-                        {
-                            var index = _view.BinarySearch(item, this);
-                            if (index < 0) index = ~index;
-                            _view.Insert(index, item);
-                        }
-                        else
-                        {
-                            _view.Add(item);
-                        }
+                        var index = _view.BinarySearch(item, this);
+                        if (index < 0) index = ~index;
+                        _view.Insert(index, item);
+                    }
+                    else
+                    {
+                        _view.Add(item);
                     }
                 }
             }
@@ -369,12 +360,7 @@ namespace EZEreaderUniversal
         void HandleItemChanged(object item)
         {
             // apply filter/sort after edits
-            bool refresh = false;
-            if (_filter != null && !_filter(item))
-            {
-                // item was removed from view
-                refresh = true;
-            }
+            var refresh = _filter != null && !_filter(item);
             if (_sort.Count > 0)
             {
                 // find sorted index for this object
@@ -427,19 +413,17 @@ namespace EZEreaderUniversal
         Type GetItemType()
         {
             Type itemType = null;
-            if (_source != null)
+            if (_source == null) return null;
+            var type = _source.GetType();
+            var args = type.GenericTypeArguments;
+            if (args.Length == 1)
             {
-                var type = _source.GetType();
-                var args = type.GenericTypeArguments;
-                if (args.Length == 1)
-                {
-                    itemType = args[0];
-                }
-                else if (_sourceList != null && _sourceList.Count > 0)
-                {
-                    var item = _sourceList[0];
-                    itemType = item.GetType();
-                }
+                itemType = args[0];
+            }
+            else if (_sourceList != null && _sourceList.Count > 0)
+            {
+                var item = _sourceList[0];
+                itemType = item.GetType();
             }
             return itemType;
         }
@@ -484,7 +468,7 @@ namespace EZEreaderUniversal
                 get { return _reset; }
             }
 
-            public VectorChangedEventArgs(CollectionChange cc, int index = -1, object item = null)
+            public VectorChangedEventArgs(CollectionChange cc, int index = -1)
             {
                 _cc = cc;
                 _index = (uint)index;
@@ -510,11 +494,9 @@ namespace EZEreaderUniversal
             get { return _filter; }
             set
             {
-                if (_filter != value)
-                {
-                    _filter = value;
-                    Refresh();
-                }
+                if (_filter == value) return;
+                _filter = value;
+                Refresh();
             }
         }
         public bool CanGroup { get { return false; } }
@@ -748,6 +730,7 @@ namespace EZEreaderUniversal
                 try
                 {
                     var cmp =
+                        // ReSharper disable once PossibleUnintendedReferenceComparison
                         cx == cy ? 0 :
                         cx == null ? -1 :
                         cy == null ? +1 :

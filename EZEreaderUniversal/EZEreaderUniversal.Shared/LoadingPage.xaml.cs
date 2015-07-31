@@ -34,7 +34,7 @@ namespace EZEreaderUniversal
 
         protected async override void OnNavigatedTo(NavigationEventArgs e)
         {
-            string newFile = "";
+            var newFile = "";
             if (rootPage.FileEvent != null)
             {    
                 
@@ -49,17 +49,18 @@ namespace EZEreaderUniversal
                     {
                         await file.CopyAsync(sFolder, newFile);
                     }
+                    // ReSharper disable once EmptyGeneralCatchClause
                     catch (Exception)
                     {
 
                     }
                 }
             }
-            string folderName = newFile.Substring(0, newFile.Length - 4);
+            var folderName = newFile.Substring(0, newFile.Length - 4);
             await Io.CreateOrGetFolder(folderName);
             await UnZipTheFile(newFile, folderName);
             await Io.DeleteFileInFolder(sFolder, newFile);
-            string importError = "";
+            var importError = "";
             try
             {
                 AddBookToLibrary(folderName);
@@ -89,24 +90,25 @@ namespace EZEreaderUniversal
         /// <returns></returns>
         private async Task UnZipTheFile(string fileName, string folderName)
         {
-            StorageFolder folder = await sFolder.GetFolderAsync(folderName);
+            var folder = await sFolder.GetFolderAsync(folderName);
  
             using (var stream = await sFolder.OpenStreamForReadAsync(fileName))
             {
-                using (ZipArchive archive = new ZipArchive(stream))
+                using (var archive = new ZipArchive(stream))
                 {
-                    foreach (ZipArchiveEntry entry in archive.Entries)
+                    foreach (var entry in archive.Entries)
                     {
                         if (entry.FullName.Contains('/'))
                         {
                             if (entry.FullName.ElementAt(entry.FullName.Length - 1) == '/')
                             {
-                                string multiFolder = entry.FullName.Substring(0, entry.FullName.Length - 1);
+                                var multiFolder = entry.FullName.Substring(0, entry.FullName.Length - 1);
                                 try
                                 {
                                     await sFolder.CreateFolderAsync(folderName + "\\"
                                         + multiFolder);
                                 }
+                                // ReSharper disable once EmptyGeneralCatchClause
                                 catch (Exception)
                                 {
                                     
@@ -114,8 +116,8 @@ namespace EZEreaderUniversal
                             }
                             else
                             {
-                                string[] directoryName = entry.FullName.Split('/');
-                                StorageFolder lastFolder = await Io.CreateOrGetFolders(folder, directoryName);
+                                var directoryName = entry.FullName.Split('/');
+                                var lastFolder = await Io.CreateOrGetFolders(folder, directoryName);
                                 using (var file = entry.Open())
                                 {
                                     StorageFile newFile = null;
@@ -123,6 +125,7 @@ namespace EZEreaderUniversal
                                     {
                                         newFile = await lastFolder.CreateFileAsync(entry.Name, CreationCollisionOption.ReplaceExisting);
                                     }
+                                    // ReSharper disable once EmptyGeneralCatchClause
                                     catch (Exception)
                                     {
                                         
@@ -148,6 +151,7 @@ namespace EZEreaderUniversal
                                 {
                                     newFile = await folder.CreateFileAsync(entry.FullName, CreationCollisionOption.ReplaceExisting);
                                 }
+                                // ReSharper disable once EmptyGeneralCatchClause
                                 catch (Exception)
                                 {
                                    

@@ -8,7 +8,6 @@ using System.Xml.Linq;
 using Windows.Data.Html;
 using Windows.Foundation;
 using Windows.Storage;
-using Windows.Storage.Streams;
 using Windows.UI;
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
@@ -81,8 +80,13 @@ namespace EZEreaderUniversal
         ///     NavigationHelper to respond to the page's navigation methods.
         ///     <para>
         ///         Page specific logic should be placed in event handlers for the
-        ///         <see cref="NavigationHelper.LoadState" />
-        ///         and <see cref="NavigationHelper.SaveState" />.
+        ///         <see>
+        ///             <cref>NavigationHelper.LoadState</cref>
+        ///         </see>
+        ///         and <see>
+        ///             <cref>NavigationHelper.SaveState</cref>
+        ///         </see>
+        ///         .
         ///         The navigation parameter is available in the LoadState method
         ///         in addition to page state preserved during an earlier session.
         ///     </para>
@@ -316,10 +320,10 @@ namespace EZEreaderUniversal
                 }
                 else
                 {
-                    string chapterPath = _thisBook.MainDirectory +
+                    var chapterPath = _thisBook.MainDirectory +
                                          _thisBook.Chapters[_thisBook.CurrentChapter].ChapterString;
                     var chapterUri = new Uri("ms-appx:///" + chapterPath, UriKind.Absolute);
-                    StorageFile chapterFile = await StorageFile.GetFileFromApplicationUriAsync(chapterUri);
+                    var chapterFile = await StorageFile.GetFileFromApplicationUriAsync(chapterUri);
                     using (Stream chapterStream = await chapterFile.OpenStreamForReadAsync())
                     {
                         htmlDoc.Load(chapterStream);
@@ -370,62 +374,55 @@ namespace EZEreaderUniversal
         {
             var imageString = "";
             var contentLoc = _thisBook.ContentDirectory;
-            if (_thisBook.IsoStore)
+            if (!_thisBook.IsoStore) return imageString;
+            string fullChapterString;
+            if (_thisBook.ContentDirectory.Contains('/'))
             {
-                string fullChapterString;
-                if (_thisBook.ContentDirectory.Contains('/'))
+                var st = contentLoc.Split('/');
+                contentLoc = "";
+                for (var i = 0; i < st.Length - 1; i++)
                 {
-                    string[] st = contentLoc.Split('/');
-                    contentLoc = "";
-                    for (int i = 0; i < st.Length - 1; i++)
-                    {
-                        contentLoc += st[i];
-                    }
-                    fullChapterString = _thisBook.MainDirectory + contentLoc + "/" +
-                                        _thisBook.Chapters[_thisBook.CurrentChapter].ChapterString;
+                    contentLoc += st[i];
                 }
-                else
+                fullChapterString = _thisBook.MainDirectory + contentLoc + "/" +
+                                    _thisBook.Chapters[_thisBook.CurrentChapter].ChapterString;
+            }
+            else
+            {
+                fullChapterString = _thisBook.MainDirectory +
+                                    _thisBook.Chapters[_thisBook.CurrentChapter].ChapterString;
+            }
+
+            var fullChapterStrings = fullChapterString.Split('/');
+            var chapterString = fullChapterStrings[fullChapterStrings.Length - 1];
+            var chapterStringLoc = fullChapterString.Split('/');
+            var chapterFolder = await Io.CreateOrGetFolders(_appFolder, chapterStringLoc);
+
+            using (var file = await chapterFolder.OpenStreamForReadAsync(chapterString))
+            {
+                var xdoc = XDocument.Load(file);
+                // ReSharper disable once UnusedVariable.Compiler
+                XNamespace ns = "http://www.w3.org/1999/xhtml";
+
+                var picLoc = from x in xdoc.Descendants()
+                    select (string) x.Attribute("src");
+
+                foreach (var src in picLoc.Where(src => src != null))
                 {
-                    fullChapterString = _thisBook.MainDirectory +
-                                        _thisBook.Chapters[_thisBook.CurrentChapter].ChapterString;
+                    imageString = src;
                 }
 
-                string[] fullChapterStrings = fullChapterString.Split('/');
-                string chapterString = fullChapterStrings[fullChapterStrings.Length - 1];
-                string[] chapterStringLoc = fullChapterString.Split('/');
-                StorageFolder chapterFolder = await Io.CreateOrGetFolders(_appFolder, chapterStringLoc);
-
-                using (Stream file = await chapterFolder.OpenStreamForReadAsync(chapterString))
+                if (imageString == "")
                 {
-                    XDocument xdoc = XDocument.Load(file);
-                    XNamespace ns = "http://www.w3.org/1999/xhtml";
+                    var picLocHref = from x in xdoc.Descendants()
+                        select (string) x.Attribute("href");
 
-                    IEnumerable<string> picLoc = from x in xdoc.Descendants()
-                        select (string) x.Attribute("src");
-
-                    foreach (string src in picLoc)
+                    foreach (var href in picLocHref.Where(href => href != null))
                     {
-                        if (src != null)
-                        {
-                            imageString = src;
-                        }
+                        imageString = href;
                     }
-
-                    if (imageString == "")
-                    {
-                        IEnumerable<string> picLocHref = from x in xdoc.Descendants()
-                            select (string) x.Attribute("href");
-
-                        foreach (string href in picLocHref)
-                        {
-                            if (href != null)
-                            {
-                                imageString = href;
-                            }
-                        }
-                    }
-                    imageString = GetHtmlPicFromString(imageString, contentLoc);
                 }
+                imageString = GetHtmlPicFromString(imageString, contentLoc);
             }
             return imageString;
         }
@@ -438,53 +435,49 @@ namespace EZEreaderUniversal
         /// <returns></returns>
         private string GetHtmlPicFromString(string imageString, string contentLoc)
         {
-            if (imageString != "")
+            if (imageString == "") return imageString;
+            if (!imageString.Contains(".jpeg") && !imageString.Contains(".jpg") && !imageString.Contains(".png"))
+                return imageString;
+            if (imageString.Contains("/"))
             {
-                if (imageString.Contains(".jpeg") || imageString.Contains(".jpg") ||
-                    imageString.Contains(".png"))
+                var imageStringSplit = imageString.Split('/');
+                if (_thisBook.ContentDirectory.Contains("/"))
                 {
-                    if (imageString.Contains("/"))
-                    {
-                        string[] imageStringSplit = imageString.Split('/');
-                        if (_thisBook.ContentDirectory.Contains("/"))
-                        {
-                            imageString = _thisBook.MainDirectory + contentLoc + "/";
-                        }
-                        else
-                        {
-                            imageString = _thisBook.MainDirectory;
-                        }
-                        if (!imageStringSplit[0].Contains("."))
-                        {
-                            for (int i = 0; i < imageStringSplit.Length - 1; i++)
-                            {
-                                imageString += imageStringSplit[i] + "/";
-                            }
-                            imageString += imageStringSplit[imageStringSplit.Length - 1];
-                        }
-                        else
-                        {
-                            for (int i = 1; i < imageStringSplit.Length - 1; i++)
-                            {
-                                imageString += imageStringSplit[i] + "/";
-                            }
-                            imageString += imageStringSplit[imageStringSplit.Length - 1];
-                        }
-                    }
-                    else
-                    {
-                        string fullImageString;
-                        if (_thisBook.ContentDirectory.Contains("/"))
-                        {
-                            fullImageString = _thisBook.MainDirectory + contentLoc + "/" + imageString;
-                        }
-                        else
-                        {
-                            fullImageString = _thisBook.MainDirectory + imageString;
-                        }
-                        imageString = fullImageString;
-                    }
+                    imageString = _thisBook.MainDirectory + contentLoc + "/";
                 }
+                else
+                {
+                    imageString = _thisBook.MainDirectory;
+                }
+                if (!imageStringSplit[0].Contains("."))
+                {
+                    for (var i = 0; i < imageStringSplit.Length - 1; i++)
+                    {
+                        imageString += imageStringSplit[i] + "/";
+                    }
+                    imageString += imageStringSplit[imageStringSplit.Length - 1];
+                }
+                else
+                {
+                    for (var i = 1; i < imageStringSplit.Length - 1; i++)
+                    {
+                        imageString += imageStringSplit[i] + "/";
+                    }
+                    imageString += imageStringSplit[imageStringSplit.Length - 1];
+                }
+            }
+            else
+            {
+                string fullImageString;
+                if (_thisBook.ContentDirectory.Contains("/"))
+                {
+                    fullImageString = _thisBook.MainDirectory + contentLoc + "/" + imageString;
+                }
+                else
+                {
+                    fullImageString = _thisBook.MainDirectory + imageString;
+                }
+                imageString = fullImageString;
             }
             return imageString;
         }
@@ -520,13 +513,14 @@ namespace EZEreaderUniversal
             StorageFile imageFile = null;
             if (_thisBook.IsoStore)
             {
-                string[] folders = imageString.Split('/');
+                var folders = imageString.Split('/');
                 try
                 {
-                    StorageFolder appBaseFolder = ApplicationData.Current.LocalFolder;
-                    StorageFolder imageFolder = await Io.CreateOrGetFolders(appBaseFolder, folders);
+                    var appBaseFolder = ApplicationData.Current.LocalFolder;
+                    var imageFolder = await Io.CreateOrGetFolders(appBaseFolder, folders);
                     imageFile = await imageFolder.GetFileAsync(folders[folders.Length - 1]);
                 }
+                // ReSharper disable once EmptyGeneralCatchClause
                 catch (Exception)
                 {
                 }
@@ -536,8 +530,8 @@ namespace EZEreaderUniversal
                 try
                 {
                     var chapterUri = new Uri("ms-appx:///" + imageString, UriKind.Absolute);
-                    StorageFile chapterFile = await StorageFile.GetFileFromApplicationUriAsync(chapterUri);
-                    using (IRandomAccessStreamWithContentType chapterStream = await chapterFile.OpenReadAsync())
+                    var chapterFile = await StorageFile.GetFileFromApplicationUriAsync(chapterUri);
+                    using (var chapterStream = await chapterFile.OpenReadAsync())
                     {
                         var img = new BitmapImage();
                         await img.SetSourceAsync(chapterStream);
@@ -545,13 +539,14 @@ namespace EZEreaderUniversal
                         containers.Child = image;
                     }
                 }
+                // ReSharper disable once EmptyGeneralCatchClause
                 catch (Exception)
                 {
                 }
             }
             if (imageFile != null)
             {
-                using (IRandomAccessStreamWithContentType fileStream = await imageFile.OpenReadAsync())
+                using (var fileStream = await imageFile.OpenReadAsync())
                 {
                     if (fileStream.CanRead)
                     {
@@ -573,12 +568,12 @@ namespace EZEreaderUniversal
         private async Task GetChapterFromStorage(HtmlDocument htmlDoc)
         {
             string fullChapterString;
-            string contentLoc = _thisBook.ContentDirectory;
+            var contentLoc = _thisBook.ContentDirectory;
             if (_thisBook.ContentDirectory.Contains('/'))
             {
-                string[] st = contentLoc.Split('/');
+                var st = contentLoc.Split('/');
                 contentLoc = "";
-                for (int i = 0; i < st.Length - 1; i++)
+                for (var i = 0; i < st.Length - 1; i++)
                 {
                     contentLoc += st[i];
                 }
@@ -591,13 +586,13 @@ namespace EZEreaderUniversal
                                     _thisBook.Chapters[_thisBook.CurrentChapter].ChapterString;
             }
 
-            string[] fullChapterStrings = fullChapterString.Split('/');
-            string chapterString = fullChapterStrings[fullChapterStrings.Length - 1];
-            string[] chapterStringLoc =
+            var fullChapterStrings = fullChapterString.Split('/');
+            var chapterString = fullChapterStrings[fullChapterStrings.Length - 1];
+            var chapterStringLoc =
                 fullChapterString.Split('/');
 
-            StorageFolder chapterFolder = await Io.CreateOrGetFolders(_appFolder, chapterStringLoc);
-            using (Stream file = await chapterFolder.OpenStreamForReadAsync(chapterString))
+            var chapterFolder = await Io.CreateOrGetFolders(_appFolder, chapterStringLoc);
+            using (var file = await chapterFolder.OpenStreamForReadAsync(chapterString))
             {
                 htmlDoc.Load(file);
                 _chapterText = HtmlUtilities.ConvertToText(htmlDoc.DocumentNode.InnerHtml);
@@ -621,7 +616,7 @@ namespace EZEreaderUniversal
             _myRtb.ManipulationStarted += LayoutRoot_ManipulationStarted;
             _myRtb.ManipulationDelta += LayoutRoot_ManipulationDelta;
             _myRtb.ManipulationMode = ManipulationModes.All;
-            Thickness margin = _myRtb.Margin;
+            var margin = _myRtb.Margin;
             _myRtb.Visibility = Visibility.Visible;
             margin.Left = 10;
             margin.Right = 10;
@@ -636,37 +631,35 @@ namespace EZEreaderUniversal
         {
             _listRtbo = new List<RichTextBlockOverflow>();
             LayoutRoot.UpdateLayout();
-            if (_myRtb.HasOverflowContent)
+            if (!_myRtb.HasOverflowContent) return;
+            _listRtbo.Add(new RichTextBlockOverflow());
+            _myRtb.OverflowContentTarget = _listRtbo[_pageNumber];
+            _listRtbo[_pageNumber].Visibility = Visibility.Visible;
+            _listRtbo[_pageNumber].Margin = _myRtb.Margin;
+            _listRtbo[_pageNumber].Tapped += myRTB_Tapped;
+            _listRtbo[_pageNumber].ManipulationStarted += LayoutRoot_ManipulationStarted;
+            _listRtbo[_pageNumber].ManipulationDelta += LayoutRoot_ManipulationDelta;
+            _listRtbo[_pageNumber].ManipulationMode = ManipulationModes.All;
+            _pageNumber++;
+            LayoutRoot.Children.Add(_listRtbo[_pageNumber - 1]);
+            _myRtb.Visibility = Visibility.Collapsed;
+            LayoutRoot.UpdateLayout();
+
+            //if theres any overflow, add it to a list of overflows
+            while (_listRtbo[_pageNumber - 1].HasOverflowContent)
             {
                 _listRtbo.Add(new RichTextBlockOverflow());
-                _myRtb.OverflowContentTarget = _listRtbo[_pageNumber];
+                _listRtbo[_pageNumber - 1].OverflowContentTarget = _listRtbo[_pageNumber];
+                _listRtbo[_pageNumber - 1].Visibility = Visibility.Collapsed;
                 _listRtbo[_pageNumber].Visibility = Visibility.Visible;
                 _listRtbo[_pageNumber].Margin = _myRtb.Margin;
                 _listRtbo[_pageNumber].Tapped += myRTB_Tapped;
                 _listRtbo[_pageNumber].ManipulationStarted += LayoutRoot_ManipulationStarted;
                 _listRtbo[_pageNumber].ManipulationDelta += LayoutRoot_ManipulationDelta;
                 _listRtbo[_pageNumber].ManipulationMode = ManipulationModes.All;
+                LayoutRoot.Children.Add(_listRtbo[_pageNumber]);
                 _pageNumber++;
-                LayoutRoot.Children.Add(_listRtbo[_pageNumber - 1]);
-                _myRtb.Visibility = Visibility.Collapsed;
                 LayoutRoot.UpdateLayout();
-
-                //if theres any overflow, add it to a list of overflows
-                while (_listRtbo[_pageNumber - 1].HasOverflowContent)
-                {
-                    _listRtbo.Add(new RichTextBlockOverflow());
-                    _listRtbo[_pageNumber - 1].OverflowContentTarget = _listRtbo[_pageNumber];
-                    _listRtbo[_pageNumber - 1].Visibility = Visibility.Collapsed;
-                    _listRtbo[_pageNumber].Visibility = Visibility.Visible;
-                    _listRtbo[_pageNumber].Margin = _myRtb.Margin;
-                    _listRtbo[_pageNumber].Tapped += myRTB_Tapped;
-                    _listRtbo[_pageNumber].ManipulationStarted += LayoutRoot_ManipulationStarted;
-                    _listRtbo[_pageNumber].ManipulationDelta += LayoutRoot_ManipulationDelta;
-                    _listRtbo[_pageNumber].ManipulationMode = ManipulationModes.All;
-                    LayoutRoot.Children.Add(_listRtbo[_pageNumber]);
-                    _pageNumber++;
-                    LayoutRoot.UpdateLayout();
-                }
             }
         }
 
@@ -779,11 +772,11 @@ namespace EZEreaderUniversal
                 }
                 else
                 {
-                    string chapterPath = _thisBook.MainDirectory +
+                    var chapterPath = _thisBook.MainDirectory +
                                          _thisBook.Chapters[_thisBook.CurrentChapter].ChapterString;
                     var chapterUri = new Uri("ms-appx:///" + chapterPath, UriKind.Absolute);
-                    StorageFile chapterFile = await StorageFile.GetFileFromApplicationUriAsync(chapterUri);
-                    using (Stream chapterStream = await chapterFile.OpenStreamForReadAsync())
+                    var chapterFile = await StorageFile.GetFileFromApplicationUriAsync(chapterUri);
+                    using (var chapterStream = await chapterFile.OpenStreamForReadAsync())
                     {
                         htmlDoc.Load(chapterStream);
                         _chapterText = HtmlUtilities.ConvertToText(htmlDoc.DocumentNode.InnerHtml);
@@ -793,7 +786,7 @@ namespace EZEreaderUniversal
                 _myRun = new Run();
                 if (_chapterText == "")
                 {
-                    string newImage = await GetPicFromHtml();
+                    var newImage = await GetPicFromHtml();
                     await GetPicFromStorage(newImage, image, containers);
                     if (newImage != "")
                     {
@@ -844,7 +837,7 @@ namespace EZEreaderUniversal
         /// <param name="e"></param>
         private async void myRTB_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            Point eTap = e.GetPosition(LayoutRoot.Children.ElementAt(_thisBook.CurrentPage));
+            var eTap = e.GetPosition(LayoutRoot.Children.ElementAt(_thisBook.CurrentPage));
 
             if (ReadingBottomBar.Visibility == Visibility.Collapsed)
             {
@@ -886,19 +879,17 @@ namespace EZEreaderUniversal
         /// <param name="e"></param>
         private async void LayoutRoot_ManipulationDelta(object sender, ManipulationDeltaRoutedEventArgs e)
         {
-            if (e.IsInertial)
+            if (!e.IsInertial) return;
+            var currentpoint = e.Position;
+            if (currentpoint.X - _initialPoint.X >= 100)
             {
-                Point currentpoint = e.Position;
-                if (currentpoint.X - _initialPoint.X >= 100)
-                {
-                    await PageTurnBack();
-                    e.Complete();
-                }
-                else if (_initialPoint.X - currentpoint.X >= 100)
-                {
-                    await PageTurnForwards();
-                    e.Complete();
-                }
+                await PageTurnBack();
+                e.Complete();
+            }
+            else if (_initialPoint.X - currentpoint.X >= 100)
+            {
+                await PageTurnForwards();
+                e.Complete();
             }
         }
 
@@ -913,13 +904,11 @@ namespace EZEreaderUniversal
         /// <param name="e"></param>
         private void FontSizeListBox_Loaded(object sender, RoutedEventArgs e)
         {
-            if (_fontSizes.Contains(_rootPage.LibrarySource.ReadingFontSize.ToString()))
-            {
-                FontSizeListBox.SelectionChanged -= FontSizeListBox_SelectionChanged;
-                FontSizeListBox.SelectedItem = _rootPage.LibrarySource.ReadingFontSize.ToString();
-                FontSizeListBox.SelectionChanged += FontSizeListBox_SelectionChanged;
-                FontSizeListBox.ScrollIntoView(FontSizeListBox.SelectedItem);
-            }
+            if (!_fontSizes.Contains(_rootPage.LibrarySource.ReadingFontSize.ToString())) return;
+            FontSizeListBox.SelectionChanged -= FontSizeListBox_SelectionChanged;
+            FontSizeListBox.SelectedItem = _rootPage.LibrarySource.ReadingFontSize.ToString();
+            FontSizeListBox.SelectionChanged += FontSizeListBox_SelectionChanged;
+            FontSizeListBox.ScrollIntoView(FontSizeListBox.SelectedItem);
         }
 
         /// <summary>
@@ -930,11 +919,9 @@ namespace EZEreaderUniversal
         private void FontSizeListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var listBox = sender as ListBox;
-            if (listBox != null)
-            {
-                var newFont = (string) (listBox.SelectedItem);
-                FontCheckerBlock.FontSize = Convert.ToInt32(newFont);
-            }
+            if (listBox == null) return;
+            var newFont = (string) (listBox.SelectedItem);
+            FontCheckerBlock.FontSize = Convert.ToInt32(newFont);
         }
 
         /// <summary>
@@ -945,19 +932,16 @@ namespace EZEreaderUniversal
         /// <param name="e"></param>
         private void FontFamilyListBox_Loaded(object sender, RoutedEventArgs e)
         {
-            foreach (TextBlock item in FontFamilyListBox.Items)
+            foreach (TextBlock item in FontFamilyListBox.Items.Cast<TextBlock>().Where(item => item.Text == _rootPage.LibrarySource.ReadingFontFamily))
             {
-                if (item.Text == _rootPage.LibrarySource.ReadingFontFamily)
+                FontFamilyListBox.SelectionChanged -= FontFamilyListBox_SelectionChanged;
+                var listBox = sender as ListBox;
+                if (listBox != null)
                 {
-                    FontFamilyListBox.SelectionChanged -= FontFamilyListBox_SelectionChanged;
-                    var listBox = sender as ListBox;
-                    if (listBox != null)
-                    {
-                        listBox.SelectedItem = item;
-                    }
-                    FontFamilyListBox.SelectionChanged += FontFamilyListBox_SelectionChanged;
-                    FontFamilyListBox.ScrollIntoView(FontFamilyListBox.SelectedItem);
+                    listBox.SelectedItem = item;
                 }
+                FontFamilyListBox.SelectionChanged += FontFamilyListBox_SelectionChanged;
+                FontFamilyListBox.ScrollIntoView(FontFamilyListBox.SelectedItem);
             }
         }
 
@@ -969,15 +953,13 @@ namespace EZEreaderUniversal
         private void FontFamilyListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var listBox = sender as ListBox;
-            if (listBox != null && listBox.SelectedItem != null)
+            if (listBox == null || listBox.SelectedItem == null) return;
+            var newFontFamily = (TextBlock) ((sender as ListBox).SelectedItem);
+            if (newFontFamily != null)
             {
-                var newFontFamily = (TextBlock) ((sender as ListBox).SelectedItem);
-                if (newFontFamily != null)
-                {
-                    FontCheckerBlock.FontFamily = new FontFamily(newFontFamily.Text);
-                }
-                FontCheckerBlock.UpdateLayout();
+                FontCheckerBlock.FontFamily = new FontFamily(newFontFamily.Text);
             }
+            FontCheckerBlock.UpdateLayout();
         }
 
         /// <summary>
@@ -995,7 +977,7 @@ namespace EZEreaderUniversal
                 _rootPage.LibrarySource.ReadingFontFamily = newFontFamily.Text;
                 _rootPage.LibrarySource.ReadingFonts.ReadingFontFamily = newFontFamily.Text;
             }
-            BottomAppBar.Visibility = Visibility.Collapsed;
+            if (BottomAppBar != null) BottomAppBar.Visibility = Visibility.Collapsed;
             LayoutRoot.Children.Clear();
             await CreateFirstPage();
             FontFlyout.Hide();
@@ -1008,7 +990,7 @@ namespace EZEreaderUniversal
         /// <param name="e"></param>
         private void FontFlyoutCancelButton_Click(object sender, RoutedEventArgs e)
         {
-            BottomAppBar.Visibility = Visibility.Collapsed;
+            if (BottomAppBar != null) BottomAppBar.Visibility = Visibility.Collapsed;
             FontFlyout.Hide();
         }
 
@@ -1034,7 +1016,7 @@ namespace EZEreaderUniversal
             _rootPage.LibrarySource.ReadingFonts.ReadingFontSize = 20;
             _rootPage.LibrarySource.ReadingFontFamily = "Segoe UI";
             _rootPage.LibrarySource.ReadingFonts.ReadingFontFamily = "Segoe UI";
-            BottomAppBar.Visibility = Visibility.Collapsed;
+            if (BottomAppBar != null) BottomAppBar.Visibility = Visibility.Collapsed;
             LayoutRoot.Children.Clear();
             await CreateFirstPage();
             FontFlyout.Hide();
@@ -1047,11 +1029,9 @@ namespace EZEreaderUniversal
         /// <param name="e"></param>
         private void FontButton_Click(object sender, RoutedEventArgs e)
         {
-            if (FontCheckerBlock.Visibility == Visibility.Visible)
-            {
-                FontFlyoutGrid.UpdateLayout();
-                FontFlyout.Hide();
-            }
+            if (FontCheckerBlock.Visibility != Visibility.Visible) return;
+            FontFlyoutGrid.UpdateLayout();
+            FontFlyout.Hide();
         }
 
         /// <summary>
@@ -1063,19 +1043,16 @@ namespace EZEreaderUniversal
         private void ChaptersListBox_Loaded(object sender, RoutedEventArgs e)
         {
             var listBox = sender as ListBox;
-            if (listBox != null && _thisBook.Chapters[_thisBook.CurrentChapter].ChapterName != listBox.SelectedItem as string)
+            if (listBox == null ||
+                _thisBook.Chapters[_thisBook.CurrentChapter].ChapterName == listBox.SelectedItem as string) return;
+            // ReSharper disable once PossibleNullReferenceException
+            for (var i = 0; i < ChaptersListBox.Items.Count; i++)
             {
-                for (int i = 0; i < ChaptersListBox.Items.Count; i++)
-                {
-                    if ((string) ChaptersListBox.Items[i] ==
-                        _thisBook.Chapters[_thisBook.CurrentChapter].ChapterName &&
-                        _thisBook.Chapters[_thisBook.CurrentChapter].ChapterID == _chaptersNumbers[i])
-                    {
-                        ChaptersListBox.SelectionChanged -= ChaptersListBox_SelectionChanged;
-                        (sender as ListBox).SelectedIndex = i;
-                        ChaptersListBox.SelectionChanged += ChaptersListBox_SelectionChanged;
-                    }
-                }
+                if ((string) ChaptersListBox.Items[i] != _thisBook.Chapters[_thisBook.CurrentChapter].ChapterName ||
+                    _thisBook.Chapters[_thisBook.CurrentChapter].ChapterID != _chaptersNumbers[i]) continue;
+                ChaptersListBox.SelectionChanged -= ChaptersListBox_SelectionChanged;
+                (sender as ListBox).SelectedIndex = i;
+                ChaptersListBox.SelectionChanged += ChaptersListBox_SelectionChanged;
             }
         }
 
@@ -1086,29 +1063,24 @@ namespace EZEreaderUniversal
         /// <param name="e"></param>
         private async void ChaptersListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            bool chapterChanged = false;
+            var chapterChanged = false;
             var listBox = sender as ListBox;
             if (listBox != null)
             {
                 var newChapter = (string) listBox.SelectedItem;
-                for (int i = 0; i < _thisBook.Chapters.Count; i++)
+                for (var i = 0; i < _thisBook.Chapters.Count; i++)
                 {
-                    if (newChapter == _thisBook.Chapters[i].ChapterName &&
-                        _chaptersNumbers[ChaptersListBox.SelectedIndex] ==
-                        _thisBook.Chapters[i].ChapterID)
-                    {
-                        _thisBook.CurrentChapter = i;
-                        chapterChanged = true;
-                    }
+                    if (newChapter != _thisBook.Chapters[i].ChapterName ||
+                        _chaptersNumbers[ChaptersListBox.SelectedIndex] != _thisBook.Chapters[i].ChapterID) continue;
+                    _thisBook.CurrentChapter = i;
+                    chapterChanged = true;
                 }
             }
             ChaptersFlyout.Hide();
-            if (chapterChanged)
-            {
-                _thisBook.CurrentPage = 0;
-                LayoutRoot.Children.Clear();
-                await CreateFirstPage();
-            }
+            if (!chapterChanged) return;
+            _thisBook.CurrentPage = 0;
+            LayoutRoot.Children.Clear();
+            await CreateFirstPage();
         }
 
         /// <summary>
@@ -1139,12 +1111,10 @@ namespace EZEreaderUniversal
                 BackgroundColorListBox.SelectionChanged += BackgroundColorListBox_SelectionChanged;
             }
 
-            if ((string) FontColorListBox.SelectedItem != _rootPage.LibrarySource.ReadingFontColorName)
-            {
-                FontColorListBox.SelectionChanged -= FontColorListBox_SelectionChanged;
-                FontColorListBox.SelectedItem = _rootPage.LibrarySource.ReadingFontColorName;
-                FontColorListBox.SelectionChanged += FontColorListBox_SelectionChanged;
-            }
+            if ((string) FontColorListBox.SelectedItem == _rootPage.LibrarySource.ReadingFontColorName) return;
+            FontColorListBox.SelectionChanged -= FontColorListBox_SelectionChanged;
+            FontColorListBox.SelectedItem = _rootPage.LibrarySource.ReadingFontColorName;
+            FontColorListBox.SelectionChanged += FontColorListBox_SelectionChanged;
         }
 
         /// <summary>
@@ -1154,7 +1124,7 @@ namespace EZEreaderUniversal
         /// <param name="e"></param>
         private void FontColorListBox_Loaded(object sender, RoutedEventArgs e)
         {
-            if (FontColorListBox.Items.Contains(_rootPage.LibrarySource.ReadingFontColorName))
+            if (FontColorListBox.Items != null && FontColorListBox.Items.Contains(_rootPage.LibrarySource.ReadingFontColorName))
             {
                 FontColorListBox.SelectionChanged -= FontColorListBox_SelectionChanged;
                 FontColorListBox.SelectedItem = _rootPage.LibrarySource.ReadingFontColorName;
@@ -1174,15 +1144,11 @@ namespace EZEreaderUniversal
         private void FontColorListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var listBox = sender as ListBox;
-            if (listBox != null && listBox.SelectedItem != null)
-            {
-                var newForegroundColor = (sender as ListBox).SelectedItem as string;
-                if (_allColorBrushes.ContainsKey(newForegroundColor))
-                {
-                    ColorTextBlock.Foreground = _allColorBrushes[newForegroundColor];
-                    ColorTextBlockGrid.UpdateLayout();
-                }
-            }
+            if (listBox == null || listBox.SelectedItem == null) return;
+            var newForegroundColor = (sender as ListBox).SelectedItem as string;
+            if (!_allColorBrushes.ContainsKey(newForegroundColor)) return;
+            ColorTextBlock.Foreground = _allColorBrushes[newForegroundColor];
+            ColorTextBlockGrid.UpdateLayout();
         }
 
         /// <summary>
@@ -1192,15 +1158,13 @@ namespace EZEreaderUniversal
         /// <param name="e"></param>
         private void BackgroundColorListBox_Loaded(object sender, RoutedEventArgs e)
         {
-            if (BackgroundColorListBox.Items.Contains(_rootPage.LibrarySource.BackgroundReadingColorName))
-            {
-                BackgroundColorListBox.SelectionChanged -= BackgroundColorListBox_SelectionChanged;
-                BackgroundColorListBox.SelectedItem = _rootPage.LibrarySource.BackgroundReadingColorName;
-                BackgroundColorListBox.SelectionChanged += BackgroundColorListBox_SelectionChanged;
-                BackgroundColorListBox.ScrollIntoView(BackgroundColorListBox.Items.First());
-                BackgroundColorListBox.UpdateLayout();
-                BackgroundColorListBox.ScrollIntoView(BackgroundColorListBox.SelectedItem);
-            }
+            if (BackgroundColorListBox.Items != null && !BackgroundColorListBox.Items.Contains(_rootPage.LibrarySource.BackgroundReadingColorName)) return;
+            BackgroundColorListBox.SelectionChanged -= BackgroundColorListBox_SelectionChanged;
+            BackgroundColorListBox.SelectedItem = _rootPage.LibrarySource.BackgroundReadingColorName;
+            BackgroundColorListBox.SelectionChanged += BackgroundColorListBox_SelectionChanged;
+            BackgroundColorListBox.ScrollIntoView(BackgroundColorListBox.Items.First());
+            BackgroundColorListBox.UpdateLayout();
+            BackgroundColorListBox.ScrollIntoView(BackgroundColorListBox.SelectedItem);
         }
 
         /// <summary>
@@ -1212,15 +1176,11 @@ namespace EZEreaderUniversal
         private void BackgroundColorListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var listBox = sender as ListBox;
-            if (listBox != null && listBox.SelectedItem != null)
-            {
-                var newBackgroundColor = (sender as ListBox).SelectedItem as string;
-                if (_allColorBrushes.ContainsKey(newBackgroundColor))
-                {
-                    ColorTextBlockGrid.Background = _allColorBrushes[newBackgroundColor];
-                    ColorTextBlockGrid.UpdateLayout();
-                }
-            }
+            if (listBox == null || listBox.SelectedItem == null) return;
+            var newBackgroundColor = (sender as ListBox).SelectedItem as string;
+            if (!_allColorBrushes.ContainsKey(newBackgroundColor)) return;
+            ColorTextBlockGrid.Background = _allColorBrushes[newBackgroundColor];
+            ColorTextBlockGrid.UpdateLayout();
         }
 
         /// <summary>
@@ -1238,7 +1198,7 @@ namespace EZEreaderUniversal
                 (string) BackgroundColorListBox.SelectedItem;
             _rootPage.LibrarySource.BackgroundReadingColor =
                 _allColorBrushes[(string) BackgroundColorListBox.SelectedItem];
-            BottomAppBar.Visibility = Visibility.Collapsed;
+            if (BottomAppBar != null) BottomAppBar.Visibility = Visibility.Collapsed;
             LayoutRoot.Children.Clear();
             await CreateFirstPage();
             ColorsFlyout.Hide();
@@ -1251,7 +1211,7 @@ namespace EZEreaderUniversal
         /// <param name="e"></param>
         private void CancelColorButton_Click(object sender, RoutedEventArgs e)
         {
-            BottomAppBar.Visibility = Visibility.Collapsed;
+            if (BottomAppBar != null) BottomAppBar.Visibility = Visibility.Collapsed;
             ColorsFlyout.Hide();
         }
 
@@ -1266,7 +1226,7 @@ namespace EZEreaderUniversal
             _rootPage.LibrarySource.BackgroundReadingColor = new SolidColorBrush(Colors.White);
             _rootPage.LibrarySource.ReadingFontColorName = "Black";
             _rootPage.LibrarySource.ReadingFontColor = new SolidColorBrush(Colors.Black);
-            BottomAppBar.Visibility = Visibility.Collapsed;
+            if (BottomAppBar != null) BottomAppBar.Visibility = Visibility.Collapsed;
             LayoutRoot.Children.Clear();
             await CreateFirstPage();
             ColorsFlyout.Hide();

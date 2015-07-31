@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel;
+
 
 namespace EZEreaderUniversal.DataModels
 {
@@ -14,7 +10,7 @@ namespace EZEreaderUniversal.DataModels
         public event PropertyChangedEventHandler PropertyChanged;
         private void NotifyPropertyChanged(string p)
         {
-            PropertyChangedEventHandler handler = PropertyChanged;
+            var handler = PropertyChanged;
             if (null != handler)
             {
                 handler(this, new PropertyChangedEventArgs(p));

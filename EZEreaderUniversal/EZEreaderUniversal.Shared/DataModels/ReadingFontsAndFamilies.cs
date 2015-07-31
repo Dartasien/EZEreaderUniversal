@@ -1,15 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace EZEreaderUniversal.DataModels
+﻿namespace EZEreaderUniversal.DataModels
 {
     public class ReadingFontsAndFamilies
     {
-        public ReadingFontsAndFamilies()
-        {
-        }
-
         private int _readingfontsize;
         public int ReadingFontSize
         {
@@ -19,6 +11,7 @@ namespace EZEreaderUniversal.DataModels
             }
             set
             {
+                // ReSharper disable once RedundantCheckBeforeAssignment
                 if (value != _readingfontsize)
                 {
                     _readingfontsize = value;
@@ -35,6 +28,7 @@ namespace EZEreaderUniversal.DataModels
             }
             set
             {
+                // ReSharper disable once RedundantCheckBeforeAssignment
                 if (value != _readingfontfamily)
                 {
                     _readingfontfamily = value;
@@ -51,6 +45,7 @@ namespace EZEreaderUniversal.DataModels
             }
             set
             {
+                // ReSharper disable once RedundantCheckBeforeAssignment
                 if (value != _readingfontcolorname)
                 {
                     _readingfontcolorname = value;
@@ -66,6 +61,7 @@ namespace EZEreaderUniversal.DataModels
             }
             set
             {
+                // ReSharper disable once RedundantCheckBeforeAssignment
                 if (value != _backgroundreadingcolorname)
                 {
                     _backgroundreadingcolorname = value;

@@ -22,13 +22,11 @@ namespace EZEreaderUniversal
             var path = value as string;
             if (String.IsNullOrEmpty(path))
                 return null;
-            if (path != null && ((path.Length > 9) && (path.ToLower().Substring(0, 9).Equals("isostore:"))))
-            {
-                var bmp = new BitmapImage();
-                SetSourceOne(bmp, path.Substring(9));
-                return bmp;
-            }
-            return path;
+            if (((path.Length <= 9) || (!path.ToLower().Substring(0, 9).Equals("isostore:"))))
+                return path;
+            var bmp = new BitmapImage();
+            SetSourceOne(bmp, path.Substring(9));
+            return bmp;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)
@@ -41,7 +39,7 @@ namespace EZEreaderUniversal
         /// </summary>
         /// <param name="img"></param>
         /// <param name="path"></param>
-        public async void SetSourceOne(BitmapImage img, string path)
+        private async void SetSourceOne(BitmapImage img, string path)
         {
             await SetSource(img, path);
         }
@@ -52,16 +50,17 @@ namespace EZEreaderUniversal
         /// <param name="img">bitmapimage to set a source for</param>
         /// <param name="path">string location of the image in storage</param>
         /// <returns>sets the img.source to a new filestream</returns>
-        public async Task SetSource(BitmapImage img, string path)
+        private async Task SetSource(BitmapImage img, string path)
         {
             StorageFile imageFile = null;
-            string[] folders = path.Split('/');
+            var folders = path.Split('/');
             try
             {
                 StorageFolder appBaseFolder = ApplicationData.Current.LocalFolder;
                 StorageFolder imageFolder = await Io.CreateOrGetFolders(appBaseFolder, folders);
                 imageFile = await imageFolder.GetFileAsync(folders[folders.Length - 1]);
             }
+            // ReSharper disable once EmptyGeneralCatchClause
             catch (Exception)
             {
             }

@@ -1,18 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Windows.Graphics.Imaging;
-using Windows.Storage;
-using Windows.Storage.Streams;
-using Windows.UI.Core;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Media.Imaging;
 
 namespace EZEreaderUniversal.DataModels
 {
@@ -23,7 +11,7 @@ namespace EZEreaderUniversal.DataModels
         public event PropertyChangedEventHandler PropertyChanged;
         private void NotifyPropertyChanged(string p)
         {
-            PropertyChangedEventHandler handler = PropertyChanged;
+            var handler = PropertyChanged;
             if (null != handler)
             {
                 handler(this, new PropertyChangedEventArgs(p));
@@ -108,7 +96,8 @@ namespace EZEreaderUniversal.DataModels
         }
 
         //a time for when the book was last accessed
-        public long _openedrecentlytime;
+        // ReSharper disable once InconsistentNaming
+        private long _openedrecentlytime;
 
         public long OpenedRecentlyTime
         {

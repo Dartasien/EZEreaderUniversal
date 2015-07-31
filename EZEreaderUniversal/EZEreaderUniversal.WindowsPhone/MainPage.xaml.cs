@@ -113,17 +113,15 @@ namespace EZEreaderUniversal
                     _ourBook = listViewItem.DataContext as BookModel;
                 }
                 LibraryListView.SelectedItem = null;
-                if (_ourBook != null)
+                if (_ourBook == null) return;
+                if (_ourBook.IsStarted != true)
                 {
-                    if (_ourBook.IsStarted != true)
-                    {
-                        _ourBook.IsStarted = true;
-                        LibrarySource.RecentReads.Add(_ourBook);
-                    }
-                    _ourBook.OpenedRecentlyTime = DateTime.Now.Ticks;
-                    LibrarySource.SortBooksByAccessDate();
-                    Frame.Navigate(typeof(ReadingPage), _ourBook);
+                    _ourBook.IsStarted = true;
+                    LibrarySource.RecentReads.Add(_ourBook);
                 }
+                _ourBook.OpenedRecentlyTime = DateTime.Now.Ticks;
+                LibrarySource.SortBooksByAccessDate();
+                Frame.Navigate(typeof(ReadingPage), _ourBook);
             }
         }
 
@@ -197,8 +195,8 @@ namespace EZEreaderUniversal
             {
                 var messageDialog = new MessageDialog("Are you sure you want to delete " + _ourBook.BookName + " by " +
                     _ourBook.AuthorID + " from your Library?");
-                messageDialog.Commands.Add(new UICommand("Yes", new UICommandInvokedHandler(this.CommandInvokedHandler)));
-                messageDialog.Commands.Add(new UICommand("Cancel", new UICommandInvokedHandler(this.CommandInvokedHandler)));
+                messageDialog.Commands.Add(new UICommand("Yes", CommandInvokedHandler));
+                messageDialog.Commands.Add(new UICommand("Cancel", CommandInvokedHandler));
                 messageDialog.DefaultCommandIndex = 1;
                 messageDialog.CancelCommandIndex = 1;
                 await messageDialog.ShowAsync();
@@ -207,8 +205,8 @@ namespace EZEreaderUniversal
             {
                 var messageDialog = new MessageDialog("Woul you like to remove " + _ourBook.BookName +
                     " by " + _ourBook.AuthorID + " from your Recent list?");
-                messageDialog.Commands.Add(new UICommand("Yes", new UICommandInvokedHandler(this.CommandInvokedHandler)));
-                messageDialog.Commands.Add(new UICommand("Cancel", new UICommandInvokedHandler(this.CommandInvokedHandler)));
+                messageDialog.Commands.Add(new UICommand("Yes", CommandInvokedHandler));
+                messageDialog.Commands.Add(new UICommand("Cancel", CommandInvokedHandler));
                 messageDialog.DefaultCommandIndex = 1;
                 messageDialog.CancelCommandIndex = 1;
                 await messageDialog.ShowAsync();
@@ -222,27 +220,23 @@ namespace EZEreaderUniversal
         /// <param name="command"></param>
         private async void CommandInvokedHandler(IUICommand command)
         {
-            if (command.Label == "Yes")
+            if (command.Label != "Yes") return;
+            if (_ourBook == null) return;
+            if (!LibrarySource.IsDataLoaded)
             {
-                if (_ourBook != null)
-                {
-                    if (!LibrarySource.IsDataLoaded)
-                    {
-                        await RetrieveLibrary();
-                    }
-                    if (LibrarySource.RecentReads.Contains(_ourBook))
-                    {
-                        _ourBook.CurrentPage = 0;
-                        _ourBook.CurrentChapter = 0;
-                        _ourBook.IsStarted = false;
-                        _ourBook.IsCompleted = false;
-                        LibrarySource.RecentReads.Remove(_ourBook);
-                    }
-                    if (!_isRecentReads)
-                    {
-                        await LibrarySource.RemoveBook(_ourBook);
-                    }
-                }
+                await RetrieveLibrary();
+            }
+            if (LibrarySource.RecentReads.Contains(_ourBook))
+            {
+                _ourBook.CurrentPage = 0;
+                _ourBook.CurrentChapter = 0;
+                _ourBook.IsStarted = false;
+                _ourBook.IsCompleted = false;
+                LibrarySource.RecentReads.Remove(_ourBook);
+            }
+            if (!_isRecentReads)
+            {
+                await LibrarySource.RemoveBook(_ourBook);
             }
         }
 
@@ -444,14 +438,12 @@ namespace EZEreaderUniversal
         /// </summary>
         private void CloseSearchGrid()
         {
-            if (SearchGrid.Visibility == Visibility.Visible)
-            {
-                SearchGrid.Visibility = Visibility.Collapsed;
-                LibraryTextBlockGrid.Visibility = Visibility.Visible;
-                RecentReadsTextBlockGrid.Visibility = Visibility.Visible;
-                LibrarySource.SortedBooks.Filter = null;
-                SearchBookTextBox.Text = "";
-            }
+            if (SearchGrid.Visibility != Visibility.Visible) return;
+            SearchGrid.Visibility = Visibility.Collapsed;
+            LibraryTextBlockGrid.Visibility = Visibility.Visible;
+            RecentReadsTextBlockGrid.Visibility = Visibility.Visible;
+            LibrarySource.SortedBooks.Filter = null;
+            SearchBookTextBox.Text = "";
         }
         #endregion
 
@@ -480,7 +472,7 @@ namespace EZEreaderUniversal
             var textBox = sender as TextBox;
             if (textBox != null)
             {
-                string filter = textBox.Text;
+                var filter = textBox.Text;
                 LibrarySource.SortedBooks.Filter = x => ((BookModel)x).AuthorID.ToLower().Contains(filter.ToLower()) 
                                                         || ((BookModel)x).BookName.ToLower().Contains(filter.ToLower());
             }

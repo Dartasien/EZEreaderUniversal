@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
 using Windows.Storage;
-using Windows.Storage.Search;
 using Windows.Storage.Streams;
 using Windows.UI.Xaml.Media.Imaging;
 
@@ -46,11 +46,11 @@ namespace EZEreaderUniversal
         /// <returns></returns>
         public static async Task<bool> DeleteFileInFolder(StorageFolder storageFolder, string fileName)
         {
-            bool deleteSuccessful = true;
+            var deleteSuccessful = true;
 
             try
             {
-                StorageFile fileToDelete = await storageFolder.GetFileAsync(fileName);
+                var fileToDelete = await storageFolder.GetFileAsync(fileName);
                 await fileToDelete.DeleteAsync();
             }
             catch (Exception)
@@ -67,7 +67,7 @@ namespace EZEreaderUniversal
         /// <returns></returns>
         public static StorageFolder GetAppInstallationFolder()
         {
-            StorageFolder folder = Windows.ApplicationModel.Package.Current.InstalledLocation;
+            var folder = Windows.ApplicationModel.Package.Current.InstalledLocation;
             return folder;
         }
 
@@ -91,7 +91,7 @@ namespace EZEreaderUniversal
             StorageFolder newFolder;
             try
             {
-                StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
+                var storageFolder = ApplicationData.Current.LocalFolder;
 
                 if (folderName == "\\")
                     return storageFolder;
@@ -180,11 +180,10 @@ namespace EZEreaderUniversal
         /// <returns></returns>
         public static async Task<StorageFolder> CreateOrGetFolders(StorageFolder folder, string[] directoryName)
         {
-            StorageFolder folderOne = await CreateOrGetFolder(directoryName[0], folder);
+            var folderOne = await CreateOrGetFolder(directoryName[0], folder);
             StorageFolder folderTwo;
             StorageFolder folderThree;
             StorageFolder folderFour;
-            StorageFolder folderFive;
 
             switch (directoryName.Length)
             {
@@ -208,7 +207,7 @@ namespace EZEreaderUniversal
                     folderTwo = await CreateOrGetFolder(directoryName[1], folderOne);
                     folderThree = await CreateOrGetFolder(directoryName[2], folderTwo);
                     folderFour = await CreateOrGetFolder(directoryName[3], folderThree);
-                    folderFive = await CreateOrGetFolder(directoryName[4], folderFour);
+                    var folderFive = await CreateOrGetFolder(directoryName[4], folderFour);
                     return await CreateOrGetFolder(directoryName[4], folderFive);
             }
         }
@@ -221,14 +220,14 @@ namespace EZEreaderUniversal
         {
             var filesInRoot = await AppBaseFolder.GetFilesAsync();
             var foldersInRoot = await AppBaseFolder.GetFoldersAsync();
-            foreach (StorageFile file in filesInRoot)
+            foreach (var file in filesInRoot)
             {
                 //if (file.Name != "ebooks.xml")
                 //{
                 await file.DeleteAsync();
                 //}
             }
-            foreach (StorageFolder folders in foldersInRoot)
+            foreach (var folders in foldersInRoot)
             {
                 await folders.DeleteAsync();
             }
@@ -242,7 +241,7 @@ namespace EZEreaderUniversal
         /// <returns></returns>
         public async static Task DeleteFolderInLocalFolder(string folderName)
         {
-            StorageFolder folderToDelete = await AppBaseFolder.GetFolderAsync(folderName);
+            var folderToDelete = await AppBaseFolder.GetFolderAsync(folderName);
             await folderToDelete.DeleteAsync();
         }
 
@@ -252,17 +251,14 @@ namespace EZEreaderUniversal
         /// <returns>List of all the files in this app's root folder</returns>
         public static async Task<List<string>> GetDocumentFiles()
         {
-            List<string> results = new List<string>();
+            var results = new List<string>();
 
             try
             {
-                StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
-                StorageFileQueryResult queryResult = storageFolder.CreateFileQuery();
+                var storageFolder = ApplicationData.Current.LocalFolder;
+                var queryResult = storageFolder.CreateFileQuery();
                 var files = await queryResult.GetFilesAsync();
-                foreach (StorageFile file in files)
-                {
-                    results.Add(file.Name);
-                }
+                results.AddRange(files.Select(file => file.Name));
             }
             catch (Exception)
             {
@@ -284,6 +280,7 @@ namespace EZEreaderUniversal
             {
                 results = await storageFolder.GetFilesAsync();
             }
+            // ReSharper disable once EmptyGeneralCatchClause
             catch (Exception)
             {
             }
@@ -298,13 +295,13 @@ namespace EZEreaderUniversal
         /// <returns></returns>
         public static async Task<bool> WriteStringToFile(StorageFile f, string data)
         {
-            bool result = true;
+            var result = true;
 
             try
             {
                 using (var stream = await f.OpenAsync(FileAccessMode.ReadWrite))
                 {
-                    using (DataWriter dataWriter = new DataWriter(stream))
+                    using (var dataWriter = new DataWriter(stream))
                     {
                         dataWriter.WriteString(data);
                         await dataWriter.StoreAsync();
@@ -332,9 +329,9 @@ namespace EZEreaderUniversal
             {
                 using (var stream = await f.OpenAsync(FileAccessMode.Read))
                 {
-                    using (DataReader dataReader = new DataReader(stream))
+                    using (var dataReader = new DataReader(stream))
                     {
-                        uint numBytesLoaded = await dataReader.LoadAsync((uint)stream.Size);
+                        var numBytesLoaded = await dataReader.LoadAsync((uint)stream.Size);
                         result = dataReader.ReadString(numBytesLoaded);
                     }
                 }
@@ -355,17 +352,13 @@ namespace EZEreaderUniversal
         /// <returns>List of names of files in the specified folder which end with the specified extension</returns>
         public static async Task<List<string>> GetDocumentFilesOfTypeFromFolder(StorageFolder storageFolder, string extension)
         {
-            List<string> results = new List<string>();
+            var results = new List<string>();
 
             try
             {
-                StorageFileQueryResult queryResult = storageFolder.CreateFileQuery();
+                var queryResult = storageFolder.CreateFileQuery();
                 var files = await queryResult.GetFilesAsync();
-                foreach (StorageFile file in files)
-                {
-                    if (file.Name.ToLower().EndsWith(extension.ToLower()))
-                        results.Add(file.Name);
-                }
+                results.AddRange(from file in files where file.Name.ToLower().EndsWith(extension.ToLower()) select file.Name);
             }
             catch (Exception)
             {
@@ -376,25 +369,20 @@ namespace EZEreaderUniversal
 
         public static async Task<BitmapImage> GetCoverImage(string picLoc)
         {
-            StorageFolder newFolder;
-            BitmapImage img = new BitmapImage();
-            InMemoryRandomAccessStream ras = new InMemoryRandomAccessStream();
-            string[] picLoc2;
+            var img = new BitmapImage();
+            var ras = new InMemoryRandomAccessStream();
             if (picLoc.Contains("/"))
             {
-                picLoc2 = picLoc.Split('/');
-                newFolder = await CreateOrGetFolders(AppBaseFolder, picLoc2);
-                using (Stream fileSource = await newFolder.OpenStreamForReadAsync(picLoc2[picLoc2.Length - 1]))
+                var picLoc2 = picLoc.Split('/');
+                var newFolder = await CreateOrGetFolders(AppBaseFolder, picLoc2);
+                using (var fileSource = await newFolder.OpenStreamForReadAsync(picLoc2[picLoc2.Length - 1]))
                 {
                     await fileSource.CopyToAsync(ras.AsStreamForWrite());
                     await img.SetSourceAsync(ras);
                     return img;
                 }
             }
-            else
-            {
-                return null;
-            }
+            return null;
         }
 
         /// <summary>
@@ -404,11 +392,11 @@ namespace EZEreaderUniversal
         /// <returns>XML string representing object or null if object is not serializable</returns>
         public static string SerializeToString(object obj)
         {
-            XmlSerializer serializer = new XmlSerializer(obj.GetType());
+            var serializer = new XmlSerializer(obj.GetType());
 
             try
             {
-                using (StringWriter writer = new StringWriter())
+                using (var writer = new StringWriter())
                 {
                     serializer.Serialize(writer, obj);
 
@@ -429,11 +417,11 @@ namespace EZEreaderUniversal
         /// <returns>Object with data as described by XML or default(T) if deserialization failed.</returns>
         public static T SerializeFromString<T>(string xml)
         {
-            XmlSerializer serializer = new XmlSerializer(typeof(T));
+            var serializer = new XmlSerializer(typeof(T));
 
             try
             {
-                using (StringReader reader = new StringReader(xml))
+                using (var reader = new StringReader(xml))
                 {
                     return (T)serializer.Deserialize(reader);
                 }
@@ -453,23 +441,16 @@ namespace EZEreaderUniversal
         public static async Task<XDocument> LoadXmlDocumentAsync(StorageFolder storageFolder, string filename)
         {
 
-            StorageFile storageFile = await storageFolder.GetFileAsync(filename);
+            var storageFile = await storageFolder.GetFileAsync(filename);
 
             try
             {
-                IRandomAccessStream readStream = await storageFile.OpenAsync(FileAccessMode.Read);
-
-                IInputStream inputStream = readStream.GetInputStreamAt(0);
-
-                DataReader dataReader = new DataReader(inputStream);
-
-                uint numBytesLoaded = await dataReader.LoadAsync((uint)readStream.Size);
-
-
-
-                string s = dataReader.ReadString(numBytesLoaded);
-
-                StringReader stringReader = new StringReader(s);
+                var readStream = await storageFile.OpenAsync(FileAccessMode.Read);
+                var inputStream = readStream.GetInputStreamAt(0);
+                var dataReader = new DataReader(inputStream);
+                var numBytesLoaded = await dataReader.LoadAsync((uint)readStream.Size);
+                var s = dataReader.ReadString(numBytesLoaded);
+                var stringReader = new StringReader(s);
 
                 return XDocument.Load(stringReader);
             }
@@ -489,28 +470,24 @@ namespace EZEreaderUniversal
         public static async Task SaveXmlDocumentAsync(XDocument xmlDoc, StorageFolder storageFolder, string filename)
         {
 
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
 
-            XmlWriterSettings xws = new XmlWriterSettings();
-
-            xws.Indent = true;
+            var xws = new XmlWriterSettings {Indent = true};
 
             try
             {
-                using (XmlWriter xw = XmlWriter.Create(sb, xws))
+                using (var xw = XmlWriter.Create(sb, xws))
                 {
 
                     xmlDoc.Save(xw);
 
                 }
 
-
-
                 var storageFileResult = await storageFolder.CreateFileAsync(filename, CreationCollisionOption.ReplaceExisting);
                 var streamResult = await storageFileResult.OpenAsync(FileAccessMode.ReadWrite);
                 var outStream = streamResult.GetOutputStreamAt(0);
 
-                DataWriter dataWriter = new DataWriter(outStream);
+                var dataWriter = new DataWriter(outStream);
 
                 dataWriter.WriteString(sb.ToString());
 
@@ -518,6 +495,7 @@ namespace EZEreaderUniversal
 
                 await outStream.FlushAsync();
             }
+            // ReSharper disable once EmptyGeneralCatchClause
             catch
             {
             }
